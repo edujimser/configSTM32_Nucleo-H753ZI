@@ -5,124 +5,195 @@
   */
 /* USER CODE END Header */
 
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
-#include "rtc.h"
-#include "gpio.h"
 
-/* Private includes ----------------------------------------------------------*/
+
+/* Includes ---------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#include "main.h"      /* Configuración base: Definiciones de pines (Labels) y prototipos de inicialización. */
+#include "FreeRTOS.h"  /* Kernel de FreeRTOS: Define las estructuras de datos fundamentales del sistema operativo. */
+#include "cmsis_os2.h" /* API CMSIS-RTOS v2: Capa de abstracción para gestionar tareas, semáforos y colas. */
+#include "rtc.h"       /* Real Time Clock: Manejo del calendario, hora y alarmas internas del microcontrolador. */
+#include "usart.h"     /* USART/UART: Configuración de la comunicación serie (usada para nuestro printf). */
+#include "gpio.h"      /* GPIO: Configuración de los puertos de entrada y salida general (LEDs, botones, etc). */
+
+
+
+/* Private includes -----------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* @brief External library dependencies and system headers */
 /* USER CODE BEGIN Includes */
+
+/* AQUÍ: Referencias a archivos de cabecera externos (.h).
+   Se incluyen librerías estándar de C o drivers externos necesarios para el proyecto. */
+#include <stdio.h>    /* Standard I/O: Para usar printf() y redirección de consola */
 
 /* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
+
+
+
+
+
+
+/* Private typedef  -----------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* @brief User-defined data types (Structures, Unions, Enumerations) */
 /* USER CODE BEGIN PTD */
+
+/* AQUÍ: Definiciones de nuevos tipos de datos creados por el usuario. Se utiliza para declarar estructuras, uniones o tipos enumerados que organicen la información. */
 
 /* USER CODE END PTD */
 
-/* Private define ------------------------------------------------------------*/
+
+
+
+
+
+
+/* Private define ------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* @brief Compile-time constants and literal definitions */
 /* USER CODE BEGIN PD */
+
+/* AQUÍ: Constantes simbólicas procesadas antes de la compilación. Se utiliza para asignar nombres a valores fijos, mejorando la legibilidad y facilitando cambios globales. */
 
 /* USER CODE END PD */
 
-/* Private macro -------------------------------------------------------------*/
+
+
+
+
+
+
+/* Private macro  ------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* @brief Preprocessor macros for inline logic and bit manipulation */
 /* USER CODE BEGIN PM */
+
+/* AQUÍ: Macros de preprocesador que ejecutan lógica en línea.
+   Se utiliza para operaciones matemáticas rápidas o manipulación directa de registros y bits. */
 
 /* USER CODE END PM */
 
-/* Private variables ---------------------------------------------------------*/
-/* USER CODE BEGIN PV */
-/* Handles para las tareas */
-osThreadId_t GreenTaskHandle;
-osThreadId_t YellowTaskHandle;
-osThreadId_t RedTaskHandle;
 
-/* Configuración de las tareas */
-const osThreadAttr_t GreenTask_attributes = {
-  .name = "GreenTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-const osThreadAttr_t YellowTask_attributes = {
-  .name = "YellowTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-const osThreadAttr_t RedTask_attributes = {
-  .name = "RedTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
+
+
+
+
+
+
+/* Private variables ----------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* @brief Global scoped variables with internal linkage (static context) */
+/* USER CODE BEGIN PV */
+
+
+/* AQUÍ: Declaración de variables globales con alcance en todo este archivo.
+   Se utiliza para almacenar estados, contadores y buffers que deben persistir durante la ejecución. */
+
 /* USER CODE END PV */
+
+
+
+
+
+
+
+/* Private variables ----------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* @brief Global scoped variables and internal state buffers (Internal Linkage) */
+/* AQUÍ: Declaración de variables globales, handles de SO y estructuras de configuración que deben persistir en RAM. */
+/* USER CODE BEGIN PV */
+osThreadId_t StatusTaskHandle; 
+
+
+/* USER CODE END PV */
+
+
+
+
+
+
+
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 
-/* USER CODE BEGIN PFP */
-void StartGreenTask(void *argument);
-void StartYellowTask(void *argument);
-void StartRedTask(void *argument);
-/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+/* ---           L.1                                                          USER CODE BEGIN 0                                                                              --- */
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
+
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+/* ---           L.1                                                          MAIN ENTRY POINT                                                                               --- */
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
+	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+	/* ---           L.2                                                          USER CODE BEGIN 1                                                                              --- */
+	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
-  /* USER CODE END 1 */
+	SCB_EnableICache();
+	SCB_EnableDCache();
+	HAL_Init();
+	SystemClock_Config();
+	MX_GPIO_Init();
+	MX_RTC_Init();
+	MX_USART3_UART_Init();
+	setvbuf(stdout, NULL, _IONBF, 0);
 
-  /* Enable the CPU Cache */
-  SCB_EnableICache();
-  SCB_EnableDCache();
+	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+	/* ---           L.2                                                          USER CODE BEGIN 2                                                                              --- */
+	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+	/* USER CODE BEGIN 2 */
+	printf("\r\n==================================\r\n");
+	printf("  NUCLEO-H753ZI INICIALIZADA\r\n");
+	printf("  Consola UART activa a 115200\r\n");
+	printf("==================================\r\n");
+	HAL_Delay(100);
 
-  /* MCU Configuration--------------------------------------------------------*/
-  HAL_Init();
 
-  /* USER CODE BEGIN Init */
+	StatusTaskHandle = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &StartGreenYellowRedTask_attributes);
 
-  /* USER CODE END Init */
+	/* USER CODE END 2 */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Init scheduler */
+	osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+	MX_FREERTOS_Init();
 
-  /* USER CODE BEGIN SysInit */
+	/* Start scheduler */
+	osKernelStart();
 
-  /* USER CODE END SysInit */
+	/* We should never get here as control is now taken by the scheduler */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_RTC_Init();
+	/* Infinite loop */
 
-  /* USER CODE BEGIN 2 */
-  /* El Kernel se inicializa aquí */
-  osKernelInitialize();
+	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+	/* ---           L.2                                                          USER CODE BEGIN 3                                                                              --- */
+	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+	while (1)
+	{
 
-  /* Creamos las 3 tareas */
-  GreenTaskHandle = osThreadNew(StartGreenTask, NULL, &GreenTask_attributes);
-  YellowTaskHandle = osThreadNew(StartYellowTask, NULL, &YellowTask_attributes);
-  RedTaskHandle = osThreadNew(StartRedTask, NULL, &RedTask_attributes);
-  /* USER CODE END 2 */
+	}
 
-  /* Init scheduler */
-  // MX_FREERTOS_Init(); // Si CubeMX generó esta función, puedes dejarla o usar osThreadNew arriba
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here */
-  while (1)
-  {
-  }
 }
+
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+/* ---           L.2                                                          USER CODE BEGIN 4                                                                              --- */
+/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
 
 /**
   * @brief System Clock Configuration
+  * @retval None
   */
 void SystemClock_Config(void)
 {
@@ -130,13 +201,24 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_CRSInitTypeDef RCC_CRSInitStruct = {0};
 
+  /** Supply configuration update enable
+  */
   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+
+  /** Configure the main internal regulator output voltage
+  */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
+  /** Configure LSE Drive Capability
+  */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_MEDIUMLOW);
 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE
                               |RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -155,9 +237,16 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
+    ErrorHandler.file        = __FILE__;
+    ErrorHandler.function    = __func__;
+    ErrorHandler.line        = __LINE__;
+    ErrorHandler.err_code    = ERR_OSC_PLL;
+    ErrorHandler.err_name    = "OSC_CONFIG_FAULT";
+    ErrorHandler.description = "Fallo al inicializar el oscilador (HSE/HSI) o el PLL.";
     Error_Handler();
   }
-
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
@@ -169,64 +258,73 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
-     Error_Handler();
-  }
+    /* Rellenamos la "caja negra" antes de morir */
+    ErrorHandler.file        = __FILE__;
+    ErrorHandler.function    = __func__;
+    ErrorHandler.line        = __LINE__;
+    ErrorHandler.err_code    = ERR_FLASH_LATENCY;
+    ErrorHandler.err_name    = "CLOCK_CONFIG_FAULT";
+    ErrorHandler.description = "Fallo al configurar los buses del sistema o la latencia Flash.";
 
+    Error_Handler();
+  }
+  /** Enable the SYSCFG APB clock
+  */
   __HAL_RCC_CRS_CLK_ENABLE();
+
+  /** Configures CRS
+  */
   RCC_CRSInitStruct.Prescaler = RCC_CRS_SYNC_DIV1;
   RCC_CRSInitStruct.Source = RCC_CRS_SYNC_SOURCE_LSE;
   RCC_CRSInitStruct.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
   RCC_CRSInitStruct.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000,32768);
   RCC_CRSInitStruct.ErrorLimitValue = 34;
   RCC_CRSInitStruct.HSI48CalibrationValue = 32;
+
   HAL_RCCEx_CRSConfig(&RCC_CRSInitStruct);
 }
 
-/* USER CODE BEGIN 4 */
-void StartGreenTask(void *argument)
-{
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-    osDelay(500);
-  }
-}
 
-void StartYellowTask(void *argument)
-{
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_1);
-    osDelay(750);
-  }
-}
 
-void StartRedTask(void *argument)
-{
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-    osDelay(1000);
-  }
-}
 /* USER CODE END 4 */
 
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1)
   {
     HAL_IncTick();
   }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
 }
 
-
-
-void Error_Handler(void)
+#ifdef USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
 {
-  __disable_irq();
-  while (1)
-  {
-  }
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
 }
+#endif /* USE_FULL_ASSERT */
