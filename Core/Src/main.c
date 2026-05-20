@@ -16,7 +16,6 @@
 #include "gpio.h"      /* GPIO: Configuración de los puertos de entrada y salida general (LEDs, botones, etc). */
 
 
-
 /* Private includes -----------------------------------------------------------------------------------------------------------------------------------------------------*/
 /* @brief External library dependencies and system headers */
 /* USER CODE BEGIN Includes */
@@ -24,6 +23,8 @@
 /* AQUÍ: Referencias a archivos de cabecera externos (.h).
    Se incluyen librerías estándar de C o drivers externos necesarios para el proyecto. */
 #include <stdio.h>    /* Standard I/O: Para usar printf() y redirección de consola */
+#include "LedDataVision/LedData.h" /* Gestión de LEDs: Funciones y estructuras para controlar los LEDs de forma flexible. */
+
 
 /* USER CODE END Includes */
 
@@ -144,6 +145,7 @@ int main(void)
 	SCB_EnableDCache();
 	HAL_Init();
 	SystemClock_Config();
+  Error_Handler_Init();
 	MX_GPIO_Init();
 	MX_RTC_Init();
 	MX_USART3_UART_Init();
@@ -161,6 +163,8 @@ int main(void)
 
 
 	StatusTaskHandle = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &StartGreenYellowRedTask_attributes);
+
+
 
 	/* USER CODE END 2 */
 

@@ -28,7 +28,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
-#include "Task/Task_Error.h"
 #include "Error/ErrorHandler.h"
 
 /* Private includes ----------------------------------------------------------*/

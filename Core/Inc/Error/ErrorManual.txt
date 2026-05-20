@@ -1,0 +1,145 @@
+
+=========================================================================
+GUÍA RÁPIDA DE COMPORTAMIENTO FÍSICO (LEDS EN TU CÓDIGO)
+=========================================================================
+- Error_Handler (Software): 
+    * Modo LED (mode): Solo Rojo Fijo (MODE_ONLY_RED)
+    * Retraso (delayMs): Apagado (BLINK_OFF)
+    * Modo Pánico (modePanic): Desactivado (false)
+    * Tiempo Pánico (modePanicTimeOut): Apagado (BLINK_PANIC_OFF)
+
+- HardFault_Handler_C: 
+    * Modo LED (mode): Solo Amarillo Fijo (MODE_ONLY_YELLOW)
+    * Retraso (delayMs): Apagado (BLINK_OFF)
+    * Modo Pánico (modePanic): Activo (true)
+    * Tiempo Pánico (modePanicTimeOut): Apagado (BLINK_PANIC_OFF)
+
+- UsageFault_Handler_C: 
+    * Modo LED (mode): Solo Verde Fijo (MODE_ONLY_GREEN)
+    * Retraso (delayMs): Apagado (BLINK_OFF)
+    * Modo Pánico (modePanic): Activo (true)
+    * Tiempo Pánico (modePanicTimeOut): Apagado (BLINK_PANIC_OFF)
+
+- BusFault_Handler_C: 
+    * Modo LED (mode): Parpadeo Rojo (MODE_RED_BLINK)
+    * Retraso (delayMs): Apagado (BLINK_OFF)
+    * Modo Pánico (modePanic): Activo (true)
+    * Tiempo Pánico (modePanicTimeOut): Parpadeo sin saturación (BLINK_PANIC_NO_SATURE)
+
+- MemManage_Handler_C: 
+    * Modo LED (mode): Parpadeo Amarillo (MODE_YELLOW_BLINK)
+    * Retraso (delayMs): Apagado (BLINK_OFF)
+    * Modo Pánico (modePanic): Activo (true)
+    * Tiempo Pánico (modePanicTimeOut): Sin saturación (BLINK_PANIC_NO_SATURE)
+
+=========================================================================
+¡CONFIGURACIÓN INICIAL OBLIGATORIA!
+=========================================================================
+Para que los bloques de UsageFault, BusFault y MemManage funcionen y 
+no se vayan todos directos al HardFault, asegúrate de pegar estas 
+dos líneas al principio de tu main() (justo después de inicializar el reloj):
+
+SCB->SHCSR |= (SCB_SHCSR_MEMFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_USGFAULTENA_Msk);
+SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk;
+
+
+=========================================================================
+BLOQUE 1: PROVOCANDO ERROR_HANDLER ESTÁNDAR (SOFTWARE)
+=========================================================================
+if (1) {
+    printf("\n[TEST] Saltando directamente a Error_Handler() de Software...\r\n");
+    HAL_Delay(500); 
+
+    /* NOTA: Si este bloque te activa un BusFault en lugar del Error_Handler, 
+       significa que tu estructura global 'ErrorHandler' NO está inicializada 
+       en memoria RAM (es un puntero nulo). Si te da BusFault, comenta las 
+       líneas de abajo que usan 'ErrorHandler.' y deja solo 'Error_Handler();' */
+
+    ErrorHandler.file        = __FILE__;     
+    ErrorHandler.function    = __func__;     
+    ErrorHandler.line        = __LINE__;     
+    ErrorHandler.err_code    = 0x00000005; 
+    ErrorHandler.err_name    = "UART3_INIT_FAULT";
+    ErrorHandler.description = "El periférico UART3 no responde.";
+
+    /* Saltamos al manejador estándar */
+    Error_Handler(); 
+}
+
+
+=========================================================================
+BLOQUE 2: PROVOCANDO UN HARDFAULT REAL (INSTRUCCIÓN ILEGAL DEFINIDA)
+=========================================================================
+if (0) {  
+    printf("\n[TEST] Provocando un HardFault real por instrucción ilegal de CPU...\r\n");
+    HAL_Delay(500); 
+
+    /* En Cortex-M, el bit 0 de la dirección de salto DEBE ser 1 (Modo Thumb). 
+       Al forzar un salto a una dirección con bit 0 en cero (0x24000000), 
+       la CPU intenta cambiar a modo ARM nativo (inexistente en Cortex-M).
+       Esto garantiza un HardFault inmediato por violación de estado (INVSTATE). */
+    void (*provocar_hardfault)(void) = (void (*)(void))0x24000000;
+
+    provocar_hardfault();
+}
+
+
+=========================================================================
+BLOQUE 3: PROVOCANDO UN USAGEFAULT REAL (DIVISIÓN POR CERO)
+=========================================================================
+if (0) {  
+    printf("\n[TEST] Provocando un UsageFault real por división entera por cero...\r\n");
+    HAL_Delay(500); 
+
+    /* 'volatile' obliga a la CPU a realizar la operación en caliente en lugar 
+       de que el compilador optimice y borre la línea en el archivo binario */
+    volatile uint32_t numerador = 100;
+    volatile uint32_t denominador = 0;
+    volatile uint32_t resultado;
+
+    /* Dispara el UsageFault_Handler gracias a la configuración del SCB->CCR */
+    resultado = numerador / denominador;
+
+    (void)resultado; 
+}
+
+
+=========================================================================
+BLOQUE 4: PROVOCANDO UN BUSFAULT REAL (DIRECCIÓN TOTALMENTE INVÁLIDA)
+=========================================================================
+if (0) {  
+    printf("\n[TEST] Provocando un BusFault real por lectura en dirección inexistente...\r\n");
+    HAL_Delay(500); 
+
+    /* El rango de direcciones 0x00000000 a 0x0001FFFF en el STM32H7 está reservado 
+       en muchos modelos o provoca un error de Bus preciso si se accede a zonas 
+       no mapeadas del bus Axi/Ahb. */
+    volatile uint32_t *ptr_invalido = (volatile uint32_t *)0x0FFFFFFF;
+    volatile uint32_t lectura_erronea;
+
+    /* Al intentar leer, el bus colapsa y salta BusFault_Handler */
+    lectura_erronea = *ptr_invalido;
+
+    (void)lectura_erronea;
+}
+
+
+=========================================================================
+BLOQUE 5: PROVOCANDO UN MEMMANAGE FAULT REAL (VIOLACIÓN DE EJECUCIÓN MPU)
+=========================================================================
+if (0) {  
+    printf("\n[TEST] Provocando un MemManage Fault real...\r\n");
+    HAL_Delay(500); 
+
+    /* NOTA: Para que este bloque dispare un MemManage_Handler legítimo, 
+       debes tener la MPU (Memory Protection Unit) activa en tu proyecto 
+       con alguna región configurada como "No Ejecutar" (XN) o protegida.
+       Si la MPU está totalmente apagada, este bloque derivará en un BusFault. */
+
+    /* Forzamos un salto de código a la región de memoria de Periféricos (0x40000000). 
+       Por arquitectura de hardware ARM, la zona de periféricos tiene prohibido 
+       ejecutar instrucciones (Execute Never). Rompe las reglas de la MPU nativa. */
+    void (*provocar_memmanage)(void) = (void (*)(void))0x40000001; 
+
+    provocar_memmanage();
+}
