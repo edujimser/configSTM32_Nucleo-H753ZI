@@ -1,33 +1,57 @@
+/**
+ * @file LedData.c
+ * @brief Implementación de la lógica de conmutación de estados y tareas para los LEDs.
+ */
+
 #include "LedDataVision/LedData.h"
 
+/* ========================================================================= */
+/* --- ATRIBUTOS DE KERNEL (OS OBJECTS CONFIG)                           --- */
+/* ========================================================================= */
 
-
-
-
+/**
+ * @brief Descriptor de configuración del Kernel para el hilo 'TaskError'.
+ */
 const osThreadAttr_t StartGreenYellowRedTask_attributes = {
-  .name = "TaskError",                            // Nombre para identificar la tarea en herramientas de depuración.
-  .stack_size = 256 * 4,                          // Reserva 1024 bytes (256 palabras de 32 bits) de RAM para la pila de esta tarea.
-  .priority = (osPriority_t) osPriorityLow1 ,     // Asignamos una prioridad baja para que esta tarea no interfiera con tareas críticas.
+  .name = "TaskError",                            // Identificador de depuración.
+  .stack_size = 256 * 4,                          // Reserva de 1024 bytes físicos de Stack RAM.
+  .priority = (osPriority_t) osPriorityLow1 ,     // Prioridad asignada por debajo del promedio.
 };
 
+/* ========================================================================= */
+/* --- INSTANCIAS DE CONTROL GLOBAL                                      --- */
+/* ========================================================================= */
 
+/**
+ * @brief Configuración inicial usada durante el despliegue correcto del sistema.
+ */
 LedConfig_t startConfiguration = {
-    .mode = MODE_SEQUENCE,
-    .delayMs = BLINK_VERY_SLOW,
-    .toggleState = false,
-    .lastToggleTime = 0,
-    .toggleCounter = 0,
-    .modePanic = false,
+    .mode             = MODE_SEQUENCE,
+    .delayMs          = BLINK_VERY_SLOW,
+    .toggleState      = false,
+    .lastToggleTime   = 0,
+    .toggleCounter    = 0,
+    .modePanic        = false,
     .modePanicTimeOut = BLINK_PANIC_OFF,
 };
 
+/* ========================================================================= */
+/* --- ALGORITMOS DE CONMUTACIÓN (MÁQUINA DE ESTADOS)                    --- */
+/* ========================================================================= */
 
+/**
+ * @brief Procesa el modo asignado y manipula los pines GPIO correspondientes.
+ * @details Esta función evalúa los deltas de tiempo del System Tick para conmutar
+ * los estados físicos de salida. Si detecta la bandera @c modePanic activa,
+ * omite las llamadas asíncronas de tiempo y procesa retrasos mediante lazos directos
+ * de CPU de forma síncrona y bloqueante.
+ */
 void applyLedConfiguration(LedConfig_t *config) {
     switch (config->mode) {
         
-        // ==========================================
-        // MODOS FIJOS
-        // ==========================================
+        /* ----------------------------------------------------------------- */
+        /* MODOS FIJOS (ESTÁTICOS)                                           */
+        /* ----------------------------------------------------------------- */
         case MODE_ALL_ON:
             LED_GREEN_ON();
             LED_YELLOW_ON();
@@ -64,9 +88,9 @@ void applyLedConfiguration(LedConfig_t *config) {
             LED_RED_OFF();
             break;
 
-        // ==========================================
-        // MODOS PARPADEO
-        // ==========================================
+        /* ----------------------------------------------------------------- */
+        /* MODOS PARPADEO (DINÁMICOS Y SECUENCIALES)                         */
+        /* ----------------------------------------------------------------- */
         case MODE_SEQUENCE:
             // Si está activada la bandera modePanic, entra directo. Si no, evalúa HAL_GetTick()
             if (config->modePanic || ((HAL_GetTick() - config->lastToggleTime) >= config->delayMs)) {
@@ -202,6 +226,9 @@ void applyLedConfiguration(LedConfig_t *config) {
             }
             break;
 
+        /* ----------------------------------------------------------------- */
+        /* MODO POR DEFECTO / RECOVERY                                       */
+        /* ----------------------------------------------------------------- */
         case MODE_OFF:
         default:
             LED_GREEN_OFF();
@@ -213,18 +240,19 @@ void applyLedConfiguration(LedConfig_t *config) {
     }   
 }
 
-
+/* ========================================================================= */
+/* --- HILOS DE EJECUCIÓN (RTOS TASKS)                                   --- */
+/* ========================================================================= */
 
 /**
-  * @brief Tarea que gestiona LEDs basándose en una estructura de configuración.
-  * @param argument: Puntero genérico (void*) que recibimos del main al crear la tarea.
-  */
+ * @brief Tarea que gestiona los LEDs basándose en una estructura de configuración.
+ * @details Realiza un filtrado previo de sanidad de datos para evitar que valores
+ * corruptos o desbordados rompan el temporizador. Posteriormente, entra en el lazo
+ * operativo del RTOS.
+ */
 void StartGreenYellowRedTask(void *argument) {
     
-    /* --- 1. PREPARACIÓN DE DATOS --- */
-
-    // Convertimos el puntero 'void*' a un puntero tipo 'LedConfig_t*'.
-    // Esto es necesario porque 'void*' no tiene "forma", y así el compilador sabe cómo leer la estructura.
+    /* --- 1. PREPARACIÓN Y VALIDACIÓN DE SEGURIDAD DE DATOS --- */
     LedConfig_t *config = (LedConfig_t *)argument;
 
     // Validar que el modo esté dentro del rango permitido de la lista (Enum)
@@ -234,7 +262,7 @@ void StartGreenYellowRedTask(void *argument) {
 
     // Validar que el delay no sea 0 (Blink_off) para evitar fallos de tiempo
     if (config->delayMs == BLINK_OFF || config->delayMs >= END_OF_BLINKS) {
-        config->delayMs = BLINK_VERY_SLOW; //
+        config->delayMs = BLINK_VERY_SLOW; 
     }
     
     /* --- 2. BUCLE INFINITO DEL HILO --- */
