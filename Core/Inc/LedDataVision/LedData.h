@@ -141,8 +141,7 @@ void StartGreenYellowRedTask(void *argument);
  */
 void applyLedConfiguration(LedConfig_t *config);
 
-/** @brief Atributos de kernel de FreeRTOS para la tarea de señalización. */
-extern const osThreadAttr_t StartGreenYellowRedTask_attributes;
+;
 /** @brief Instancia de configuración inicial por defecto del firmware. */
 extern LedConfig_t startConfiguration;
 /** @brief Instancia global compartida reservada para el manejador de fallos catastróficos. */

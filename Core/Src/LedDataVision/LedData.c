@@ -6,19 +6,6 @@
 #include "LedDataVision/LedData.h"
 
 /* ========================================================================= */
-/* --- ATRIBUTOS DE KERNEL (OS OBJECTS CONFIG)                           --- */
-/* ========================================================================= */
-
-/**
- * @brief Descriptor de configuración del Kernel para el hilo 'TaskError'.
- */
-const osThreadAttr_t StartGreenYellowRedTask_attributes = {
-  .name = "TaskError",                            // Identificador de depuración.
-  .stack_size = 256 * 4,                          // Reserva de 1024 bytes físicos de Stack RAM.
-  .priority = (osPriority_t) osPriorityLow1 ,     // Prioridad asignada por debajo del promedio.
-};
-
-/* ========================================================================= */
 /* --- INSTANCIAS DE CONTROL GLOBAL                                      --- */
 /* ========================================================================= */
 
@@ -251,23 +238,23 @@ void applyLedConfiguration(LedConfig_t *config) {
  * operativo del RTOS.
  */
 void StartGreenYellowRedTask(void *argument) {
-    
+
     /* --- 1. PREPARACIÓN Y VALIDACIÓN DE SEGURIDAD DE DATOS --- */
     LedConfig_t *config = (LedConfig_t *)argument;
 
     // Validar que el modo esté dentro del rango permitido de la lista (Enum)
     if (config->mode >= END_OF_MODES  || config->mode < 0) {
-        config->mode = MODE_SEQUENCE; 
+        config->mode = MODE_SEQUENCE;
     }
 
     // Validar que el delay no sea 0 (Blink_off) para evitar fallos de tiempo
     if (config->delayMs == BLINK_OFF || config->delayMs >= END_OF_BLINKS) {
-        config->delayMs = BLINK_VERY_SLOW; 
+        config->delayMs = BLINK_VERY_SLOW;
     }
-    
+
     /* --- 2. BUCLE INFINITO DEL HILO --- */
     for(;;) {
         applyLedConfiguration(config);
-        osDelay(config->delayMs); 
+        osDelay(config->delayMs);
     }
 }

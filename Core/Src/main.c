@@ -4,123 +4,56 @@
   * @brief          : Código Nucleo-H753 - 400MHz HSE con 3 Tareas FreeRTOS
   */
 /* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "FreeRTOS.h"
+#include "cmsis_os2.h"
+#include "rtc.h"
+#include "usart.h"
+#include "gpio.h"
 
-
-
-/* Includes ---------------------------------------------------------------------------------------------------------------------------------------------------------*/
-#include "main.h"      /* Configuración base: Definiciones de pines (Labels) y prototipos de inicialización. */
-#include "FreeRTOS.h"  /* Kernel de FreeRTOS: Define las estructuras de datos fundamentales del sistema operativo. */
-#include "cmsis_os2.h" /* API CMSIS-RTOS v2: Capa de abstracción para gestionar tareas, semáforos y colas. */
-#include "rtc.h"       /* Real Time Clock: Manejo del calendario, hora y alarmas internas del microcontrolador. */
-#include "usart.h"     /* USART/UART: Configuración de la comunicación serie (usada para nuestro printf). */
-#include "gpio.h"      /* GPIO: Configuración de los puertos de entrada y salida general (LEDs, botones, etc). */
-
-
-/* Private includes -----------------------------------------------------------------------------------------------------------------------------------------------------*/
-/* @brief External library dependencies and system headers */
+/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
-/* AQUÍ: Referencias a archivos de cabecera externos (.h).
-   Se incluyen librerías estándar de C o drivers externos necesarios para el proyecto. */
-#include <stdio.h>    /* Standard I/O: Para usar printf() y redirección de consola */
-#include "LedDataVision/LedData.h" /* Gestión de LEDs: Funciones y estructuras para controlar los LEDs de forma flexible. */
-
-
+#include <stdio.h>
+#include "LedDataVision/LedData.h"
+#include "Error/ErrorHandler.h"
 /* USER CODE END Includes */
 
-
-
-
-
-
-
-/* Private typedef  -----------------------------------------------------------------------------------------------------------------------------------------------------*/
-/* @brief User-defined data types (Structures, Unions, Enumerations) */
+/* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-/* AQUÍ: Definiciones de nuevos tipos de datos creados por el usuario. Se utiliza para declarar estructuras, uniones o tipos enumerados que organicen la información. */
 
 /* USER CODE END PTD */
 
-
-
-
-
-
-
-/* Private define ------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/* @brief Compile-time constants and literal definitions */
+/* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-/* AQUÍ: Constantes simbólicas procesadas antes de la compilación. Se utiliza para asignar nombres a valores fijos, mejorando la legibilidad y facilitando cambios globales. */
 
 /* USER CODE END PD */
 
-
-
-
-
-
-
-/* Private macro  ------------------------------------------------------------------------------------------------------------------------------------------------------*/
-/* @brief Preprocessor macros for inline logic and bit manipulation */
+/* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
 /* AQUÍ: Macros de preprocesador que ejecutan lógica en línea.
-   Se utiliza para operaciones matemáticas rápidas o manipulación directa de registros y bits. */
 
 /* USER CODE END PM */
 
+/* Private variables ---------------------------------------------------------*/
 
-
-
-
-
-
-
-/* Private variables ----------------------------------------------------------------------------------------------------------------------------------------------------*/
-/* @brief Global scoped variables with internal linkage (static context) */
 /* USER CODE BEGIN PV */
 
 
-/* AQUÍ: Declaración de variables globales con alcance en todo este archivo.
-   Se utiliza para almacenar estados, contadores y buffers que deben persistir durante la ejecución. */
-
 /* USER CODE END PV */
-
-
-
-
-
-
-
-/* Private variables ----------------------------------------------------------------------------------------------------------------------------------------------------*/
-/* @brief Global scoped variables and internal state buffers (Internal Linkage) */
-/* AQUÍ: Declaración de variables globales, handles de SO y estructuras de configuración que deben persistir en RAM. */
-/* USER CODE BEGIN PV */
-osThreadId_t StatusTaskHandle; 
-
-
-/* USER CODE END PV */
-
-
-
-
-
-
-
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
+/* USER CODE BEGIN PFP */
+//void StartSDManagerTask(void *argument);
 
+/* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
-
-
-/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-/* ---           L.1                                                          USER CODE BEGIN 0                                                                              --- */
-/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -129,71 +62,66 @@ void MX_FREERTOS_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
-
-
-/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-/* ---           L.1                                                          MAIN ENTRY POINT                                                                               --- */
-/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-
 int main(void)
 {
-	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-	/* ---           L.2                                                          USER CODE BEGIN 1                                                                              --- */
-	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
-	SCB_EnableICache();
-	SCB_EnableDCache();
-	HAL_Init();
-	SystemClock_Config();
-  Error_Handler_Init();
-	MX_GPIO_Init();
-	MX_RTC_Init();
-	MX_USART3_UART_Init();
-	setvbuf(stdout, NULL, _IONBF, 0);
+  /* USER CODE BEGIN 1 */
 
-	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-	/* ---           L.2                                                          USER CODE BEGIN 2                                                                              --- */
-	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-	/* USER CODE BEGIN 2 */
-	printf("\r\n==================================\r\n");
-	printf("  NUCLEO-H753ZI INICIALIZADA\r\n");
-	printf("  Consola UART activa a 115200\r\n");
-	printf("==================================\r\n");
-	HAL_Delay(100);
+  /* USER CODE END 1 */
+
+  /* Enable the CPU Cache */
+
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_RTC_Init();
+  MX_USART3_UART_Init();
+  /* USER CODE BEGIN 2 */
 
 
-	StatusTaskHandle = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &StartGreenYellowRedTask_attributes);
 
+  /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+  MX_FREERTOS_Init();
 
-	/* USER CODE END 2 */
+  /* Start scheduler */
+  osKernelStart();
 
-	/* Init scheduler */
-	osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
-	MX_FREERTOS_Init();
+  /* We should never get here as control is now taken by the scheduler */
 
-	/* Start scheduler */
-	osKernelStart();
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
 
-	/* We should never get here as control is now taken by the scheduler */
-
-	/* Infinite loop */
-
-	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-	/* ---           L.2                                                          USER CODE BEGIN 3                                                                              --- */
-	/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-	while (1)
-	{
-
-	}
-
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
-
-
-/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-/* ---           L.2                                                          USER CODE BEGIN 4                                                                              --- */
-/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-
 
 /**
   * @brief System Clock Configuration
@@ -238,17 +166,11 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
   RCC_OscInitStruct.PLL.PLLFRACN = 0;
-
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_OSC_PLL;
-    ErrorHandler.err_name    = "OSC_CONFIG_FAULT";
-    ErrorHandler.description = "Fallo al inicializar el oscilador (HSE/HSI) o el PLL.";
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -264,16 +186,9 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
-    /* Rellenamos la "caja negra" antes de morir */
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_FLASH_LATENCY;
-    ErrorHandler.err_name    = "CLOCK_CONFIG_FAULT";
-    ErrorHandler.description = "Fallo al configurar los buses del sistema o la latencia Flash.";
-
     Error_Handler();
   }
+
   /** Enable the SYSCFG APB clock
   */
   __HAL_RCC_CRS_CLK_ENABLE();
@@ -290,7 +205,7 @@ void SystemClock_Config(void)
   HAL_RCCEx_CRSConfig(&RCC_CRSInitStruct);
 }
 
-
+/* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
 
@@ -316,6 +231,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 1 */
 }
 
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
 #ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number

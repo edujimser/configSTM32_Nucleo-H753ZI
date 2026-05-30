@@ -3,10 +3,11 @@
  * @brief Sistema de gestión y diagnóstico de fallos críticos para STM32H7.
  * @author Tu Nombre / Departamento de Firmware
  * @date 2026
- * @version 1.1
+ * @version 1.2
  * * @details Este módulo proporciona las estructuras, enumeraciones y prototipos
  * necesarios para capturar, almacenar en "Caja Negra" y reportar fallos de 
  * software y excepciones de hardware (Faults) del núcleo ARM Cortex-M7.
+ * Utiliza el método de enlazado profesional de GCC (--wrap).
  */
 
 #ifndef __ERRORHANDLER_H
@@ -78,38 +79,38 @@ extern ErrorHandler_t ErrorHandler;
 void Error_Handler_Init(void);
 
 /**
- * @brief Manejador estándar para capturar fallos de Software en caliente.
- * @note Esta función utiliza el atributo @c naked para evitar la alteración del prólogo de pila.
+ * @brief Intercepta de manera profesional el Error_Handler por software.
+ * @note Enlazado mediante la bandera -Wl,--wrap=Error_Handler
  * @return void
  */
-__attribute__((naked)) void Error_Handler(void);
+void __wrap_Error_Handler(void);
 
 /**
- * @brief Vector ISR interrupción nativa: HardFault_Handler.
+ * @brief Vector ISR interceptado de forma nativa: HardFault_Handler.
  * @note Implementada en ensamblador (@c naked) para extraer el puntero de pila nativo.
  * @return void
  */
-__attribute__((naked)) void HardFault_Handler(void);
+__attribute__((naked)) void __wrap_HardFault_Handler(void);
 
 /**
- * @brief Vector ISR interrupción nativa: UsageFault_Handler.
+ * @brief Vector ISR interceptado de forma nativa: UsageFault_Handler.
  * @note Implementada en ensamblador (@c naked) para extraer el puntero de pila nativo.
  * @return void
  */
-__attribute__((naked)) void UsageFault_Handler(void);
+__attribute__((naked)) void __wrap_UsageFault_Handler(void);
 
 /**
- * @brief Vector ISR interrupción nativa: BusFault_Handler.
+ * @brief Vector ISR interceptado de forma nativa: BusFault_Handler.
  * @note Implementada en ensamblador (@c naked) para extraer el puntero de pila nativo.
  * @return void
  */
-__attribute__((naked)) void BusFault_Handler(void);
+__attribute__((naked)) void __wrap_BusFault_Handler(void);
 
 /**
- * @brief Vector ISR interrupción nativa: MemManage_Handler.
+ * @brief Vector ISR interceptado de forma nativa: MemManage_Handler.
  * @note Implementada en ensamblador (@c naked) para extraer el puntero de pila nativo.
  * @return void
  */
-__attribute__((naked)) void MemManage_Handler(void);
+__attribute__((naked)) void __wrap_MemManage_Handler(void);
 
 #endif /* __ERRORHANDLER_H */

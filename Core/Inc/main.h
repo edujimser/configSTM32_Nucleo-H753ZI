@@ -28,7 +28,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
-#include "Error/ErrorHandler.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -51,16 +50,25 @@ extern "C" {
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
+void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define STATUS_LED_VERDE_Pin GPIO_PIN_0
+#define STATUS_LED_VERDE_GPIO_Port GPIOB
+#define SDMMC1_CD_Pin GPIO_PIN_11
+#define SDMMC1_CD_GPIO_Port GPIOF
+#define STATUS_LED_ROJO_Pin GPIO_PIN_14
+#define STATUS_LED_ROJO_GPIO_Port GPIOB
 #define STLINK_RX_Pin GPIO_PIN_8
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9
 #define STLINK_TX_GPIO_Port GPIOD
+#define STATUS_LED_AMARILLO_Pin GPIO_PIN_1
+#define STATUS_LED_AMARILLO_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

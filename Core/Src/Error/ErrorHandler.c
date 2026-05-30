@@ -1,6 +1,7 @@
 /**
  * @file ErrorHandler.c
  * @brief Implementación del motor de diagnóstico y procesadores de pánico de CPU.
+ * @note Adaptado para interceptación mediante Linker Flags (__wrap_).
  */
 
 #include "Error/ErrorHandler.h"
@@ -49,8 +50,6 @@ LedConfig_t configErrorLed = {
 
 /**
  * @brief Configura el bloque de control del sistema (SCB) de ARM Cortex-M7.
- * @details Habilita explícitamente los atrapadores de fallos de hardware intermedios
- * (Usage, Bus y MemManage) y activa el trap automático para divisiones enteras por cero.
  */
 void Error_Handler_Init(void)
 {
@@ -64,16 +63,13 @@ void Error_Handler_Init(void)
 }
 
 /* ========================================================================= */
-/* --- MANEJADOR DE ERRORES DE SOFTWARE                                  --- */
+/* --- MANEJADOR DE ERRORES DE SOFTWARE INTERCEPTADO                     --- */
 /* ========================================================================= */
 
 /**
- * @brief Captura y procesa un error crítico provocado intencionadamente por software.
- * @details Vuelca de manera estructurada los datos guardados en la estructura global
- * ErrorHandler a través del terminal serie (printf), bloquea las ITs y 
- * fija el LED perimetral en Rojo Seguro.
+ * @brief Intercepta y procesa el Error_Handler provocado por software.
  */
-void Error_Handler(void)
+void __wrap_Error_Handler(void)
 {
   ErrorHandler.timestamp = HAL_GetTick(); // Marca de tiempo del error (en ms desde el arranque)
 
@@ -130,13 +126,13 @@ void Error_Handler(void)
 }
 
 /* ========================================================================= */
-/* --- EXCEPCIÓN HARDFAULT                                               --- */
+/* --- EXCEPCIÓN HARDFAULT INTERCEPTADA                                  --- */
 /* ========================================================================= */
 
 /**
- * @brief Entrada en bajo nivel (Asm) de la excepción HardFault.
+ * @brief Entrada en bajo nivel (Asm) de la excepción HardFault redirigida.
  */
-__attribute__((naked)) void HardFault_Handler(void)
+__attribute__((naked)) void __wrap_HardFault_Handler(void)
 {
     __asm volatile
     (
@@ -150,7 +146,6 @@ __attribute__((naked)) void HardFault_Handler(void)
 
 /**
  * @brief Decodificador de la interrupción HardFault en C.
- * @param[in] stack Puntero a la base de la memoria del stack frame capturado.
  */
 void HardFault_Handler_C(uint32_t *stack)
 {
@@ -238,13 +233,13 @@ void HardFault_Handler_C(uint32_t *stack)
 }
 
 /* ========================================================================= */
-/* --- EXCEPCIÓN USAGEFAULT                                              --- */
+/* --- EXCEPCIÓN USAGEFAULT INTERCEPTADA                                 --- */
 /* ========================================================================= */
 
 /**
- * @brief Entrada en bajo nivel (Asm) de la excepción UsageFault.
+ * @brief Entrada en bajo nivel (Asm) de la excepción UsageFault redirigida.
  */
-__attribute__((naked)) void UsageFault_Handler(void)
+__attribute__((naked)) void __wrap_UsageFault_Handler(void)
 {
     __asm volatile (
         "tst lr, #4 \n"          
@@ -257,7 +252,6 @@ __attribute__((naked)) void UsageFault_Handler(void)
 
 /**
  * @brief Decodificador de la interrupción UsageFault en C.
- * @param[in] stack Puntero a la base de la memoria del stack frame capturado.
  */
 void UsageFault_Handler_C(uint32_t *stack)
 {
@@ -365,13 +359,13 @@ void UsageFault_Handler_C(uint32_t *stack)
 }
 
 /* ========================================================================= */
-/* --- EXCEPCIÓN BUSFAULT                                                --- */
+/* --- EXCEPCIÓN BUSFAULT INTERCEPTADA                                   --- */
 /* ========================================================================= */
 
 /**
- * @brief Entrada en bajo nivel (Asm) de la excepción BusFault.
+ * @brief Entrada en bajo nivel (Asm) de la excepción BusFault redirigida.
  */
-__attribute__((naked)) void BusFault_Handler(void)
+__attribute__((naked)) void __wrap_BusFault_Handler(void)
 {
     __asm volatile
     (
@@ -385,7 +379,6 @@ __attribute__((naked)) void BusFault_Handler(void)
 
 /**
  * @brief Decodificador de la interrupción BusFault en C.
- * @param[in] stack Puntero a la base de la memoria del stack frame capturado.
  */
 void BusFault_Handler_C(uint32_t *stack)
 {
@@ -436,7 +429,7 @@ void BusFault_Handler_C(uint32_t *stack)
 
     if (cfsr & SCB_CFSR_BFARVALID_Msk)
     {
-        static char desc_con_direccion[128];
+        static char desc_con_direccion[256];
         snprintf(desc_con_direccion, sizeof(desc_con_direccion), "%s [Direccion del fallo: 0x%08lX]", ErrorHandler.description, bfar);
         ErrorHandler.description = desc_con_direccion;
     }
@@ -504,13 +497,13 @@ void BusFault_Handler_C(uint32_t *stack)
 }
 
 /* ========================================================================= */
-/* --- EXCEPCIÓN MEMMANAGE (MPU)                                         --- */
+/* --- EXCEPCIÓN MEMMANAGE (MPU) INTERCEPTADA                            --- */
 /* ========================================================================= */
 
 /**
- * @brief Entrada en bajo nivel (Asm) de la excepción MemManage.
+ * @brief Entrada en bajo nivel (Asm) de la excepción MemManage redirigida.
  */
-__attribute__((naked)) void MemManage_Handler(void)
+__attribute__((naked)) void __wrap_MemManage_Handler(void)
 {
     __asm volatile
     (
@@ -518,13 +511,12 @@ __attribute__((naked)) void MemManage_Handler(void)
         "ite eq                            \n" 
         "mrseq r0, msp                     \n" 
         "mrsne r0, psp                     \n" 
-        "b MemManage_Handler_C             \n" 
+        "b MemManage_Handler_C              \n" 
     );
 }
 
 /**
  * @brief Decodificador de la interrupción MemManage en C.
- * @param[in] stack Puntero a la base de la memoria del stack frame capturado.
  */
 void MemManage_Handler_C(uint32_t *stack)
 {

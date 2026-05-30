@@ -48,17 +48,10 @@ void MX_RTC_Init(void)
   hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
   hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
-
-if (HAL_RTC_Init(&hrtc) != HAL_OK)
-{
-  ErrorHandler.file        = __FILE__;
-  ErrorHandler.function    = __func__;
-  ErrorHandler.line        = __LINE__;
-  ErrorHandler.err_code    = ERR_RTC_INIT; // Código único para el RTC
-  ErrorHandler.err_name    = "RTC_INIT_FAULT";
-  ErrorHandler.description = "Fallo en la inicializacion del reloj de tiempo real (RTC).";
-  Error_Handler();
-}
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
@@ -79,20 +72,11 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+      Error_Handler();
+    }
 
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
-    /* Rellenamos la estructura ErrorHandler */
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_RTC_INIT; // Código para relojes periféricos
-    ErrorHandler.err_name    = "PERIPH_CLOCK_FAULT";
-    ErrorHandler.description = "Fallo al configurar las fuentes de reloj de los perifericos (PLL2/PLL3).";
-
-    /* Ejecutamos el bloqueo del sistema e impresión */
-    Error_Handler();
-  }
     /* RTC clock enable */
     __HAL_RCC_RTC_ENABLE();
   /* USER CODE BEGIN RTC_MspInit 1 */

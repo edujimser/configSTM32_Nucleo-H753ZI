@@ -49,51 +49,20 @@ void MX_USART3_UART_Init(void)
   huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
   huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-
   if (HAL_UART_Init(&huart3) != HAL_OK)
   {
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_UART3_INIT; 
-    ErrorHandler.err_name    = "UART3_INIT_FAULT";
-    ErrorHandler.description = "Fallo en la configuracion basica de UART3 (Baudios/Pines).";
     Error_Handler();
   }
-
-  /* 2. Umbral del FIFO de Transmisión */
   if (HAL_UARTEx_SetTxFifoThreshold(&huart3, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_UART3_TX_FIFO;
-    ErrorHandler.err_name    = "UART3_TX_FIFO_FAULT";
-    ErrorHandler.description = "Fallo al establecer el umbral del FIFO de transmision.";
     Error_Handler();
   }
-
-  /* 3. Umbral del FIFO de Recepción */
   if (HAL_UARTEx_SetRxFifoThreshold(&huart3, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
   {
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_UART3_RX_FIFO;
-    ErrorHandler.err_name    = "UART3_RX_FIFO_FAULT";
-    ErrorHandler.description = "Fallo al establecer el umbral del FIFO de recepcion.";
     Error_Handler();
   }
-
-  /* 4. Desactivación del modo FIFO */
   if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK)
   {
-    ErrorHandler.file        = __FILE__;
-    ErrorHandler.function    = __func__;
-    ErrorHandler.line        = __LINE__;
-    ErrorHandler.err_code    = ERR_UART3_FIFO_DISABLE;
-    ErrorHandler.err_name    = "UART3_FIFO_DISABLE_FAULT";
-    ErrorHandler.description = "Fallo al intentar desactivar el modo FIFO en UART3.";
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
@@ -118,13 +87,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
     PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    { 
-      ErrorHandler.file        = __FILE__;
-      ErrorHandler.function    = __func__;
-      ErrorHandler.line        = __LINE__;
-      ErrorHandler.err_code    = ERR_UART3_CLK_CONFIG;
-      ErrorHandler.err_name    = "UART3_CLK_CONFIG_FAULT";
-      ErrorHandler.description = "Fallo al configurar la fuente de reloj para UART3.";
+    {
       Error_Handler();
     }
 
