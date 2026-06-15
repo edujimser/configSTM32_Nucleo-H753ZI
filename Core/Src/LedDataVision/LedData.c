@@ -239,6 +239,7 @@ void applyLedConfiguration(LedConfig_t *config) {
  */
 void StartGreenYellowRedTask(void *argument) {
 
+
     /* --- 1. PREPARACIÓN Y VALIDACIÓN DE SEGURIDAD DE DATOS --- */
     LedConfig_t *config = (LedConfig_t *)argument;
 

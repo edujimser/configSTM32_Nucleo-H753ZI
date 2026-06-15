@@ -8,6 +8,7 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "dma.h"
 #include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
@@ -21,7 +22,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 
 /* USER CODE END PTD */
 
@@ -41,8 +41,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
-
+extern osThreadId_t logTaskHandle;
+extern UART_HandleTypeDef huart3;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,16 +95,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_RTC_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
-
+  char msg[] = "PRUEBA_DIRECTA\r\n";
+  HAL_UART_Transmit(&huart3, (uint8_t*)msg, 16, 1000);
 
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */

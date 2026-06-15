@@ -24,7 +24,6 @@
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "LedDataVision/LedData.h"
@@ -48,16 +47,17 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 
+// LOG -----------------------------------------------------------------
+
 osThreadId_t TaskNormalStatusSystem;
 const osThreadAttr_t StartGreenYellowRedTask_attributes = {
   .name = "TaskNormalStatusSystem",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityLow1 ,
+  .priority = (osPriority_t) osPriorityLow ,
 };
 
 /* USER CODE END Variables */
-
-
+/* Definitions for defaultTask */
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,14 +92,15 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  TaskNormalStatusSystem = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &StartGreenYellowRedTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  TaskNormalStatusSystem = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &StartGreenYellowRedTask_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -110,7 +111,16 @@ void MX_FREERTOS_Init(void) {
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /* USER CODE END Header_StartDefaultTask */
-
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN StartDefaultTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartDefaultTask */
+}
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */

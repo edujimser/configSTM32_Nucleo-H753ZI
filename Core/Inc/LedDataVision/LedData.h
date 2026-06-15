@@ -20,6 +20,8 @@
 #include <stdbool.h> 
 #include "stm32h7xx_hal.h"    
 #include "cmsis_os2.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /* ========================================================================= */
 /* --- CONFIGURACIÓN DE HARDWARE (MAPEO DE PINES)                        --- */
