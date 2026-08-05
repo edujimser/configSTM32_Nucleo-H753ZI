@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include "LedDataVision/LedData.h"
 #include "Error/ErrorHandler.h"
+#include "MsgUart/MsgUart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +42,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-extern osThreadId_t logTaskHandle;
 extern UART_HandleTypeDef huart3;
 /* USER CODE END PV */
 
@@ -98,9 +98,8 @@ int main(void)
   MX_DMA_Init();
   MX_RTC_Init();
   MX_USART3_UART_Init();
+
   /* USER CODE BEGIN 2 */
-  char msg[] = "PRUEBA_DIRECTA\r\n";
-  HAL_UART_Transmit(&huart3, (uint8_t*)msg, 16, 1000);
 
   /* USER CODE END 2 */
 
@@ -207,7 +206,12 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART3) {
+    	// Solo envía la señal para despertar a la tarea
+         osThreadFlagsSet(UartTaskHandle, 0x0001U);
+    }
+}
 /* USER CODE END 4 */
 
 /**
