@@ -1,4 +1,5 @@
 #include <string.h>
+#include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include "FreeRTOS.h"
@@ -174,7 +175,7 @@ char MSG_Enviar_Caract_Valid(const char *texto){
 }
 
 void vTaskUartHandler(void *argument) {
-    S_UartMsg *msg;
+    S_UartMsg *msg ;
 
     for (;;) {
 
@@ -214,8 +215,13 @@ void vTaskUartHandler(void *argument) {
                             uint32_t flags = osThreadFlagsWait(0x0001U, osFlagsWaitAny, 100);
 
                             if (flags == osFlagsErrorTimeout) {
+                            	huart3.gState = HAL_UART_STATE_READY;
                                 HAL_UART_AbortTransmit(&huart3);
                             }
+                        }else {
+                            // CORRECCIÓN 3: Si HAL_UART_Transmit_DMA no devuelve HAL_OK, liberar gState
+                            HAL_UART_AbortTransmit_IT(&huart3);
+                            huart3.gState = HAL_UART_STATE_READY;
                         }
 
                         osThreadFlagsClear(0x0001U);
@@ -224,10 +230,25 @@ void vTaskUartHandler(void *argument) {
                     case HAL_UART_STATE_BUSY:
                     case HAL_UART_STATE_BUSY_TX:
                     case HAL_UART_STATE_BUSY_RX:
+
+                    	osThreadFlagsClear(0x0001U);
+						if (HAL_UART_Transmit_DMA(&huart3, (uint8_t *)msgPtr, len) == HAL_OK) {
+							uint32_t flags = osThreadFlagsWait(0x0001U, osFlagsWaitAny, 200);
+							if (flags == osFlagsErrorTimeout) {
+								HAL_UART_AbortTransmit_IT(&huart3);
+								huart3.gState = HAL_UART_STATE_READY;
+							}
+						} else {
+							HAL_UART_AbortTransmit_IT(&huart3);
+							huart3.gState = HAL_UART_STATE_READY;
+						}
+						osThreadFlagsClear(0x0001U);
+						break;
                     case HAL_UART_STATE_BUSY_TX_RX:
 
                         osThreadFlagsClear(0x0001U);
-                        HAL_UART_AbortTransmit(&huart3);
+                        HAL_UART_AbortTransmit_IT(&huart3);
+                        huart3.gState = HAL_UART_STATE_READY;
                         break;
 
                     case HAL_UART_STATE_TIMEOUT:
@@ -302,6 +323,58 @@ void vTaskUartHandler(void *argument) {
 
 
 // PRUEBAS INDIVIDUALES ======================================================================================================================
+bool pruebasEjecutadas = true;
+
+void Prueba_TX()
+{
+
+	MSG_Enviar("Hola, esto es una prueba desde una tarea de FreeRTOS!\r\n");
+	        vTaskDelay(pdMS_TO_TICKS(500));
+
+	        if (!pruebasEjecutadas)
+	        {
+	            pruebasEjecutadas = true;
+
+	            MSG_Enviar(">>> INICIANDO BATERÍA DE PRUEBAS DE ROBUSTEZ UART <<<\r\n");
+	            vTaskDelay(pdMS_TO_TICKS(5000));
+
+	            // 1) Longitud máxima superada
+	            Prueba_Longitud_Maxima();
+	            vTaskDelay(pdMS_TO_TICKS(5000));
+
+	            // 2) Mensajes vacíos y NULL
+	            Prueba_Mensajes_Vacios();
+	            vTaskDelay(pdMS_TO_TICKS(5000));
+
+	            // 3) Caracteres inválidos
+	            Prueba_Caracteres_Invalidos();
+	            vTaskDelay(pdMS_TO_TICKS(5000));
+
+	            // 4) Saturación de cola
+	            Prueba_Saturacion_Cola();
+	            vTaskDelay(pdMS_TO_TICKS(5000));
+
+	            // 5) Condición de carrera entre tareas
+	            //    (requiere que vTaskPruebaConcurrente esté creada)
+	            PruebaConcurrente_Tiempo(20000);
+	            vTaskDelay(pdMS_TO_TICKS(5000));
+
+	            // 6) Abortos DMA repetidos
+	            Prueba_Abortos_DMA_Repetidos();
+
+	            // 7) FIFO corrupta (tu prueba original)
+	            Prueba_FIFO_Corrupta();
+
+	            // 8) Puntero reutilizado
+	            Prueba_Puntero_Reutilizado();
+
+	            // 9) Latencia extrema (requiere tareas pesadas creadas)
+	            MSG_Enviar(">>> Prueba de latencia extrema (carga alta) <<<\r\n");
+	            vTaskDelay(pdMS_TO_TICKS(500));
+
+	            MSG_Enviar(">>> BATERÍA DE PRUEBAS FINALIZADA <<<\r\n");
+	        }
+}
 
 // =======================
 // 1) PRUEBA LONGITUD MÁXIMA
@@ -495,3 +568,39 @@ void Prueba_Kernel_No_Iniciado(void)
 // RECEPCION
 // ==========================================================================================================================================
 osMessageQueueId_t hUartQueueRX = NULL;
+osThreadId_t UartRXTaskHandle = NULL;
+ALIGN_32BYTES(uint8_t rxDmaBuffer[LONGITUD_MAX_UART_RX]);
+ALIGN_32BYTES(uint8_t processingBuffer[LONGITUD_MAX_UART_RX]);
+uint16_t receivedDataSize = 0;
+
+void vTaskUartRxHandler (void *argument)
+{
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    if (huart3.hdmarx != NULL) {
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_RX);
+        __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
+    }
+
+    for (;;) {
+        // Esperamos a que la ISR nos notifique que hay datos nuevos (bloqueo eficiente indefinido)
+        uint32_t notifiedValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        if (notifiedValue > 0 && receivedDataSize > 0) {
+            // Ya tenemos los datos seguros en 'processingBuffer' y su tamaño en 'receivedDataSize'
+
+            if (receivedDataSize >= 4) {
+                if (strncmp((char *)processingBuffer, "PRUEBA TX", 9) == 0) {
+                	pruebasEjecutadas = false;
+                	Prueba_TX();
+                }
+                else {
+                    MSG_Enviar("Comando no reconocido\r\n");
+                }
+            }
+
+            // Limpiamos por seguridad
+            receivedDataSize = 0;
+        }
+    }
+}

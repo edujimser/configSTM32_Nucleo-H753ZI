@@ -19,6 +19,7 @@
 #include "LedDataVision/LedData.h"
 #include "Error/ErrorHandler.h"
 #include "MsgUart/MsgUart.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,7 +101,6 @@ int main(void)
   MX_USART3_UART_Init();
 
   /* USER CODE BEGIN 2 */
-
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -206,10 +206,58 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+/* CALLBACK */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == USART3) {
     	// Solo envía la señal para despertar a la tarea
          osThreadFlagsSet(UartTaskHandle, 0x0001U);
+    }
+}
+
+
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+    if (huart->Instance == USART3) {
+
+        // 1. Obtener y limpiar inmediatamente errores de overrun, ruido, framing o paridad
+        uint32_t errorFlags = HAL_UART_GetError(huart);
+
+        if (errorFlags != HAL_UART_ERROR_NONE) {
+            // Limpiamos los flags de error directamente en los registros del periférico
+            __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
+        }
+
+        // 2. Procesar datos SOLO si la longitud recibida es válida y no vacía
+        if (Size > 0 && Size <= LONGITUD_MAX_UART_RX) {
+
+            // Invalida la línea de Caché antes de copiar datos
+            SCB_InvalidateDCache_by_Addr((uint32_t*)rxDmaBuffer, LONGITUD_MAX_UART_RX);
+
+            // Copia segura al búfer de procesamiento
+            memcpy(processingBuffer, rxDmaBuffer, Size);
+            processingBuffer[Size] = '\0';
+            receivedDataSize = Size;
+
+            // Notificación a FreeRTOS
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+            vTaskNotifyGiveFromISR(UartRXTaskHandle, &xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+
+        // 3. REARME DEL DMA:
+        // Si el estado interno de la HAL se quedó bloqueado por el evento de error,
+        // forzamos a 'HAL_UART_STATE_READY' únicamente la parte de RX antes de rearmar.
+        if (huart->RxState != HAL_UART_STATE_READY) {
+            huart->RxState = HAL_UART_STATE_READY;
+        }
+
+        // Rearmar recepción por DMA
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_RX);
+
+        // Desactivar interrupción de Half-Transfer (solo nos interesa trama completa / IDLE)
+        if (huart3.hdmarx != NULL) {
+            __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
+        }
     }
 }
 /* USER CODE END 4 */

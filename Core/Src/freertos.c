@@ -132,6 +132,9 @@ void MX_FREERTOS_Init(void) {
 	// 1. Tarea de UartTask (Prioridad: 16 - Below Normal)
 	UartTaskHandle = osThreadNew(vTaskUartHandler, NULL, &UartTask_attr);
 
+	// 1. Tarea de UartTask (Prioridad: 16 - Below Normal)
+	UartRXTaskHandle = osThreadNew(vTaskUartRxHandler, NULL, &UartTask_attr_RX);
+
 	// 2. Tarea de Prueba (Prioridad: 9 - Low + 1)
 	TaskPrueba = osThreadNew(vTaskPrueba, NULL, &TaskPuerba_attr);
 
@@ -153,56 +156,10 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE BEGIN Application */
 void vTaskPrueba(void *argument)
 {
-    static bool pruebasEjecutadas = false;
-
     for (;;)
     {
-        MSG_Enviar("Hola, esto es una prueba desde una tarea de FreeRTOS!\r\n");
-        vTaskDelay(pdMS_TO_TICKS(500));
-
-        if (!pruebasEjecutadas)
-        {
-            pruebasEjecutadas = true;
-
-            MSG_Enviar(">>> INICIANDO BATERÍA DE PRUEBAS DE ROBUSTEZ UART <<<\r\n");
-            vTaskDelay(pdMS_TO_TICKS(5000));
-
-            // 1) Longitud máxima superada
-            Prueba_Longitud_Maxima();
-            vTaskDelay(pdMS_TO_TICKS(5000));
-
-            // 2) Mensajes vacíos y NULL
-            Prueba_Mensajes_Vacios();
-            vTaskDelay(pdMS_TO_TICKS(5000));
-
-            // 3) Caracteres inválidos
-            Prueba_Caracteres_Invalidos();
-            vTaskDelay(pdMS_TO_TICKS(5000));
-
-            // 4) Saturación de cola
-            Prueba_Saturacion_Cola();
-            vTaskDelay(pdMS_TO_TICKS(5000));
-
-            // 5) Condición de carrera entre tareas
-            //    (requiere que vTaskPruebaConcurrente esté creada)
-            PruebaConcurrente_Tiempo(20000);
-            vTaskDelay(pdMS_TO_TICKS(5000));
-
-            // 6) Abortos DMA repetidos
-            Prueba_Abortos_DMA_Repetidos();
-
-            // 7) FIFO corrupta (tu prueba original)
-            Prueba_FIFO_Corrupta();
-
-            // 8) Puntero reutilizado
-            Prueba_Puntero_Reutilizado();
-
-            // 9) Latencia extrema (requiere tareas pesadas creadas)
-            MSG_Enviar(">>> Prueba de latencia extrema (carga alta) <<<\r\n");
-            vTaskDelay(pdMS_TO_TICKS(500));
-
-            MSG_Enviar(">>> BATERÍA DE PRUEBAS FINALIZADA <<<\r\n");
-        }
+    	Prueba_TX();
+    	osDelay(5000);
     }
 }
 

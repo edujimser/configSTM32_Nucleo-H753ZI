@@ -26,6 +26,8 @@
 
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_tx;
+DMA_HandleTypeDef hdma_usart3_rx;
+
 
 /* USART3 init function */
 
@@ -130,7 +132,22 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
   /* USER CODE BEGIN USART3_MspInit 1 */
+    hdma_usart3_rx.Instance = DMA1_Stream1;
+	hdma_usart3_rx.Init.Request = DMA_REQUEST_USART3_RX;
+	hdma_usart3_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_usart3_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_usart3_rx.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_usart3_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_usart3_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_usart3_rx.Init.Mode = DMA_NORMAL;
+	hdma_usart3_rx.Init.Priority = DMA_PRIORITY_LOW;
+	hdma_usart3_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	if (HAL_DMA_Init(&hdma_usart3_rx) != HAL_OK)
+	{
+	  Error_Handler();
+	}
 
+	__HAL_LINKDMA(uartHandle, hdmarx, hdma_usart3_rx);
   /* USER CODE END USART3_MspInit 1 */
   }
 }
