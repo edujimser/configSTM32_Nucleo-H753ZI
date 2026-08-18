@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include "MsgUart/TxUart/TxUart.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "main.h"
@@ -30,9 +31,10 @@
 /* USER CODE BEGIN Includes */
 #include "queue.h"
 #include "LedDataVision/LedData.h"
-#include "MsgUart/MsgUart.h"
 #include "usart.h"
 #include "stm32h7xx_hal_uart.h"
+#include "MsgUart/TestUart/TestUart.h"
+#include "MsgUart/RxUart/RxUart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +54,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+extern I_TestUart TestUart_1;
+
+
 // Tarea: TaskPrueba
 // Prioridad: osPriorityLow1 (Valor: 9)
 osThreadId_t TaskPrueba;
@@ -74,7 +79,7 @@ const osThreadAttr_t StartGreenYellowRedTask_attributes = {
 // Prioridad: osPriorityBelowNormal (Valor: 16)
 const osThreadAttr_t UartTask_attr = {
   .name = "TaskUartHandle",
-  .stack_size = 256 * 4,
+  .stack_size = 256 * 6,
   .priority = (osPriority_t) osPriorityBelowNormal,
 };
 
@@ -82,7 +87,7 @@ const osThreadAttr_t UartTask_attr = {
 // Prioridad: osPriorityBelowNormal (Valor: 16)
 const osThreadAttr_t UartTask_attr_RX = {
   .name = "TaskUartHandleRX",
-  .stack_size = 256 * 2,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityBelowNormal,
 };
 /* USER CODE END Variables */
@@ -158,8 +163,8 @@ void vTaskPrueba(void *argument)
 {
     for (;;)
     {
-    	Prueba_TX();
-    	osDelay(5000);
+    	MSG_Enviar("Sistema Corriendo \r\n", TestUart_1);
+    	osDelay(3000);
     }
 }
 

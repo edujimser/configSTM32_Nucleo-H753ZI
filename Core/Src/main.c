@@ -5,6 +5,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include "MsgUart/TxUart/TxUart.h"
 #include "main.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
@@ -18,7 +19,8 @@
 #include <stdio.h>
 #include "LedDataVision/LedData.h"
 #include "Error/ErrorHandler.h"
-#include "MsgUart/MsgUart.h"
+#include "MsgUart/TestUart/TestUart.h"
+#include "MsgUart/RxUart/RxUart.h"
 #include <string.h>
 /* USER CODE END Includes */
 
@@ -44,6 +46,7 @@
 
 /* USER CODE BEGIN PV */
 extern UART_HandleTypeDef huart3;
+I_TestUart TestUart_1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,10 +104,11 @@ int main(void)
   MX_USART3_UART_Init();
 
   /* USER CODE BEGIN 2 */
+  TestUart_1 = TestUart_Init(false);
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+  osKernelInitialize();
   MX_FREERTOS_Init();
 
   /* Start scheduler */
