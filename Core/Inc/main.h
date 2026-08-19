@@ -67,6 +67,8 @@ void Error_Handler(void);
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9
 #define STLINK_TX_GPIO_Port GPIOD
+#define SPI1_CS_Pin GPIO_PIN_14
+#define SPI1_CS_GPIO_Port GPIOD
 #define STATUS_LED_AMARILLO_Pin GPIO_PIN_1
 #define STATUS_LED_AMARILLO_GPIO_Port GPIOE
 

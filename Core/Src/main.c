@@ -5,12 +5,12 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "MsgUart/TxUart/TxUart.h"
 #include "main.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
 #include "dma.h"
 #include "rtc.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -21,6 +21,7 @@
 #include "Error/ErrorHandler.h"
 #include "MsgUart/TestUart/TestUart.h"
 #include "MsgUart/RxUart/RxUart.h"
+#include "MsgUart/TxUart/TxUart.h"
 #include <string.h>
 /* USER CODE END Includes */
 
@@ -102,13 +103,13 @@ int main(void)
   MX_DMA_Init();
   MX_RTC_Init();
   MX_USART3_UART_Init();
-
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   TestUart_1 = TestUart_Init(false);
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */

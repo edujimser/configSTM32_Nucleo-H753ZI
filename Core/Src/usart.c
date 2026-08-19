@@ -21,13 +21,11 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-
+DMA_HandleTypeDef hdma_usart3_rx;
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_tx;
-DMA_HandleTypeDef hdma_usart3_rx;
-
 
 /* USART3 init function */
 
