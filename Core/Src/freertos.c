@@ -34,6 +34,7 @@
 #include "MsgUart/TestUart/TestUart.h"
 #include "MsgUart/RxUart/RxUart.h"
 #include "MsgUart/TxUart/TxUart.h"
+#include "SPI_Flash_Memory/SPI_Flash_Memory.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,43 +54,54 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-extern I_TestUart TestUart_1;
+I_TestUart TestUart_1;
 extern SPI_HandleTypeDef hspi1;
 uint8_t flash_id[3] = {0, 0, 0};
 
-// Tarea: TaskPrueba
-// Prioridad: osPriorityLow1 (Valor: 9)
-osThreadId_t TaskPrueba;
-const osThreadAttr_t TaskPuerba_attr = {
-  .name = "TaskPrueba",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityLow1,
+/* ==============================================================================
+ * 1. Definición de Atributos de Tareas (Thread Attributes)
+ * ============================================================================== */
+
+const osThreadAttr_t ThreadAttr_InitTask = {
+  .name       = "Task_Init",
+  .stack_size = 512 * 4,
+  .priority   = (osPriority_t) osPriorityHigh,
 };
 
-// Tarea: TaskNormalStatusSystem
-// Prioridad: osPriorityLow (Valor: 8)
-osThreadId_t TaskNormalStatusSystem;
-const osThreadAttr_t StartGreenYellowRedTask_attributes = {
-  .name = "TaskNormalStatusSystem",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+const osThreadAttr_t ThreadAttr_Test = {
+  .name       = "Task_Test",
+  .stack_size = 256 * 12,
+  .priority   = (osPriority_t) osPriorityLow1,
 };
 
-// Tarea: UartTask
-// Prioridad: osPriorityBelowNormal (Valor: 16)
-const osThreadAttr_t UartTask_attr = {
-  .name = "TaskUartHandle",
-  .stack_size = 256 * 6,
-  .priority = (osPriority_t) osPriorityBelowNormal,
+const osThreadAttr_t ThreadAttr_StatusSystem = {
+  .name       = "Task_StatusSystem",
+  .stack_size = 256 * 4,
+  .priority   = (osPriority_t) osPriorityLow,
 };
 
-// Tarea: UartTask
-// Prioridad: osPriorityBelowNormal (Valor: 16)
-const osThreadAttr_t UartTask_attr_RX = {
-  .name = "TaskUartHandleRX",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
+const osThreadAttr_t ThreadAttr_Uart_Tx = {
+  .name       = "Task_UartTx",
+  .stack_size = 256 * 8,
+  .priority   = (osPriority_t) osPriorityBelowNormal,
 };
+
+const osThreadAttr_t ThreadAttr_Uart_Rx = {
+  .name       = "Task_UartRx",
+  .stack_size = 256 * 12,
+  .priority   = (osPriority_t) osPriorityBelowNormal,
+};
+
+/* ==============================================================================
+ * 2. Definición de Identificadores de Tareas (Thread Handles)
+ * ============================================================================== */
+
+osThreadId_t ThreadId_InitTask;
+osThreadId_t ThreadId_Test;
+osThreadId_t ThreadId_StatusSystem;
+osThreadId_t ThreadId_Uart_Tx;
+osThreadId_t ThreadId_Uart_Rx;
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -101,7 +113,9 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-void vTaskPrueba(void *argument);
+void ThreadFunc_InitTask(void *argument);
+void ThreadFunc_Test(void *argument);
+
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -131,8 +145,8 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
-	hUartQueue = osMessageQueueNew(10, sizeof(S_UartMsg *), NULL);
-	hUartQueueRX = osMessageQueueNew(10, sizeof(S_UartMsg *), NULL);
+	Queue_Uart_Tx = osMessageQueueNew(15, sizeof(S_UartMsg *), NULL);
+	Queue_Uart_Rx = osMessageQueueNew(10, sizeof(S_UartMsg *), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -140,18 +154,20 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-	// 1. Tarea de UartTask (Prioridad: 16 - Below Normal)
-	UartTaskHandle = osThreadNew(vTaskUartHandler, NULL, &UartTask_attr);
 
-	// 1. Tarea de UartTask (Prioridad: 16 - Below Normal)
-	UartRXTaskHandle = osThreadNew(vTaskUartRxHandler, NULL, &UartTask_attr_RX);
+	// 1. Tarea de Inicialización del Sistema
+	ThreadId_InitTask = osThreadNew(ThreadFunc_InitTask, NULL, &ThreadAttr_InitTask);
 
-	// 2. Tarea de Prueba (Prioridad: 9 - Low + 1)
-	TaskPrueba = osThreadNew(vTaskPrueba, NULL, &TaskPuerba_attr);
+	// 2. Tarea de Pruebas (SPI Flash)
+	ThreadId_Test = osThreadNew(ThreadFunc_Test, NULL, &ThreadAttr_Test);
 
-	// 3. Tarea de Estado del Sistema (Prioridad: 8 - Low)
-	TaskNormalStatusSystem = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &StartGreenYellowRedTask_attributes);
+	// 3. Tarea de Estado del Sistema (LEDs/Sensores)
+	ThreadId_StatusSystem = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &ThreadAttr_StatusSystem);
+
+	// 4. Tareas UART (Transmisión y Recepción)
+	ThreadId_Uart_Tx = osThreadNew(ThreadFunc_Uart_TX, NULL, &ThreadAttr_Uart_Tx);
+	ThreadId_Uart_Rx = osThreadNew(ThreadFunc_Uart_Rx, NULL, &ThreadAttr_Uart_Rx);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -175,45 +191,43 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-void vTaskPrueba(void *argument)
+
+/* ==============================================================================
+ * Implementación de las Funciones de Tarea (Thread Functions)
+ * ============================================================================== */
+
+/**
+ * @brief Tarea encargada de inicializar periféricos o módulos que requieren
+ *        el RTOS activo (ej. uso de retardos de OS, colas, etc.).
+ *        Una vez finaliza, se auto-destruye.
+ */
+void ThreadFunc_InitTask(void *argument)
 {
-    uint8_t comando = 0x09;          // Comando para leer el ID
-    uint8_t flash_id[3] = {0, 0, 0}; // Aquí recibimos la respuesta
-    char mensaje_id[64];             // Buffer para el texto (64 letras son más que suficientes)
+  TestUart_1 = TestUart_Init(false);
+  osDelay(10);
 
-    // 1. Asegurar que el chip está "deseleccionado" (en Alto) al arrancar
-    HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-    osDelay(10);
+  Flash_Init(&spi_flash_memory_1, &hspi1, SPI1_CS_GPIO_Port, SPI1_CS_Pin, true);
 
+  osDelay(10);
+
+  osThreadExit();
+}
+
+
+/**
+ * @brief Tarea de pruebas continuas. En este caso, verifica la comunicación
+ *        SPI con la memoria Flash periódicamente.
+ */
+void ThreadFunc_Test(void *argument)
+{
     for (;;)
-        {
-            HAL_StatusTypeDef estado;
-            // Enviamos el comando 0x9F seguido de 3 ceros vacíos para "empujar" la respuesta
-            uint8_t datos_tx[4] = {0x9F, 0x00, 0x00, 0x00};
-            uint8_t datos_rx[4] = {0, 0, 0, 0};             // Aquí recibiremos todo
+    {
+    	osDelay(5000);
 
-            MSG_Enviar("\r\n--- Leyendo SPI --- \r\n", TestUart_1);
+    	Flash_Read_ID(&spi_flash_memory_1);
 
-            HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-            osDelay(1);
-
-            // Esta función envía y recibe los 4 bytes simultáneamente
-            estado = HAL_SPI_TransmitReceive(&hspi1, datos_tx, datos_rx, 4, 100);
-
-            HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-
-            if (estado == HAL_OK) {
-                // El byte [0] será basura. El ID real de la memoria estará en [1], [2] y [3]
-            	snprintf(mensaje_id, sizeof(mensaje_id),
-            	         "Bytes recibidos: [%02X] [%02X] [%02X] [%02X] \r\n",
-            	         datos_rx[0], datos_rx[1], datos_rx[2], datos_rx[3]);
-            	MSG_Enviar(mensaje_id, TestUart_1);
-            } else {
-                MSG_Enviar("Error de timeout SPI\r\n", TestUart_1);
-            }
-
-            osDelay(1000);
-        }
+        osDelay(5000);
+    }
 }
 
 /* USER CODE END Application */

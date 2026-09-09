@@ -17,33 +17,35 @@
 uint32_t Stack_libre_uarth;
 uint32_t Stack_libre_uarth_critic;
 extern I_TestUart TestUart_1;
+osMessageQueueId_t Queue_Uart_Tx = NULL;
 
-osMessageQueueId_t hUartQueue = NULL;
-osThreadId_t UartTaskHandle = NULL;
 
 void MSG_Enviar(const char *texto, I_TestUart TestUart) {
 	if(TestUart_GetStatus(TestUart) == ESTADO_CORRIENDO) return;
 
-    // 1. Comprobación: el kernel debe estar en ejecución.
+    // Comprobación: el kernel debe estar en ejecución.
     //    Si FreeRTOS aún no ha arrancado, no podemos usar colas.
     if (osKernelGetState() != osKernelRunning) return;
 
-    // 2. Comprobación: la cola debe existir.
+    // Comprobación: la cola debe existir.
     //    Si la cola no está creada, no enviamos nada.
-    if (hUartQueue == NULL) return;
+    if (Queue_Uart_Tx == NULL) return;
 
-    // 3. Comprobación: texto válido.
+    // Comprobación: texto válido.
     //    Evita punteros nulos y fallos de memoria.
     if (texto == NULL) return;
 
-    // 4. Validación de longitud máxima definida por el usuario.
+    // Validación de longitud máxima definida por el usuario.
     //    Evita mensajes demasiado grandes que saturen el heap o DMA.
     if (MSG_Enviar_Longitud_Limit(texto)) {
         MSG_Enviar_Error("Se ha superado el limite maximo de caracteres \r\n");
         return;
     }
 
-    // 5. Validación de caracteres permitidos.
+    // Comprobamos el espacio disponible de la cola
+    if(uxQueueSpacesAvailable(Queue_Uart_Tx) == 0) return;
+
+    // Validación de caracteres permitidos.
     //    Evita caracteres de control no imprimibles (excepto \n y \r).
     if (MSG_Enviar_Caract_Valid(texto)) {
         MSG_Enviar_Error("Se ha introducido un carcacter fuera de rango \r\n");
@@ -88,7 +90,7 @@ void MSG_Enviar(const char *texto, I_TestUart TestUart) {
     // ---------------------------------------------------------
     // Enviamos *el puntero a la estructura* (S_UartMsg *) a la cola.
     // La cola está configurada para almacenar punteros (sizeof(S_UartMsg *)).
-    if (osMessageQueuePut(hUartQueue, &msg, 0, UART_QUEUE_TIMEOUT_TICKS) != osOK) {
+    if (osMessageQueuePut(Queue_Uart_Tx, &msg, 0, UART_QUEUE_TIMEOUT_TICKS) != osOK) {
 
         // Si la cola está llena o falla el envío:
         // liberamos el texto y la estructura para evitar fugas de memoria.
@@ -105,7 +107,7 @@ void MSG_Enviar_Test(const char *texto) {
 
     // 2. Comprobación: la cola debe existir.
     //    Si la cola no está creada, no enviamos nada.
-    if (hUartQueue == NULL) return;
+    if (Queue_Uart_Tx == NULL) return;
 
     // 3. Comprobación: texto válido.
     //    Evita punteros nulos y fallos de memoria.
@@ -163,7 +165,7 @@ void MSG_Enviar_Test(const char *texto) {
     // ---------------------------------------------------------
     // Enviamos *el puntero a la estructura* (S_UartMsg *) a la cola.
     // La cola está configurada para almacenar punteros (sizeof(S_UartMsg *)).
-    if (osMessageQueuePut(hUartQueue, &msg, 0, UART_QUEUE_TIMEOUT_TICKS) != osOK) {
+    if (osMessageQueuePut(Queue_Uart_Tx, &msg, 0, UART_QUEUE_TIMEOUT_TICKS) != osOK) {
 
         // Si la cola está llena o falla el envío:
         // liberamos el texto y la estructura para evitar fugas de memoria.
@@ -173,17 +175,20 @@ void MSG_Enviar_Test(const char *texto) {
 }
 
 void MSG_Enviar_Error(const char *texto) {
-    // 1. Comprobación: el kernel debe estar en ejecución.
+    // Comprobación: el kernel debe estar en ejecución.
     //    Si FreeRTOS aún no ha arrancado, no podemos usar colas.
     if (osKernelGetState() != osKernelRunning) return;
 
-    // 2. Comprobación: la cola debe existir.
+    //  Comprobación: la cola debe existir.
     //    Si la cola no está creada, no enviamos nada.
-    if (hUartQueue == NULL) return;
+    if (Queue_Uart_Tx == NULL) return;
 
-    // 3. Comprobación: texto válido.
+    //  Comprobación: texto válido.
     //    Evita punteros nulos y fallos de memoria.
     if (texto == NULL) return;
+
+    // Comprobamos el espacio disponible de la cola
+    if(uxQueueSpacesAvailable(Queue_Uart_Tx) == 0) return;
 
     // ---------------------------------------------------------
 	// RESERVA DE LA ESTRUCTURA EN EL HEAP
@@ -223,7 +228,7 @@ void MSG_Enviar_Error(const char *texto) {
 	// ---------------------------------------------------------
 	// Enviamos *el puntero a la estructura* (S_UartMsg *) a la cola.
 	// La cola está configurada para almacenar punteros (sizeof(S_UartMsg *)).
-	if (osMessageQueuePut(hUartQueue, &msg, 0, UART_QUEUE_TIMEOUT_TICKS) != osOK) {
+	if (osMessageQueuePut(Queue_Uart_Tx, &msg, 0, UART_QUEUE_TIMEOUT_TICKS) != osOK) {
 
 		// Si la cola está llena o falla el envío:
 		// liberamos el texto y la estructura para evitar fugas de memoria.
@@ -252,14 +257,14 @@ char MSG_Enviar_Caract_Valid(const char *texto){
     return false;
 }
 
-void vTaskUartHandler(void *argument) {
+void ThreadFunc_Uart_TX(void *argument) {
     S_UartMsg *msg ;
 
     for (;;) {
 
         Stack_libre_uarth = osThreadGetStackSpace(osThreadGetId());
 
-        if (osMessageQueueGet(hUartQueue, &msg, NULL, osWaitForever) == osOK) {
+        if (osMessageQueueGet(Queue_Uart_Tx, &msg, NULL, osWaitForever) == osOK) {
 
         	char *msgPtr = msg->Ptr;
         	uint32_t len = msg->len;

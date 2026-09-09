@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include "MsgUart/TestUart/TestUart.h"
 
-// ==========================================================================================================================================
-// TRANSMISIÓNM
-// ==========================================================================================================================================
+// ==========================================================================================
+// DEFINICIONES DE TRANSMISIÓN UART
+// ==========================================================================================
 
-#define LONGITUD_MAX_UART               125
+#define LONGITUD_MAX_UART               256
 #define UART_QUEUE_TIMEOUT_TICKS        50
 
 typedef struct {
@@ -23,11 +23,13 @@ typedef struct {
 
 extern uint32_t Stack_libre_uarth;
 extern uint32_t Stack_libre_uarth_critic;
+extern osMessageQueueId_t Queue_Uart_Tx;
 
-extern osMessageQueueId_t hUartQueue;
-extern osThreadId_t UartTaskHandle;
 
-void vTaskUartHandler(void *argument);
+// ==========================================================================================
+// PROTOTIPOS DE FUNCIONES PÚBLICAS
+// ==========================================================================================
+void ThreadFunc_Uart_TX(void *argument);
 void MSG_Enviar(const char *texto, I_TestUart TestUart);
 void MSG_Enviar_Test(const char *texto);
 void MSG_Enviar_Error(const char *texto);

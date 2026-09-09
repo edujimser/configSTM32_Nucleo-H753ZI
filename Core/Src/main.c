@@ -22,6 +22,7 @@
 #include "MsgUart/TestUart/TestUart.h"
 #include "MsgUart/RxUart/RxUart.h"
 #include "MsgUart/TxUart/TxUart.h"
+#include "SPI_Flash_Memory/SPI_Flash_Memory.h"
 #include <string.h>
 /* USER CODE END Includes */
 
@@ -47,7 +48,7 @@
 
 /* USER CODE BEGIN PV */
 extern UART_HandleTypeDef huart3;
-I_TestUart TestUart_1;
+extern osThreadId_t ThreadId_Uart_Rx;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,7 +106,6 @@ int main(void)
   MX_USART3_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  TestUart_1 = TestUart_Init(false);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -215,7 +215,7 @@ void SystemClock_Config(void)
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == USART3) {
     	// Solo envía la señal para despertar a la tarea
-         osThreadFlagsSet(UartTaskHandle, 0x0001U);
+         osThreadFlagsSet(ThreadFunc_Uart_TX, 0x0001U);
     }
 }
 
@@ -245,7 +245,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
 
             // Notificación a FreeRTOS
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-            vTaskNotifyGiveFromISR(UartRXTaskHandle, &xHigherPriorityTaskWoken);
+            vTaskNotifyGiveFromISR(ThreadId_Uart_Rx, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
 
