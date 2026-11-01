@@ -9,6 +9,8 @@
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
 #include "dma.h"
+#include "eth.h"
+#include "rng.h"
 #include "rtc.h"
 #include "spi.h"
 #include "usart.h"
@@ -40,7 +42,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
-/* AQUÍ: Macros de preprocesador que ejecutan lógica en línea.
+/* AQUÍ: Macros de preprocesador que ejecutan lógica en línea.*/
 
 /* USER CODE END PM */
 
@@ -53,6 +55,7 @@ extern osThreadId_t ThreadId_Uart_Rx;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MPU_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 //void StartSDManagerTask(void *argument);
@@ -74,6 +77,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+
+  /* MPU Configuration--------------------------------------------------------*/
+  MPU_Config();
 
   /* Enable the CPU Cache */
 
@@ -105,6 +111,8 @@ int main(void)
   MX_RTC_Init();
   MX_USART3_UART_Init();
   MX_SPI1_Init();
+  MX_ETH_Init();
+  MX_RNG_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
@@ -224,48 +232,66 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     if (huart->Instance == USART3) {
 
-        // 1. Obtener y limpiar inmediatamente errores de overrun, ruido, framing o paridad
-        uint32_t errorFlags = HAL_UART_GetError(huart);
+        if (Size > 0 && Size <= LONGITUD_MAX_UART_TX_RX) {
+            SCB_InvalidateDCache_by_Addr((uint32_t*)rxDmaBuffer, LONGITUD_MAX_UART_TX_RX);
 
-        if (errorFlags != HAL_UART_ERROR_NONE) {
-            // Limpiamos los flags de error directamente en los registros del periférico
-            __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
-        }
-
-        // 2. Procesar datos SOLO si la longitud recibida es válida y no vacía
-        if (Size > 0 && Size <= LONGITUD_MAX_UART_RX) {
-
-            // Invalida la línea de Caché antes de copiar datos
-            SCB_InvalidateDCache_by_Addr((uint32_t*)rxDmaBuffer, LONGITUD_MAX_UART_RX);
-
-            // Copia segura al búfer de procesamiento
             memcpy(processingBuffer, rxDmaBuffer, Size);
             processingBuffer[Size] = '\0';
             receivedDataSize = Size;
-
-            // Notificación a FreeRTOS
-            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-            vTaskNotifyGiveFromISR(ThreadId_Uart_Rx, &xHigherPriorityTaskWoken);
-            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
 
-        // 3. REARME DEL DMA:
-        // Si el estado interno de la HAL se quedó bloqueado por el evento de error,
-        // forzamos a 'HAL_UART_STATE_READY' únicamente la parte de RX antes de rearmar.
+        uint32_t errorFlags = HAL_UART_GetError(huart);
+        if (errorFlags != HAL_UART_ERROR_NONE) {
+            __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
+        }
+
         if (huart->RxState != HAL_UART_STATE_READY) {
             huart->RxState = HAL_UART_STATE_READY;
         }
 
-        // Rearmar recepción por DMA
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_RX);
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_TX_RX);
 
-        // Desactivar interrupción de Half-Transfer (solo nos interesa trama completa / IDLE)
         if (huart3.hdmarx != NULL) {
             __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
+        }
+
+        if (Size > 0 && Size <= LONGITUD_MAX_UART_TX_RX) {
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+            vTaskNotifyGiveFromISR(ThreadId_Uart_Rx, &xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
 }
 /* USER CODE END 4 */
+
+ /* MPU Configuration */
+
+void MPU_Config(void)
+{
+  MPU_Region_InitTypeDef MPU_InitStruct = {0};
+
+  /* Disables the MPU */
+  HAL_MPU_Disable();
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
+  MPU_InitStruct.BaseAddress = 0x30000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
+  MPU_InitStruct.SubRegionDisable = 0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  /* Enables the MPU */
+  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

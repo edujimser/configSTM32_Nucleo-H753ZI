@@ -241,7 +241,7 @@ char MSG_Enviar_Longitud_Limit(const char *texto){
 
 	size_t len = strlen(texto) + 1;
 
-	if(len > LONGITUD_MAX_UART){
+	if(len > LONGITUD_MAX_UART_TX){
 		return true;
 	}
 	 return false;

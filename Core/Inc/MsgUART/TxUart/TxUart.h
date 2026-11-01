@@ -13,7 +13,7 @@
 // DEFINICIONES DE TRANSMISIÓN UART
 // ==========================================================================================
 
-#define LONGITUD_MAX_UART               256
+#define LONGITUD_MAX_UART_TX            256
 #define UART_QUEUE_TIMEOUT_TICKS        50
 
 typedef struct {

@@ -1,3 +1,4 @@
+
 #include "MsgUart/TxUart/TxUart.h"
 #include <string.h>
 #include "main.h"
@@ -11,10 +12,11 @@
 #include "MsgUart/TestUart/TestUart.h"
 #include "MsgUart/RxUart/RxUart.h"
 #include "SPI_Flash_Memory/SPI_Flash_Memory.h"
+#include "SPI_Flash_Memory/SPI_Flash_Sections/SPI_flash_section_log_monitor/SPI_Flash_Logs_Monitor.h"
 
 osMessageQueueId_t Queue_Uart_Rx = NULL;
-ALIGN_32BYTES(uint8_t rxDmaBuffer[LONGITUD_MAX_UART_RX]);
-ALIGN_32BYTES(uint8_t processingBuffer[LONGITUD_MAX_UART_RX]);
+ALIGN_32BYTES(uint8_t rxDmaBuffer[LONGITUD_MAX_UART_TX_RX]);
+ALIGN_32BYTES(uint8_t processingBuffer[LONGITUD_MAX_UART_TX_RX]);
 uint16_t receivedDataSize = 0;
 extern I_TestUart TestUart_1;
 
@@ -32,7 +34,7 @@ void ThreadFunc_Uart_Rx (void *argument)
     vTaskDelay(pdMS_TO_TICKS(100));
 
     if (huart3.hdmarx != NULL) {
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_RX);
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_TX_RX);
         __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
     }
 
@@ -41,168 +43,246 @@ void ThreadFunc_Uart_Rx (void *argument)
 
         if (notifiedValue > 0 && receivedDataSize > 0) {
 
-        	if (strncmp((char *)processingBuffer, "PRUEBA_TX", 9) == 0)
-        	{
-        		Prueba_TX(TestUart_1, true);
+    	    vTaskSuspend(ThreadId_Test);
+    	    vTaskSuspend(defaultTaskHandle);
+
+        	/* ==============================================================================
+        	 * FLASH --->
+        	 * ============================================================================== */
+
+
+        	if (strncmp((char *)processingBuffer, "TEST_TX", 7) == 0) {
+        	    Prueba_TX(TestUart_1, true);
         	}
-        	else if (strncmp((char *)processingBuffer, "FLASH_ID", 8) == 0)
-        	{
-        		Flash_Read_ID(&spi_flash_memory_1);
+
+        	/* ==============================================================================
+        	 * FLASH READ --->
+        	 * ============================================================================== */
+        	else if (strncmp((char *)processingBuffer, "FLASH_READ_ALL_SECTOR_", 22) == 0) {
+
+        	    char *sub_cmd = (char *)processingBuffer + 22;
+
+        	    //FLASH_READ_ALL_SECTOR_HEX -->
+        	    if (strncmp(sub_cmd, "HEX", 3) == 0) {
+        	        Flash_CMD_UART_Read_All_Sectors(&spi_flash_memory_1, VISION_HEXADECIMAL);
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_ASCII -->
+        	    else if (strncmp(sub_cmd, "ASCII", 5) == 0) {
+        	        Flash_CMD_UART_Read_All_Sectors(&spi_flash_memory_1, VISION_ASCII);
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_DUAL -->
+        	    else if (strncmp(sub_cmd, "DUAL", 4) == 0) {
+        	        Flash_CMD_UART_Read_All_Sectors(&spi_flash_memory_1, VISION_HEXADECIMAL_AND_ASCII);
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_DIR -->
+        	    else if (strncmp(sub_cmd, "DIR ", 4) == 0) {
+        	        char *puntero_numeros = sub_cmd + 4;
+        	        int option_temp = 0;
+        	        uint32_t sectorInit_temp = 0, sectorFinal_temp = 0;
+        	        uint16_t numPage_temp;
+
+        	        if (sscanf(puntero_numeros, "%d %lu %lu %hu", &option_temp, &sectorInit_temp, &sectorFinal_temp, &numPage_temp) == 4) {
+
+        	        	numPage_temp = ((numPage_temp > GET_FLASH_NUM_PAGE) || (numPage_temp == 0)) ? GET_FLASH_NUM_PAGE : numPage_temp;
+        	        	Flash_CMD_UART_Read_Range_Sectors_Page(&spi_flash_memory_1, (E_CMD_UART_Read)option_temp, sectorInit_temp, sectorFinal_temp, numPage_temp);
+        	        }
+        	    }
+
+        	    //FLASH_READ_ALL_SECTOR_ENUM_HEX_LOAD -->
+        	    else if (strncmp(sub_cmd, "ENUM_HEX_LOAD", 13) == 0) {
+        	        Flash_CMD_UART_Read_EnumSector(&spi_flash_memory_1, VISION_HEXADECIMAL, FLASH_SECTION_LOAD);
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_ENUM_ASCII_LOAD -->
+        	    else if (strncmp(sub_cmd, "ENUM_ASCII_LOAD", 15) == 0) {
+        	        Flash_CMD_UART_Read_EnumSector(&spi_flash_memory_1, VISION_ASCII, FLASH_SECTION_LOAD);
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_ENUM_DUAL_LOAD -->
+        	    else if (strncmp(sub_cmd, "ENUM_DUAL_LOAD", 14) == 0) {
+        	        Flash_CMD_UART_Read_EnumSector(&spi_flash_memory_1, VISION_HEXADECIMAL_AND_ASCII, FLASH_SECTION_LOAD);
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_ENUM_SECTOR_HEX_LOAD -->
+        	    else if (strncmp(sub_cmd, "ENUM_SECTOR_HEX_LOAD", 20) == 0) {
+        	    	char *puntero_numeros = sub_cmd + 20;
+        	    	uint32_t sectorInit_temp = 0, sectorFinal_temp = 0;
+
+        	    	if(sscanf(puntero_numeros, "%lu %lu", &sectorInit_temp, &sectorFinal_temp) == 2){
+        	    		Flash_CMD_UART_Read_EnumSector_Sectors(&spi_flash_memory_1, VISION_HEXADECIMAL, FLASH_SECTION_LOAD, sectorInit_temp, sectorFinal_temp);
+        	    	}
+
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_ENUM_SECTOR_ASCII_LOAD -->
+        	    else if (strncmp(sub_cmd, "ENUM_SECTOR_ASCII_LOAD", 22) == 0) {
+        	    	char *puntero_numeros = sub_cmd + 22;
+        	    	uint32_t sectorInit_temp = 0, sectorFinal_temp = 0;
+
+        	    	if(sscanf(puntero_numeros, "%lu %lu", &sectorInit_temp, &sectorFinal_temp) == 2){
+        	    		Flash_CMD_UART_Read_EnumSector_Sectors(&spi_flash_memory_1, VISION_ASCII, FLASH_SECTION_LOAD, sectorInit_temp, sectorFinal_temp);
+        	    	}
+        	    }
+        	    //FLASH_READ_ALL_SECTOR_ENUM_SECTOR_DUAL_LOAD -->
+        	    else if (strncmp(sub_cmd, "ENUM_SECTOR_DUAL_LOAD", 21) == 0) {
+        	    	char *puntero_numeros = sub_cmd + 21;
+					uint32_t sectorInit_temp = 0, sectorFinal_temp = 0;
+
+					if(sscanf(puntero_numeros, "%lu %lu", &sectorInit_temp, &sectorFinal_temp) == 2){
+						Flash_CMD_UART_Read_EnumSector_Sectors(&spi_flash_memory_1, VISION_HEXADECIMAL_AND_ASCII, FLASH_SECTION_LOAD, sectorInit_temp, sectorFinal_temp);
+					}
+        	    }
+        	    else {
+        	        MSG_Enviar("\r\n[ERROR] SUBCMD FLASH DESCONOCIDO\r\n", TestUart_1);
+        	    }
+
         	}
-        	else if (strncmp((char *)processingBuffer, "FLASH_COMPONENT", 15) == 0)
-			{
-        		Flash_Read_Component(&spi_flash_memory_1);
-			}
-        	else if (strncmp((char *)processingBuffer, "FLASH_ERRARSE_ALL", 17) == 0)
-			{
-				vTaskSuspend(ThreadId_Test);
-				vTaskSuspend(defaultTaskHandle);
 
-        		Flash_Erase_All(&spi_flash_memory_1);
+        	/* ==============================================================================
+			 * FLASH ERASE --->
+			 * ============================================================================== */
+			else if (strncmp((char *)processingBuffer, "FLASH_ERASE_", 12) == 0) {
 
+				char *sub_cmd = (char *)processingBuffer + 12;
 
-        		vTaskResume(ThreadId_Test);
-        		vTaskResume(defaultTaskHandle);
-			}
-        	else if (strncmp((char *)processingBuffer, "FLASH_ERARSE_SECTOR", 19) == 0)
-			{
-
-        		vTaskSuspend(ThreadId_Test);
-        		vTaskSuspend(defaultTaskHandle);
-
-        		Flash_Erase_All_For_Sector(&spi_flash_memory_1, 4096);
-
-
-        		vTaskResume(ThreadId_Test);
-        		vTaskResume(defaultTaskHandle);
-			}
-        	else if (strncmp((char *)processingBuffer, "FLASH_WRITE_SECTOR", 18) == 0)
-			{
-
-        		vTaskSuspend(ThreadId_Test);
-        		vTaskSuspend(defaultTaskHandle);
-
-        		Flash_Write_All_Sectors_Data(&spi_flash_memory_1, 4096, 16, 0xAA);
-
-        		vTaskResume(ThreadId_Test);
-        		vTaskResume(defaultTaskHandle);
-			}
-        	else if (strncmp((char *)processingBuffer, "FLASH_WRITER_SECTOR_0", 21) == 0)
-			{
-
-        		vTaskSuspend(ThreadId_Test);
-        		vTaskSuspend(defaultTaskHandle);
-
-
-				uint8_t pequeño_buffer[64];
-				memset(pequeño_buffer, 0xFF, sizeof(pequeño_buffer));
-				const char *mi_mensaje = "Hola Garaje 49 - Dato corto";
-				memcpy(pequeño_buffer, mi_mensaje, strlen(mi_mensaje));
-
-
-        		Flash_Write_One_Sector(&spi_flash_memory_1, PART_CONFIG, GET_SECTOR_ADDR(0), pequeño_buffer, sizeof(pequeño_buffer));
-
-
-        		vTaskResume(ThreadId_Test);
-        		vTaskResume(defaultTaskHandle);
-			}
-        	else if (strncmp((char *)processingBuffer, "Flash_Dump_All_Sectors", sizeof("Flash_Dump_All_Sectors") - 1) == 0)
-			{
-
-				vTaskSuspend(ThreadId_Test);
-				vTaskSuspend(defaultTaskHandle);
-
-				Flash_Dump_All_Sectors(&spi_flash_memory_1);
-
-				vTaskResume(ThreadId_Test);
-
-			}
-        	else if (strncmp((char *)processingBuffer, "Flash_Dump_One_Sectors_Hex", sizeof("Flash_Dump_One_Sectors_Hex") - 1) == 0)
-			{
-				char *puntero_numeros = (char *)processingBuffer + 26;
-				uint32_t sector_temp = 0;
-				uint32_t page_temp = 0;
-
-				// Example Flash_Dump_One_Page_Hex 10 3
-				if (sscanf(puntero_numeros, "%lu", &sector_temp) == 1)
+				//FLASH_ERASE -->
+				if (strncmp(sub_cmd, "ALL", 3) == 0) {
+					Flash_Erase_All(&spi_flash_memory_1);
+				}
+				//FLASH_ERASE_PARTITION;
+				else if(strncmp(sub_cmd,"PARTITION", 9) == 0)
 				{
-					vTaskSuspend(ThreadId_Test);
-					vTaskSuspend(defaultTaskHandle);
+					sub_cmd = sub_cmd + 9;
+
+					uint32_t number_partition;
+
+					if(sscanf(sub_cmd, "%lu", &number_partition) == 1){
 
 
-					Flash_Dump_One_Sectors_Hex(&spi_flash_memory_1, sector_temp);
+						if(number_partition >= FLASH_SECTION_LOAD && number_partition < FLASH_SECTION_COUNT_END) {
+							Flash_Partition_ID id_partition  = (Flash_Partition_ID)number_partition;
+							Flash_Erase_Partition(&spi_flash_memory_1, id_partition);
 
-					vTaskResume(ThreadId_Test);
-					vTaskResume(defaultTaskHandle);
-			   }
-
-			}
-        	else if (strncmp((char *)processingBuffer, "Flash_Dump_One_Sectors_ASCII", sizeof("Flash_Dump_One_Sectors_ASCII") - 1) == 0)
-			{
-				char *puntero_numeros = (char *)processingBuffer + 28;
-				uint32_t sector_temp = 0;
-				uint32_t page_temp = 0;
-
-				// Example Flash_Dump_One_Page_Hex 10 3
-				if (sscanf(puntero_numeros, "%lu", &sector_temp) == 1)
+							} else {
+								MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE PARTITION DESCONOCIDA\r\n", TestUart_1);
+							}
+					}
+					else
+					{
+						MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+					}
+				}
+				else if (strncmp(sub_cmd, "ONE_", 4) == 0)
 				{
-					vTaskSuspend(ThreadId_Test);
-					vTaskSuspend(defaultTaskHandle);
+					sub_cmd = sub_cmd + 4;
+					//FLASH_ERASE_ONE_HEX_FOR_SECTOR
+				    if (strncmp(sub_cmd, "HEX_FOR_SECTOR", 14) == 0) {
+				    	char *punteros_numeros = sub_cmd + 14;
+				    	uint32_t addrCommand;
 
+				    	if (sscanf(punteros_numeros, "%lu", &addrCommand) == 1) {
+				    		Flash_Erase_One_Hex_For_Sector(&spi_flash_memory_1, addrCommand);
+						}
+				    	else
+				    	{
+							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						}
+					}
+				    //FLASH_ERASE_ONE_SECTOR_FOR_SECTOR
+				    else if (strncmp(sub_cmd, "SECTOR_FOR_SECTOR", 17) == 0) {
+				    	char *punteros_numeros = sub_cmd + 17;
+				    	uint32_t addrCommand;
 
-					Flash_Dump_One_Sectors_ASCII(&spi_flash_memory_1, sector_temp);
-
-					vTaskResume(ThreadId_Test);
-					vTaskResume(defaultTaskHandle);
-			   }
-
-			}
-        	else if (strncmp((char *)processingBuffer, "Flash_Dump_One_Page_Hex", sizeof("Flash_Dump_One_Page_Hex") - 1) == 0)
-			{
-				char *puntero_numeros = (char *)processingBuffer + 24;
-				uint32_t sector_temp = 0;
-				uint32_t page_temp = 0;
-
-				// Example Flash_Dump_One_Page_Hex 10 3
-				if (sscanf(puntero_numeros, "%lu %lu", &sector_temp, &page_temp) == 2)
+				    	if (sscanf(punteros_numeros, "%lu", &addrCommand) == 1) {
+				    		Flash_Erase_One_Hex_For_Sector(&spi_flash_memory_1, addrCommand);
+						}
+				    	else
+				    	{
+							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						}
+					}
+				    else
+				    {
+						MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+					}
+				}
+				else if (strncmp(sub_cmd, "RANGE_", 6) == 0)
 				{
-					vTaskSuspend(ThreadId_Test);
-					vTaskSuspend(defaultTaskHandle);
+					sub_cmd = sub_cmd + 6;
+					//FLASH_ERASE_ONE_HEX_FOR_SECTOR
+					if (strncmp(sub_cmd, "SECTOR_FOR_SECTOR", 17) == 0) {
+						char *punteros_numeros = sub_cmd + 17;
+						uint32_t addrInit, addrFinal;
 
+						if (sscanf(punteros_numeros, "%lu %lu", &addrInit, &addrFinal) == 2)
+						{
+							Flash_Erase_Range_Hex_For_Sector(&spi_flash_memory_1, addrInit, addrFinal);
+						}
+						else
+						{
+							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						}
+					}
+					//FLASH_ERASE_ONE_SECTR_FOR_SECTOR
+					else if (strncmp(sub_cmd, "SECTOR_FOR_SECTOR", 17) == 0) {
+						char *punteros_numeros = sub_cmd + 17;
+						uint32_t addrCommand;
 
-					Flash_Dump_One_Page_Hex(&spi_flash_memory_1, sector_temp, page_temp);
+						if (sscanf(punteros_numeros, "%lu", &addrCommand) == 1) {
+							Flash_Erase_One_Sector_For_Sector(&spi_flash_memory_1, addrCommand);
+						}
+						else
+						{
+							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						}
+					}
+					else
+					{
+						MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+					}
+				}
+				else
+				{
+					MSG_Enviar("\r\n[ERROR] SUBCMD FLASH DESCONOCIDO\r\n", TestUart_1);
+				}
 
-					vTaskResume(ThreadId_Test);
-					vTaskResume(defaultTaskHandle);
-			   }
 
 			}
-        	else if (strncmp((char *)processingBuffer, "Flash_Dump_One_Page_ASCII", sizeof("Flash_Dump_One_Page_ASCII") - 1) == 0)
-        	{
-        		char *puntero_numeros = (char *)processingBuffer + 26;
-        		uint32_t sector_temp = 0;
-        		uint32_t page_temp = 0;
+        	/* ==============================================================================
+			 * TEST --->
+			 * ============================================================================== */
+			else if(strncmp((char *)processingBuffer, "TEST_", 5) == 0)
+			{
+				char *sub_cmd = (char *)processingBuffer + 5;
 
-        	    // Example Flash_Dump_One_Page_ASCII 10 3
-        		if (sscanf(puntero_numeros, "%lu %lu", &sector_temp, &page_temp) == 2)
-        	    {
-					vTaskSuspend(ThreadId_Test);
-					vTaskSuspend(defaultTaskHandle);
+				/* ==============================================================================
+				 * TEST FLASH --->
+				 * ============================================================================== */
+				if(strncmp(sub_cmd, "FLASH_", 6) == 0){
 
-
-					Flash_Dump_One_Page_ASCII(&spi_flash_memory_1, sector_temp, page_temp);
-
-					vTaskResume(ThreadId_Test);
-					vTaskResume(defaultTaskHandle);
-        	   }
-
+					sub_cmd = sub_cmd + 6;
+					//TEST_FLASH_1
+					if (strncmp(sub_cmd, "1", 1) == 0)
+					{
+						Test_Flash_Monitor_Inject_Valid_Data(&spi_flash_memory_1);
+					}
+					//TEST_FLASH_2
+					else if(strncmp(sub_cmd, "2", 1) == 0){
+						Test_Flash_Monitor_Inject_Valid_Data_All(&spi_flash_memory_1);
+					}
+					else
+					{
+						 MSG_Enviar("COMANDO DESCONOCIDO EN TEST_FLASH", TestUart_1);
+					}
+				}
+				else
+				{
+					 MSG_Enviar("COMANDO DESCONOCIDO EN TEST_FLASH NUMBER ", TestUart_1);
+				}
+			}
+			else{
+        	    MSG_Enviar("COMANDO DESCONOCIDO EN RX", TestUart_1);
         	}
-        	else
-        	{
-				MSG_Enviar("COMANDO DESCONOCIDO EN RX", TestUart_1);
-        	}
 
-            // Limpiamos por seguridad
+    	    vTaskResume(ThreadId_Test);
+    	    vTaskResume(defaultTaskHandle);
+
             receivedDataSize = 0;
         }
     }

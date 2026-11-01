@@ -204,11 +204,14 @@ void StartDefaultTask(void *argument)
 void ThreadFunc_InitTask(void *argument)
 {
   TestUart_1 = TestUart_Init(false);
-  osDelay(10);
-
+  osDelay(100);
   Flash_Init(&spi_flash_memory_1, &hspi1, SPI1_CS_GPIO_Port, SPI1_CS_Pin, true);
+  osDelay(300);
+  Flash_Load_Init(&spi_flash_memory_1);
+  osDelay(300);
+  Flash_Monitor_Init(&spi_flash_memory_1);
+  osDelay(300);
 
-  osDelay(10);
 
   osThreadExit();
 }
@@ -224,7 +227,7 @@ void ThreadFunc_Test(void *argument)
     {
     	osDelay(5000);
 
-    	Flash_Read_ID(&spi_flash_memory_1);
+    	//Flash_Read_ID(&spi_flash_memory_1);
 
         osDelay(5000);
     }

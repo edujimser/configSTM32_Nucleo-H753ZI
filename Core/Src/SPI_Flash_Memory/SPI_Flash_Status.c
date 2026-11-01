@@ -82,7 +82,7 @@ void Flash_Read_ID(SPI_Flash_TypeDef *flash)
 
     {
 
-        char msn_buffer_local[128];
+        char msn_buffer_local[256];
 
         snprintf(msn_buffer_local, sizeof(msn_buffer_local),
                  "\r\n [SPI FLASH] [Flash_Read_ID] Analisis de Hardware Exitoso:\r\n"
@@ -151,13 +151,13 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
     uint8_t wel = (status_reg & 0x02) >> 1;
 
     {
-        char msn_buffer_local[128];
+        char msn_buffer_local[256];
 
         snprintf(msn_buffer_local, sizeof(msn_buffer_local),
-                 "\r\n========================================\r\n"
-                 " [SPI FLASH] [Flash_Read_Component] ESTADO DEL COMPONENTE\r\n"
-                 "========================================\r\n"
-                 "  - JEDEC ID Raw     : %02X %02X %02X\r\n",
+                 "\r\n=======================\r\n"
+                 " [SPI FLASH] ESTADO \r\n"
+                 "=======================\r\n"
+                 "  - JEDEC ID Raw     : %02hhX %02hhX %02hhX\r\n",
                  id_rx[0], id_rx[1], id_rx[2]);
         osDelay(TXFLASHLOG);
         MSG_Enviar(msn_buffer_local, TestUart_1);
@@ -180,14 +180,14 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
     {
         char buffer_particion[128];
 
-        for (int i = 0; i < PARTITION_COUNT; i++)
+        for (int i = 0; i < FLASH_SECTION_COUNT_END; i++)
         {
-            if (flash->partitions[i].is_configured)
+            if (flash->partitions[i].configured)
             {
                 snprintf(buffer_particion, sizeof(buffer_particion),
-                         "    -> Particion [%d] : Sectores %d a %d\r\n"
-                         "       - Sector Actual : %d\r\n"
-                         "       - Desplazamiento: %d Bytes\r\n",
+                         "    -> Particion [%d] : Sectores %l4 a %lu\r\n"
+                         "       - Sector Actual : %lu\r\n"
+                         "       - Desplazamiento: %lu Bytes\r\n",
                          i,
                          flash->partitions[i].start_sector,
                          flash->partitions[i].end_sector,
@@ -201,7 +201,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
         }
     }
 
-    // --- Bloque 4 (Cierre) ---
+
     osDelay(TXFLASHLOG);
     MSG_Enviar("========================================\r\n\r\n", TestUart_1);
     osDelay(TXFLASHLOG);

@@ -24,7 +24,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
     // =========================================================================
     // DESBLOQUEO GLOBAL DE HARDWARE (Asegurar permisos de escritura en toda la Flash)
     // =========================================================================
-    if (!Flash_Write_Enable(flash)) {
+    if (!Flash_Complement_Write_Enable(flash)) {
         MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en Write Enable para Desbloqueo.\r\n", TestUart_1);
         return false;
     }
@@ -46,7 +46,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
 
     osMutexRelease(flash->spi_mutex);
 
-    if (!Flash_Wait_For_Ready(flash, ERASE_ONE_SECTOR)) {
+    if (!Flash_Comeplement_Wait_For_Ready(flash, ERASE_ONE_SECTOR)) {
         MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando desbloqueo global.\r\n", TestUart_1);
         return false;
     }
@@ -58,7 +58,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
     // Rellenamos la parte de datos con el valor proporcionado
     memset(&packet_buffer[4], data_value, 256);
 
-    char buf_progreso[80];
+    char buf_progreso[256];
 
     // =========================================================================
     // BUCLE DE BARRIDO POR SECTORES Y PÁGINAS
@@ -67,7 +67,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
         for (uint32_t page = 0; page < pages_per_sector; ++page) {
 
             // 1. Habilitar la escritura obligatoriamente antes de CADA página
-            if (!Flash_Write_Enable(flash)) {
+            if (!Flash_Complement_Write_Enable(flash)) {
                 osDelay(TXFLASHLOG);
                 MSG_Enviar("\r\n [SPI FLASH ERROR] Error en Write Enable por página.\r\n", TestUart_1);
                 osDelay(TXFLASHLOG);
@@ -75,7 +75,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
             }
 
             // 2. Calcular la dirección física absoluta
-            uint32_t absolute_address = (sector * 4096) + (page * 256);
+            uint32_t absolute_address = (sector * FLASH_SECTION_SIZE) + (page * FLASH_PAGE_SIZE);
 
             // 3. Construir la cabecera directamente al inicio del paquete unificado
             packet_buffer[0] = 0x02; // Comando Page Program estándar
@@ -85,13 +85,15 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
 
             // 4. Proteger el bus SPI con Mutex de FreeRTOS
             if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
+
+
                 osDelay(TXFLASHLOG);
                 MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout de Mutex en escritura de página.\r\n", TestUart_1);
                 osDelay(TXFLASHLOG);
                 return false;
             }
 
-            // 5. Transmitir TODO el paquete de golpe (Comando + Dirección + 256 bytes) en una sola operación continua
+            // 5. Transmitir  el paquete de golpe (Comando + Dirección + 256 bytes) en una sola operación continua
             HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_RESET);
             HAL_StatusTypeDef estado_spi = HAL_SPI_Transmit(flash->hspi, packet_buffer, 260, WRITE_READ_NORMAL_VELOCITY);
             HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
@@ -107,7 +109,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
             }
 
             // 6. Esperar a que el chip termine de programar la página internamente (control por bit BSY)
-            if (!Flash_Wait_For_Ready(flash, WRITE_READ_NORMAL_VELOCITY)) {
+            if (!Flash_Comeplement_Wait_For_Ready(flash, WRITE_READ_NORMAL_VELOCITY)) {
                 osDelay(TXFLASHLOG);
                 MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando a que la página se escriba.\r\n", TestUart_1);
                 osDelay(TXFLASHLOG);
@@ -165,22 +167,27 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
 };
 
 
-bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partition, uint32_t sector, const uint8_t *data, uint32_t dataLenght)
+bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partition, uint32_t addr, uint32_t dataLenght , const uint8_t *data)
 {
     if (flash == NULL) {
         return false;
     }
 
     // Comprobaciones  -->
-    if (!Flash_Is_Sector_partition(flash, partition, sector)) {
+    if (!Flash_Complement_Is_Sector_partition(flash, partition, addr)) {
         osDelay(TXFLASHLOG);
         MSG_Enviar("\r\n [SPI FLASH] [Flash_Write_One_Sector] No estar particionado\r\n", TestUart_1);
         osDelay(TXFLASHLOG);
         return false;
     }
 
-    if (Flash_HaveData_Sector(flash, partition, sector)) {
-    	Flash_Erase_One_Sector(flash, partition, sector);
+    if (Flash_Complement_HaveData_Sector(flash, partition, addr)) {
+    	if(!Flash_Erase_One_Hex_For_Sector(flash, addr)){
+    		osDelay(TXFLASHLOG);
+			MSG_Enviar("\r\n [SPI FLASH] [Flash_Write_One_Sector_Partition] Fallo borrado del sector con datos\r\n", TestUart_1);
+			osDelay(TXFLASHLOG);
+			return false;
+    	}
     }
 
     if (dataLenght == 0 || dataLenght > FLASH_SECTION_SIZE || data == NULL) {
@@ -195,7 +202,7 @@ bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partiti
     osDelay(TXFLASHLOG);
 
 
-    if (!Flash_Write_Enable(flash)) {
+    if (!Flash_Complement_Write_Enable(flash)) {
     	osDelay(TXFLASHLOG);
         MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en Write Enable para Desbloqueo.\r\n", TestUart_1);
         osDelay(TXFLASHLOG);
@@ -219,7 +226,7 @@ bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partiti
 
     osMutexRelease(flash->spi_mutex);
 
-    if (!Flash_Wait_For_Ready(flash, ERASE_ONE_SECTOR)) {
+    if (!Flash_Comeplement_Wait_For_Ready(flash, ERASE_ONE_SECTOR)) {
         MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando desbloqueo global.\r\n", TestUart_1);
         return false;
     }
@@ -248,7 +255,7 @@ bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partiti
         memcpy(&packet_buffer[4], &data[offset], bytes_to_copy);
 
 
-        if (!Flash_Write_Enable(flash)) {
+        if (!Flash_Complement_Write_Enable(flash)) {
             osDelay(TXFLASHLOG);
             MSG_Enviar("\r\n [SPI FLASH ERROR] Error en Write Enable por página.\r\n", TestUart_1);
             osDelay(TXFLASHLOG);
@@ -256,7 +263,7 @@ bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partiti
         }
 
 
-        uint32_t absolute_address = (sector * 4096) + offset;
+        uint32_t absolute_address = addr + offset;
 
 
         packet_buffer[0] = FLASH_CMD_PAGE_PROGRAM;
@@ -274,11 +281,11 @@ bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partiti
 
 
         HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_RESET);
-        HAL_StatusTypeDef estado_spi = HAL_SPI_Transmit(flash->hspi, packet_buffer, 260, WRITE_READ_NORMAL_VELOCITY);
+        HAL_StatusTypeDef estado_spi = HAL_SPI_Transmit(flash->hspi, packet_buffer, 260, HAL_MAX_DELAY);
         HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
         osMutexRelease(flash->spi_mutex);
-        osDelay(10);
+
 
         if (estado_spi != HAL_OK) {
             osDelay(TXFLASHLOG);
@@ -288,19 +295,18 @@ bool Flash_Write_One_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_ID partiti
         }
 
 
-        if (!Flash_Wait_For_Ready(flash, WRITE_READ_NORMAL_VELOCITY)) {
+        if (!Flash_Comeplement_Wait_For_Ready(flash, WRITE_READ_NORMAL_VELOCITY)) {
             osDelay(TXFLASHLOG);
             MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando a que la página se escriba.\r\n", TestUart_1);
             osDelay(TXFLASHLOG);
             return false;
         }
 
-        osDelay(10);
 
 
         snprintf(buf_progreso, sizeof(buf_progreso),
                  " [SPI FLASH] Escribiendo... Sector %lu | Pág %lu \r\n",
-                 (unsigned long)sector,
+                 (unsigned long)addr,
                  (unsigned long)page);
 
         osDelay(TXFLASHLOG);
