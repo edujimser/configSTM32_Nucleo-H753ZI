@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Widgets</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/widgets">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a class="act" href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Widgets</h1>
+    <p class="dim" style="margin:-8px 0 8px">Cada tarjeta muestra el widget funcionando, y en COMO SE USA el HTML y la linea de C que necesita.</p>
+
+    <h3>LEER: de la placa a la web</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Texto</h2>
+        <span class="etq">data-v</span><span class="etq">lee</span>
+        <div class="valor"><span data-v="temp">-</span> &deg;C</div>
+        <p class="dim">Los booleanos escriben SI / NO.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;span data-v="temp"&gt;&lt;/span&gt; &amp;deg;C</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("temp", PG_WIDGETS, WV_FLOAT, 1, mi_temperatura),
+// WV_U8 WV_U16 WV_U32 WV_I32 WV_FLOAT WV_BOOL: el tipo debe ser el de tu variable</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Pantalla de puntos</h2>
+        <span class="etq">data-dot</span><span class="etq">lee</span>
+        <canvas class="dot" data-dot="temp" data-unit="&deg;C" data-digits="4" data-pitch="7"></canvas><div style="height:12px"></div><canvas class="dot" data-dot="rpm" data-unit="RPM" data-digits="4" data-pitch="4" data-color="red"></canvas>
+        <p class="dim">Letras A-Z, numeros y . - + : % / en matriz 5x7.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-dot="temp" data-unit="&amp;deg;C" data-digits="4" data-pitch="7"&gt;&lt;/canvas&gt;
+&lt;!-- data-digits: ancho fijo | data-pitch: tamano del punto | data-color="red" --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>LED y alarma</h2>
+        <span class="etq">data-led</span><span class="etq">data-alarm</span><span class="etq">lee</span>
+        <div class="fila"><span class="led" data-led="led"></span><span>LED</span></div><div class="valor" style="margin-top:14px"><span data-v="temp" data-alarm="temp" data-lo="21" data-hi="25">-</span> &deg;C</div>
+        <p class="dim">Rojo cuando la temperatura baja de 21 o sube de 25.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;span class="led" data-led="led"&gt;&lt;/span&gt;
+
+&lt;!-- se pone en rojo si sale de rango (data-alarm-st="lo" o "hi") --&gt;
+&lt;span data-v="temp" data-alarm="temp" data-lo="21" data-hi="25"&gt;&lt;/span&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("led", PG_WIDGETS, WV_BOOL, 0, mi_led),
+// WV_BOOL requiere una variable uint8_t</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Barras de carga</h2>
+        <span class="etq">data-bar</span><span class="etq">lee</span>
+        <div class="barra" data-bar="nivel" data-min="0" data-max="100"><i></i></div><div style="height:18px"></div><div class="fila" style="gap:30px;align-items:flex-end"><div class="barra v" data-bar="nivel" data-min="0" data-max="100"><i></i></div><div class="barra v" data-bar="temp" data-min="15" data-max="30" data-alarm="temp" data-hi="25"><i></i></div></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="barra"   data-bar="nivel" data-min="0" data-max="100"&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class="barra v" data-bar="temp"  data-min="15" data-max="30"&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+
+/* vars.js solo pone --p (0 a 1) en el elemento: el diseno es CSS tuyo (.barra en style.css) */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("nivel", PG_WIDGETS, WV_U8, 0, mi_nivel),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Reloj (gauge)</h2>
+        <span class="etq">data-gauge</span><span class="etq">lee</span>
+        <canvas class="gauge" data-gauge="temp" data-min="15" data-max="30" data-unit="&deg;C"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="gauge" data-gauge="temp" data-min="15" data-max="30" data-unit="&amp;deg;C"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Grafica en tiempo real</h2>
+        <span class="etq">data-chart</span><span class="etq">lee</span>
+        <canvas class="grafica" data-chart="temp,nivel" data-seconds="60"></canvas>
+        <p class="dim">El historial lo guarda el navegador: la placa solo manda el valor actual.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="grafica" data-chart="temp,nivel" data-seconds="60"&gt;&lt;/canvas&gt;
+&lt;!-- hasta 4 series | data-min / data-max opcionales (si no, escala automatica) --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Barras verticales</h2>
+        <span class="etq">data-barchart</span><span class="etq">lee</span>
+        <canvas class="barras" data-barchart="nivel,temp,brillo" data-names="Nivel,Temp,Brillo" data-min="0" data-max="100"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="barras" data-barchart="nivel,temp,brillo" data-names="Nivel,Temp,Brillo" data-min="0" data-max="100"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Horizonte artificial</h2>
+        <span class="etq">data-horizon</span><span class="etq">lee</span>
+        <canvas class="horizonte" data-horizon="pitch,roll"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="horizonte" data-horizon="pitch,roll"&gt;&lt;/canvas&gt;   &lt;!-- pitch y roll en grados --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("pitch", PG_WIDGETS, WV_FLOAT, 1, mi_pitch),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Objeto 3D (CSS)</h2>
+        <span class="etq">data-3d</span><span class="etq">lee</span>
+        <div class="escena" data-3d="pitch,yaw,roll"><div class="cubo"><div class="cara f">FRENTE</div><div class="cara b">ATRAS</div><div class="cara r">DER</div><div class="cara l">IZQ</div><div class="cara t">ARRIBA</div><div class="cara d">ABAJO</div></div></div><p class="dim">pitch <span data-v="pitch"></span>&deg; yaw <span data-v="yaw"></span>&deg; roll <span data-v="roll"></span>&deg;</p>
+        <p class="dim">3D sin librerias. Para un modelo real (three.js) hace falta la libreria dentro de la flash.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="escena" data-3d="pitch,yaw,roll"&gt;   &lt;!-- ejes X, Y, Z en grados --&gt;
+  &lt;div class="cubo"&gt; ...caras... &lt;/div&gt;
+&lt;/div&gt;
+
+/* style.css: .cubo { transform: rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz)); }
+   Cualquier cosa con transform 3D sirve: una caja, una placa, un coche... */</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Dibujo SVG que reacciona</h2>
+        <span class="etq">data-state</span><span class="etq">data-bar</span><span class="etq">lee</span>
+        <svg class="ventilador" viewBox="0 0 100 100" data-bar="rpm" data-min="0" data-max="3000" data-state="enable"><circle cx="50" cy="50" r="46" fill="none" stroke="#2b2b2b" stroke-width="2" stroke-dasharray="1 5"/><g class="aspas" fill="#f2f2f2"><path d="M50 50 C40 25 55 8 66 22 C60 32 56 42 50 50Z"/><path d="M50 50 C75 40 92 55 78 66 C68 60 58 56 50 50Z"/><path d="M50 50 C60 75 45 92 34 78 C40 68 44 58 50 50Z"/><path d="M50 50 C25 60 8 45 22 34 C32 40 42 44 50 50Z"/></g><circle class="centro" cx="50" cy="50" r="6" fill="#d71921"/></svg><p class="dim"><span data-v="rpm"></span> RPM &middot; encendido: <span data-v="enable"></span></p>
+        <p class="dim">Con data-state el valor llega al CSS como data-s: sirve para cambiar cualquier dibujo.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="ventilador" data-bar="rpm" data-min="0" data-max="3000" data-state="enable"&gt; ... &lt;/svg&gt;
+
+/* style.css: la velocidad sale de --p y el encendido de data-s (1 / 0):
+   .aspas { animation: giro calc(2.4s - var(--p) * 2.2s) linear infinite; }
+   .ventilador[data-s="0"] .aspas { animation-play-state: paused; } */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("rpm", PG_WIDGETS, WV_U16, 0, mi_rpm),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Tabla</h2>
+        <span class="etq">data-table</span><span class="etq">lee</span>
+        <table class="tabla" data-table="temp,nivel,rpm,led" data-names="Temperatura,Nivel,Velocidad,LED" data-units="C,%,rpm,"></table>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla" data-table="temp,nivel,rpm,led"
+       data-names="Temperatura,Nivel,Velocidad,LED" data-units="C,%,rpm,"&gt;&lt;/table&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Imagen segun estado</h2>
+        <span class="etq">data-img</span><span class="etq">lee</span>
+        <div class="fila"><img data-img="led" data-map="0:/off.svg,1:/on.svg" width="64" height="64" alt="estado"><span class="dim">cambia con el LED</span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;img data-img="led" data-map="0:/off.svg,1:/on.svg" width="64" height="64"&gt;
+&lt;!-- los archivos .svg/.png/.jpg se meten en la carpeta web y se empaquetan igual que el HTML --&gt;</pre></details>
+      </div>
+    </div>
+    <h3>ESCRIBIR: de la web a la placa</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Numero</h2>
+        <span class="etq">data-set</span><span class="etq r">escribe</span>
+        <div class="fila"><input type="number" step="0.5" min="10" max="35" data-set="setpoint"><span class="dim">consigna &deg;C (10 a 35)</span></div><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;input type="number" step="0.5" data-set="setpoint"&gt;</pre><pre class="codigo">// web_vars.c: variable ESCRIBIBLE (WVW) con limites minimo y maximo
+WVW("setpoint", PG_WIDGETS, WV_FLOAT, 1, mi_consigna, 10, 35),
+// la placa rechaza valores fuera de rango y variables que no sean WVW</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Deslizador</h2>
+        <span class="etq">data-set</span><span class="etq r">escribe</span>
+        <input type="range" min="0" max="100" data-set="brillo"><div class="valor" style="margin-top:8px"><span data-v="brillo">-</span> %</div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;input type="range" min="0" max="100" data-set="brillo"&gt;</pre><pre class="codigo">// web_vars.c: variable ESCRIBIBLE (WVW) con limites minimo y maximo
+WVW("brillo", PG_WIDGETS, WV_U8, 0, mi_brillo, 0, 100),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Interruptor</h2>
+        <span class="etq">data-set</span><span class="etq r">escribe</span>
+        <div class="fila"><input type="checkbox" class="sw" data-set="enable"><span data-v="enable">-</span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;input type="checkbox" class="sw" data-set="enable"&gt;</pre><pre class="codigo">// web_vars.c: variable ESCRIBIBLE (WVW) con limites minimo y maximo
+WVW("enable", PG_WIDGETS, WV_BOOL, 0, mi_enable, 0, 1),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Selector y botones de modo</h2>
+        <span class="etq">data-set</span><span class="etq r">escribe</span>
+        <select data-set="modo"><option value="0">AUTO</option><option value="1">MANUAL</option><option value="2">ECO</option></select><div class="fila" style="margin-top:14px"><button class="btn fino" data-set="modo" data-value="0">AUTO</button><button class="btn fino" data-set="modo" data-value="1">MANUAL</button><button class="btn fino" data-set="modo" data-value="2">ECO</button></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;select data-set="modo"&gt; &lt;option value="0"&gt;AUTO&lt;/option&gt; ... &lt;/select&gt;
+
+&lt;!-- boton que pone un valor fijo; el activo recibe la clase "sel" --&gt;
+&lt;button class="btn fino" data-set="modo" data-value="1"&gt;MANUAL&lt;/button&gt;</pre><pre class="codigo">// web_vars.c: variable ESCRIBIBLE (WVW) con limites minimo y maximo
+WVW("modo", PG_WIDGETS, WV_U8, 0, mi_modo, 0, 2),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Botones de comando</h2>
+        <span class="etq">data-cmd</span><span class="etq r">escribe</span>
+        <div class="fila"><button class="btn" data-cmd="toggle_led">CAMBIAR LED</button><button class="btn fino" data-cmd="reset_cont">RESET CONTADOR</button><button class="btn rojo" data-cmd="saludo" data-arg="hola desde la web">SALUDO</button></div>
+        <p class="dim">El comando corre en el hilo de red: pon un flag o manda un mensaje a tu hilo.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button class="btn" data-cmd="toggle_led"&gt;CAMBIAR LED&lt;/button&gt;
+&lt;button class="btn" data-cmd="saludo" data-arg="texto opcional"&gt;SALUDO&lt;/button&gt;</pre><pre class="codigo">// web_vars.c, seccion 4
+static void cmd_arrancar(const char *arg) { flag_arrancar = 1; }   // corta, sin esperas
+static const WebCmd_t web_cmds[] = { {"arrancar", cmd_arrancar}, ... };</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Terminal (UART / consola)</h2>
+        <span class="etq">data-terminal</span><span class="etq r">escribe</span><span class="etq">lee</span>
+        <div data-terminal></div><p class="dim">Prueba: help, led, cont</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-terminal&gt;&lt;/div&gt;</pre><pre class="codigo">// web_vars.c, seccion 5
+void WebTerm_OnLine(const char *line) {          // web -&gt; placa
+  HAL_UART_Transmit(&amp;huart3, (uint8_t*)line, strlen(line), 100);
+}
+
+// en tu codigo, cuando la UART recibe una linea:     placa -&gt; web
+WebTerm_Print(linea_recibida);    // desde cualquier hilo, NO desde una interrupcion</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Subir archivo</h2>
+        <span class="etq">data-upload</span><span class="etq r">escribe</span>
+        <div data-upload data-max="2048"></div>
+        <p class="dim">Maximo 2048 bytes en esta demo. La subida usa HTTP POST /api/upload.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-upload data-max="2048"&gt;&lt;/div&gt;   &lt;!-- data-name="config.txt" fuerza el nombre --&gt;</pre><pre class="codigo">// web_vars.c, seccion 6   (archivo completo en RAM, maximo WEBFILE_MAX_UPLOAD = 16 KB)
+int WebFile_Upload(const char *name, const uint8_t *data, size_t len, char *reply, size_t rsize) {
+  // aqui guardas en flash / SD o interpretas el archivo
+  return 0;   // 0 = ok
+}</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Descargar archivo</h2>
+        <span class="etq">enlace</span><span class="etq">lee</span>
+        <div class="fila"><a class="btn" href="/api/download?name=datos.csv" download>DESCARGAR CSV</a><a class="btn fino" href="/api/download?name=subido.bin" download>LO ULTIMO SUBIDO</a></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;a class="btn" href="/api/download?name=datos.csv" download&gt;DESCARGAR CSV&lt;/a&gt;</pre><pre class="codigo">// web_vars.c, seccion 6: tu decides que nombres existen y que devuelven
+int WebFile_Download(const char *name, const uint8_t **data, size_t *len, const char **mime) {
+  if (strcmp(name, "log.txt") == 0) { *data = log_buf; *len = log_len; *mime = "text/plain"; return 0; }
+  return -1;   // no existe
+}</pre></details>
+      </div>
+    </div>
+    <h3>TUYO: widgets propios</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Widget con tu codigo JS</h2>
+        <span class="etq">VARS.widget</span>
+        <div class="valor"><span data-doble="temp">-</span> <span class="dim">(temp x 2)</span></div>
+        <p class="dim">Con esto puedes dibujar lo que quieras: SVG, canvas, three.js...</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;span data-doble="temp"&gt;&lt;/span&gt;
+
+&lt;script&gt;
+  VARS.widget("data-doble", function (el, d, todos) {
+    var v = d[el.getAttribute("data-doble")];   // d = valores que acaban de llegar
+    if (typeof v === "number") el.textContent = (v * 2).toFixed(1);
+  });
+  // window.onVars = function (d) { ... }  recibe cada mensaje completo
+&lt;/script&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Conexion</h2>
+        <span class="etq">data-estado</span>
+        <div data-estado>conectando...</div><p class="dim">Respuesta de la placa: <span data-msg>&nbsp;</span></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-estado&gt;&lt;/div&gt;   &lt;!-- conectado / desconectado --&gt;
+&lt;span data-msg&gt;&lt;/span&gt;      &lt;!-- ultima respuesta de la placa --&gt;</pre></details>
+      </div>
+    </div>
+    <h3>Pasos para cualquier widget</h3>
+    <div class="tarjeta"><p>
+      1. En <b>web_vars.c</b> registra la variable con una linea (<b>WV</b> si solo se lee, <b>WVW</b> si la web puede cambiarla).<br>
+      2. En tu HTML pon el atributo <b>data-xxx="ID"</b> en un elemento.<br>
+      3. Compila la placa. Si has cambiado un HTML, regenera <b>packed_fs.c</b> con el empaquetador.
+    </p></div>
+  </main>
+
+  <script src="/vars.js"></script>
+  <script>
+    VARS.widget('data-doble', function (el, d) {
+      var v = d[el.getAttribute('data-doble')];
+      if (typeof v === 'number') el.textContent = (v * 2).toFixed(1);
+    });
+  </script>
+</body>
+</html>

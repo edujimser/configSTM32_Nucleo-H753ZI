@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Industria</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/industria">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a class="act" href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Industria</h1>
+    <p class="dim" style="margin:-8px 0 8px">Widgets para maquinas y procesos. Cada tarjeta lleva su codigo en COMO SE USA. Datos simulados.</p>
+    <h3>ESTADO DE MAQUINA</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Pasos de estado</h2>
+        <span class="etq">data-steps</span><span class="etq">lee</span>
+        <div class="pasos" data-steps="estado" data-names="Parado,Arranque,Marcha,Fallo" data-fail="3"></div><p class="dim" style="margin-top:14px">Estado numero <span data-v="estado"></span></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="pasos" data-steps="estado" data-names="Parado,Arranque,Marcha,Fallo" data-fail="3"&gt;&lt;/div&gt;
+&lt;!-- el paso activo es el que coincide con el valor (0, 1, 2...). data-fail marca el paso rojo --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("estado", PG_WIDGETS, WV_U8, 0, estado_maquina),
+// tu maquina de estados es un enum/uint8_t: 0 PARADO, 1 ARRANQUE, 2 MARCHA, 3 FALLO</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Torre de senalizacion</h2>
+        <span class="etq">data-state</span><span class="etq">lee</span>
+        <div class="torre" data-state="estado"><i class="r"></i><i class="a"></i><i class="v"></i></div><p class="dim" style="text-align:center">0 ambar | 1 ambar parpadeo | 2 verde | 3 rojo parpadeo</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="torre" data-state="estado"&gt;&lt;i class="r"&gt;&lt;/i&gt;&lt;i class="a"&gt;&lt;/i&gt;&lt;i class="v"&gt;&lt;/i&gt;&lt;/div&gt;
+
+/* style.css decide que luz se enciende con cada valor:
+   .torre[data-s="2"] .v { background: var(--ok); } */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("estado", PG_WIDGETS, WV_U8, 0, estado_maquina),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Contador de produccion</h2>
+        <span class="etq">data-dot</span><span class="etq">data-fmt</span><span class="etq">lee</span>
+        <canvas class="dot" data-dot="piezas" data-digits="6" data-pitch="6"></canvas><p class="dim">PIEZAS</p><canvas class="dot" data-dot="uptime" data-fmt="hms" data-pitch="4" data-color="red"></canvas><p class="dim">TIEMPO EN MARCHA (hh:mm:ss)</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-dot="piezas" data-digits="6" data-pitch="6"&gt;&lt;/canvas&gt;
+&lt;canvas class="dot" data-dot="uptime" data-fmt="hms" data-pitch="4"&gt;&lt;/canvas&gt;
+&lt;!-- data-fmt: "hms" segundos a hh:mm:ss, "hex" hexadecimal, "bin" binario (tambien en data-v) --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("uptime", PG_WIDGETS, WV_U32, 0, segundos_en_marcha),</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Entradas y salidas digitales</h2>
+        <span class="etq">data-bits</span><span class="etq">lee</span>
+        <p class="dim" style="margin:0 0 10px">ENTRADAS (valor <span data-v="entradas" data-fmt="bin"></span>)</p><div class="bits" data-bits="entradas" data-count="8" data-names="DI0,DI1,DI2,DI3,DI4,DI5,DI6,DI7"></div><p class="dim" style="margin:18px 0 10px">SALIDAS</p><div class="bits" data-bits="salidas" data-count="8" data-names="M1,M2,M3,DO3,DO4,DO5,DO6,ALM"></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="bits" data-bits="entradas" data-count="8" data-names="DI0,DI1,DI2,DI3,DI4,DI5,DI6,DI7"&gt;&lt;/div&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("entradas", PG_WIDGETS, WV_U8, 0, entradas_digitales),
+// un uint8_t (o WV_U16 con data-count="16"): el bit 0 es el primer led</pre></details>
+      </div>
+    </div>
+    <h3>TABLAS</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Tabla configurable: valor, led, barra o alarma</h2>
+        <span class="etq">data-table</span><span class="etq">data-types</span><span class="etq">lee</span>
+        <table class="tabla" data-table="m1_rpm,m1_t,m1_a,m1_run,m2_run" data-names="Velocidad M1,Temperatura M1,Corriente M1,Motor 1,Motor 2" data-units="rpm,C,A,," data-types="barra,alarma,valor,led,led" data-limits="0:3000,:70,,," data-texts="1:MARCHA,0:PARADO"></table>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla"
+  data-table="m1_rpm,m1_t,m1_a,m1_run,m2_run"
+  data-names="Velocidad M1,Temperatura M1,Corriente M1,Motor 1,Motor 2"
+  data-units="rpm,C,A,,"
+  data-types="barra,alarma,valor,led,led"     &lt;!-- como se muestra cada fila --&gt;
+  data-limits="0:3000,:70,,,"                 &lt;!-- barra: min:max | alarma: bajo:alto --&gt;
+  data-texts="1:MARCHA,0:PARADO"&gt;&lt;/table&gt;      &lt;!-- texto de los leds --&gt;
+
+&lt;!-- tipos: valor (por defecto) | led (verde si distinto de 0) | barra | alarma (rojo fuera de limites) --&gt;</pre><pre class="codigo">// cada fila es una variable de web_vars.c con PG_INDUSTRIA (o la pagina donde pongas la tabla)</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Tabla de estados (solo leds)</h2>
+        <span class="etq">data-table</span><span class="etq">lee</span>
+        <table class="tabla" data-table="m1_run,m2_run,m3_run,valvula" data-names="Motor 1,Motor 2,Motor 3,Valvula" data-types="led,led,led,led" data-texts="1:MARCHA,0:PARADO"></table>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla" data-table="m1_run,m2_run,m3_run,valvula"
+  data-names="Motor 1,Motor 2,Motor 3,Valvula" data-types="led,led,led,led"
+  data-texts="1:MARCHA,0:PARADO"&gt;&lt;/table&gt;</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Tabla libre multicolumna</h2>
+        <span class="etq">HTML normal</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla grid" id="tmotores"><thead><tr><th>MOTOR</th><th>ESTADO</th><th>RPM</th><th>TEMP C</th><th>CORR A</th></tr></thead><tbody><tr><td>M1</td><td><span class="led" data-led="m1_run"></span></td><td data-v="m1_rpm"></td><td data-v="m1_t" data-alarm="m1_t" data-hi="70"></td><td data-v="m1_a"></td></tr><tr><td>M2</td><td><span class="led" data-led="m2_run"></span></td><td data-v="m2_rpm"></td><td data-v="m2_t" data-alarm="m2_t" data-hi="70"></td><td data-v="m2_a"></td></tr><tr><td>M3</td><td><span class="led" data-led="m3_run"></span></td><td data-v="m3_rpm"></td><td data-v="m3_t" data-alarm="m3_t" data-hi="70"></td><td data-v="m3_a"></td></tr></tbody></table></div><div class="fila" style="margin-top:14px"><button class="btn fino" data-export="#tmotores" data-name="motores.csv">EXPORTAR CSV</button></div>
+        <p class="dim">Una tabla normal de HTML: tu pones filas y columnas, y en cada celda el widget que quieras.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla grid" id="tmotores"&gt;
+  &lt;thead&gt;&lt;tr&gt;&lt;th&gt;MOTOR&lt;/th&gt;&lt;th&gt;ESTADO&lt;/th&gt;&lt;th&gt;RPM&lt;/th&gt;&lt;th&gt;TEMP&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;M1&lt;/td&gt;
+        &lt;td&gt;&lt;span class="led" data-led="m1_run"&gt;&lt;/span&gt;&lt;/td&gt;
+        &lt;td data-v="m1_rpm"&gt;&lt;/td&gt;
+        &lt;td data-v="m1_t" data-alarm="m1_t" data-hi="70"&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;button class="btn" data-export="#tmotores" data-name="motores.csv"&gt;EXPORTAR CSV&lt;/button&gt;
+&lt;!-- cualquier celda puede llevar cualquier widget: data-v, data-led, data-alarm... --&gt;</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Registro de alarmas</h2>
+        <span class="etq">data-alarmlog</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla log" id="talarmas" data-alarmlog="m1_t::70:Temp M1,m2_t::70:Temp M2,m3_t::70:Temp M3,presion:2:8:Presion" data-max="8"></table></div><div class="fila" style="margin-top:14px"><button class="btn fino" data-export="#talarmas" data-name="alarmas.csv">EXPORTAR CSV</button></div>
+        <p class="dim">Anota hora, variable y evento cada vez que una variable entra o sale de limites. El registro lo guarda el navegador mientras la pagina esta abierta.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla log" id="talarmas"
+  data-alarmlog="m1_t::70:Temp M1,presion:2:8:Presion" data-max="8"&gt;&lt;/table&gt;
+&lt;!-- formato: id:bajo:alto:nombre   (vacio = sin limite) --&gt;</pre><pre class="codigo">// no necesita nada especial en C: se usan las variables normales</pre></details>
+      </div>
+    </div>
+    <h3>INSTRUMENTACION</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Medidor de aguja con zonas</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="presion" data-min="0" data-max="10" data-unit="bar" data-zones="0~2:crit,2~8:ok,8~10:crit"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="presion" data-min="0" data-max="10" data-unit="bar"
+  data-zones="0~2:crit,2~8:ok,8~10:crit"&gt;&lt;/canvas&gt;
+&lt;!-- zonas: desde~hasta:color   colores: ok (verde), warn (ambar), crit (rojo) --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("presion", PG_WIDGETS, WV_FLOAT, 1, presion_bar),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Medidor de caudal</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="caudal" data-min="0" data-max="100" data-unit="L/min" data-zones="0~70:ok,70~90:warn,90~100:crit"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="caudal" data-min="0" data-max="100" data-unit="L/min"
+  data-zones="0~70:ok,70~90:warn,90~100:crit"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Tanque</h2>
+        <span class="etq">data-bar</span><span class="etq">lee</span>
+        <div class="tanque" data-bar="nivel" data-min="0" data-max="100"><i></i><span><span data-v="nivel"></span>%</span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="tanque" data-bar="nivel" data-min="0" data-max="100"&gt;
+  &lt;i&gt;&lt;/i&gt;&lt;span&gt;&lt;span data-v="nivel"&gt;&lt;/span&gt;%&lt;/span&gt;
+&lt;/div&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("nivel", PG_WIDGETS, WV_U8, 0, nivel_tanque),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Valvula</h2>
+        <span class="etq">data-state</span><span class="etq">lee</span>
+        <svg class="valvula" viewBox="0 0 190 90" data-state="valvula"><line class="flujo" x1="4" y1="62" x2="186" y2="62"/><rect x="4" y="54" width="60" height="16" fill="none" stroke="#2b2b2b" stroke-width="2"/><rect x="126" y="54" width="60" height="16" fill="none" stroke="#2b2b2b" stroke-width="2"/><path class="cuerpo" d="M64 48 L126 76 L126 48 L64 76 Z"/><line class="cuerpo" x1="95" y1="62" x2="95" y2="22"/><line class="cuerpo" x1="73" y1="22" x2="117" y2="22"/></svg><p class="dim" style="text-align:center">abierta: <span data-v="valvula"></span></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="valvula" data-state="valvula"&gt; ... &lt;/svg&gt;
+
+/* style.css:  .valvula[data-s="1"] .flujo { animation: flujo .6s linear infinite; }  (abierta)
+               .valvula[data-s="0"] .cuerpo { stroke: var(--acc); }                    (cerrada) */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("valvula", PG_WIDGETS, WV_BOOL, 0, valvula_abierta),</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Grafica con limites</h2>
+        <span class="etq">data-chart</span><span class="etq">data-hi</span><span class="etq">lee</span>
+        <canvas class="grafica" data-chart="m1_t,m2_t,m3_t" data-seconds="60" data-hi="70" data-lo="20"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="grafica" data-chart="m1_t,m2_t,m3_t" data-seconds="60" data-lo="20" data-hi="70"&gt;&lt;/canvas&gt;
+&lt;!-- data-lo / data-hi dibujan las lineas rojas de limite --&gt;</pre></details>
+      </div>
+    </div>
+    <h3>MANDO</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Marcha, paro y emergencia</h2>
+        <span class="etq">data-cmd</span><span class="etq">data-confirm</span><span class="etq r">escribe</span>
+        <div class="fila"><button class="btn" data-cmd="start">MARCHA</button><button class="btn fino" data-cmd="stop">PARO</button><button class="btn rojo" data-cmd="emergencia" data-confirm="CONFIRMAR?">EMERGENCIA</button><button class="btn fino" data-cmd="auto">AUTO</button></div><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        <p class="dim">Para seguridad real, el paro de emergencia debe ser cableado: la web es un mando adicional, no una proteccion.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button class="btn" data-cmd="start"&gt;MARCHA&lt;/button&gt;
+&lt;button class="btn rojo" data-cmd="emergencia" data-confirm="CONFIRMAR?"&gt;EMERGENCIA&lt;/button&gt;
+&lt;!-- data-confirm: la primera pulsacion arma el boton 3 s, la segunda envia el comando --&gt;</pre><pre class="codigo">// web_vars.c, seccion 4: comandos. Cortos: ponen un flag o cambian una variable
+static void cmd_start(const char *arg) { orden_marcha = 1; }
+static const WebCmd_t web_cmds[] = { {"start", cmd_start}, ... };</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Terminal</h2>
+        <span class="etq">data-terminal</span>
+        <div data-terminal></div><p class="dim">Prueba: help, led, cont</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-terminal&gt;&lt;/div&gt;</pre></details>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

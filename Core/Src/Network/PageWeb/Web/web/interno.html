@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STM32</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/interno">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a class="act" href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>STM32</h1>
+    <p class="dim" style="margin:-8px 0 8px">Estado interno del microcontrolador: hilos, memoria y carga de CPU. Datos simulados en esta vista.</p>
+    <h3>PROCESADOR Y MEMORIA</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Carga de CPU</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="s_cpu" data-min="0" data-max="100" data-unit="% CPU" data-zones="0~70:ok,70~90:warn,90~100:crit"></canvas><div class="fila" style="justify-content:center"><span class="led" data-led="s_stats"></span><span class="dim" style="margin:0">estadisticas de CPU activas</span></div>
+        <p class="dim">Si marca 0 y el led esta apagado, faltan las estadisticas de FreeRTOS (ver LEEME).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="s_cpu" data-min="0" data-max="100" data-unit="% CPU"
+  data-zones="0~70:ok,70~90:warn,90~100:crit"&gt;&lt;/canvas&gt;</pre><pre class="codigo">// web_sys.c rellena sys_cpu cada segundo (se registra en web_vars.c como "s_cpu")
+// Necesita en FreeRTOS: USE_TRACE_FACILITY, GENERATE_RUN_TIME_STATS (ver LEEME.txt)</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Heap de FreeRTOS</h2>
+        <span class="etq">data-bar</span><span class="etq">lee</span>
+        <div class="barra" data-bar="s_hpct" data-min="0" data-max="100" data-alarm="s_hpct" data-hi="85"><i></i></div><table class="tabla" style="margin-top:14px" data-table="s_hpct,s_hfree,s_hmin,s_htot,s_ram" data-names="En uso,Libre,Minimo libre,Total heap,RAM estatica" data-units="%,B,B,B,B" data-types="alarma,valor,valor,valor,valor" data-limits=":85,,,,"></table>
+        <p class="dim">Heap = memoria dinamica de FreeRTOS (hilos, colas, mutex). RAM estatica = .data + .bss, aproximada.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="barra" data-bar="s_hpct" data-min="0" data-max="100"&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;</pre><pre class="codigo">// web_sys.c: xPortGetFreeHeapSize(), xPortGetMinimumEverFreeHeapSize()
+// "Minimo libre" es lo mas bajo que ha llegado el heap desde el arranque: si se acerca a 0, hay riesgo.</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Tiempo y conexiones</h2>
+        <span class="etq">data-dot</span><span class="etq">lee</span>
+        <canvas class="dot" data-dot="s_up" data-fmt="hms" data-pitch="4"></canvas><p class="dim">TIEMPO DESDE EL ARRANQUE</p><canvas class="dot" data-dot="s_nth" data-digits="3" data-pitch="5"></canvas><p class="dim">HILOS</p><canvas class="dot" data-dot="s_ws" data-digits="3" data-pitch="5" data-color="red"></canvas><p class="dim">NAVEGADORES CONECTADOS</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-dot="s_up" data-fmt="hms" data-pitch="4"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>CPU y heap en el tiempo</h2>
+        <span class="etq">data-chart</span><span class="etq">lee</span>
+        <canvas class="grafica" data-chart="s_cpu,s_hpct" data-seconds="120" data-min="0" data-max="100" data-hi="90"></canvas><p class="dim">blanco: CPU % &middot; rojo: heap %</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="grafica" data-chart="s_cpu,s_hpct" data-seconds="120" data-min="0" data-max="100" data-hi="90"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+    </div>
+    <h3>HILOS (TASKS DE FREERTOS)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Estado de cada hilo</h2>
+        <span class="etq">data-show-if</span><span class="etq">data-map</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla hilos" id="thilos"><thead><tr><th>NOMBRE</th><th>ESTADO</th><th>PRIO</th><th>CPU</th><th>STACK LIBRE B</th></tr></thead><tbody><tr hidden data-show-if="t0_n"><td data-v="t0_n"></td><td><span class="est" data-v="t0_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t0_p"></td><td><span class="barra mini" data-bar="t0_c"><i></i></span><span data-v="t0_c"></span>%</td><td data-v="t0_f" data-alarm="t0_f" data-lo="256"></td></tr><tr hidden data-show-if="t1_n"><td data-v="t1_n"></td><td><span class="est" data-v="t1_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t1_p"></td><td><span class="barra mini" data-bar="t1_c"><i></i></span><span data-v="t1_c"></span>%</td><td data-v="t1_f" data-alarm="t1_f" data-lo="256"></td></tr><tr hidden data-show-if="t2_n"><td data-v="t2_n"></td><td><span class="est" data-v="t2_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t2_p"></td><td><span class="barra mini" data-bar="t2_c"><i></i></span><span data-v="t2_c"></span>%</td><td data-v="t2_f" data-alarm="t2_f" data-lo="256"></td></tr><tr hidden data-show-if="t3_n"><td data-v="t3_n"></td><td><span class="est" data-v="t3_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t3_p"></td><td><span class="barra mini" data-bar="t3_c"><i></i></span><span data-v="t3_c"></span>%</td><td data-v="t3_f" data-alarm="t3_f" data-lo="256"></td></tr><tr hidden data-show-if="t4_n"><td data-v="t4_n"></td><td><span class="est" data-v="t4_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t4_p"></td><td><span class="barra mini" data-bar="t4_c"><i></i></span><span data-v="t4_c"></span>%</td><td data-v="t4_f" data-alarm="t4_f" data-lo="256"></td></tr><tr hidden data-show-if="t5_n"><td data-v="t5_n"></td><td><span class="est" data-v="t5_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t5_p"></td><td><span class="barra mini" data-bar="t5_c"><i></i></span><span data-v="t5_c"></span>%</td><td data-v="t5_f" data-alarm="t5_f" data-lo="256"></td></tr><tr hidden data-show-if="t6_n"><td data-v="t6_n"></td><td><span class="est" data-v="t6_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t6_p"></td><td><span class="barra mini" data-bar="t6_c"><i></i></span><span data-v="t6_c"></span>%</td><td data-v="t6_f" data-alarm="t6_f" data-lo="256"></td></tr><tr hidden data-show-if="t7_n"><td data-v="t7_n"></td><td><span class="est" data-v="t7_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t7_p"></td><td><span class="barra mini" data-bar="t7_c"><i></i></span><span data-v="t7_c"></span>%</td><td data-v="t7_f" data-alarm="t7_f" data-lo="256"></td></tr><tr hidden data-show-if="t8_n"><td data-v="t8_n"></td><td><span class="est" data-v="t8_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t8_p"></td><td><span class="barra mini" data-bar="t8_c"><i></i></span><span data-v="t8_c"></span>%</td><td data-v="t8_f" data-alarm="t8_f" data-lo="256"></td></tr><tr hidden data-show-if="t9_n"><td data-v="t9_n"></td><td><span class="est" data-v="t9_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t9_p"></td><td><span class="barra mini" data-bar="t9_c"><i></i></span><span data-v="t9_c"></span>%</td><td data-v="t9_f" data-alarm="t9_f" data-lo="256"></td></tr><tr hidden data-show-if="t10_n"><td data-v="t10_n"></td><td><span class="est" data-v="t10_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t10_p"></td><td><span class="barra mini" data-bar="t10_c"><i></i></span><span data-v="t10_c"></span>%</td><td data-v="t10_f" data-alarm="t10_f" data-lo="256"></td></tr><tr hidden data-show-if="t11_n"><td data-v="t11_n"></td><td><span class="est" data-v="t11_s" data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"></span></td><td data-v="t11_p"></td><td><span class="barra mini" data-bar="t11_c"><i></i></span><span data-v="t11_c"></span>%</td><td data-v="t11_f" data-alarm="t11_f" data-lo="256"></td></tr></tbody></table></div><div class="fila" style="margin-top:14px"><button class="btn fino" data-export="#thilos" data-name="hilos.csv">EXPORTAR CSV</button></div>
+        <p class="dim">Stack libre = el minimo que ha quedado libre desde que arranco el hilo (high water mark). Menos de 256 B sale en rojo.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;tr data-show-if="t1_n"&gt;                                  &lt;!-- la fila solo se ve si el hilo existe --&gt;
+  &lt;td data-v="t1_n"&gt;&lt;/td&gt;                                   &lt;!-- nombre (texto) --&gt;
+  &lt;td&gt;&lt;span class="est" data-v="t1_s"
+        data-map="0:EJECUTANDO,1:LISTO,2:BLOQUEADO,3:SUSPENDIDO,4:ELIMINADO"&gt;&lt;/span&gt;&lt;/td&gt;
+  &lt;td data-v="t1_p"&gt;&lt;/td&gt;                                   &lt;!-- prioridad --&gt;
+  &lt;td&gt;&lt;span class="barra mini" data-bar="t1_c"&gt;&lt;i&gt;&lt;/i&gt;&lt;/span&gt;&lt;span data-v="t1_c"&gt;&lt;/span&gt;%&lt;/td&gt;
+  &lt;td data-v="t1_f" data-alarm="t1_f" data-lo="256"&gt;&lt;/td&gt;   &lt;!-- rojo si queda menos de 256 bytes de stack --&gt;
+&lt;/tr&gt;</pre><pre class="codigo">// web_sys.c: sys_th_n[i] (WV_STR), sys_th_s[i], sys_th_p[i], sys_th_c[i], sys_th_f[i]
+// el hilo con CPU alta o poco stack libre es el que hay que revisar</pre></details>
+      </div>
+    </div>
+    <h3>REGISTRO Y MANDO</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Alarmas internas</h2>
+        <span class="etq">data-alarmlog</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla log" data-alarmlog="s_cpu::90:CPU alta,s_hpct::85:Heap alto" data-max="8"></table></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla log" data-alarmlog="s_cpu::90:CPU alta,s_hpct::85:Heap alto" data-max="8"&gt;&lt;/table&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Reiniciar el microcontrolador</h2>
+        <span class="etq">data-cmd</span><span class="etq">data-confirm</span><span class="etq r">escribe</span>
+        <div class="fila"><button class="btn rojo" data-cmd="reset_mcu" data-confirm="CONFIRMAR RESET?">REINICIAR STM32</button></div><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        <p class="dim">ATENCION: esta web no tiene contrasena. Cualquiera en la red puede pulsar este boton (ver LEEME).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button class="btn rojo" data-cmd="reset_mcu" data-confirm="CONFIRMAR RESET?"&gt;REINICIAR&lt;/button&gt;</pre><pre class="codigo">// web_vars.c: cmd_reset_mcu() llama a WebSys_RequestReset() -&gt; NVIC_SystemReset()</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Terminal</h2>
+        <span class="etq">data-terminal</span>
+        <div data-terminal></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-terminal&gt;&lt;/div&gt;</pre></details>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

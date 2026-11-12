@@ -22,7 +22,6 @@ extern I_TestUart TestUart_1;
 
 
 extern osThreadId_t ThreadId_InitTask;
-extern osThreadId_t ThreadId_Test;
 extern osThreadId_t ThreadId_StatusSystem;
 extern osThreadId_t ThreadId_Uart_Tx;
 extern osThreadId_t ThreadId_Uart_Rx;
@@ -43,7 +42,6 @@ void ThreadFunc_Uart_Rx (void *argument)
 
         if (notifiedValue > 0 && receivedDataSize > 0) {
 
-    	    vTaskSuspend(ThreadId_Test);
     	    vTaskSuspend(defaultTaskHandle);
 
         	/* ==============================================================================
@@ -280,7 +278,7 @@ void ThreadFunc_Uart_Rx (void *argument)
         	    MSG_Enviar("COMANDO DESCONOCIDO EN RX", TestUart_1);
         	}
 
-    	    vTaskResume(ThreadId_Test);
+
     	    vTaskResume(defaultTaskHandle);
 
             receivedDataSize = 0;

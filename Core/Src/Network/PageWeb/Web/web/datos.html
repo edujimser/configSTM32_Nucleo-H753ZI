@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Datos</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/datos">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a class="act" href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Datos en vivo</h1>
+    <div class="rejilla">
+      <div class="tarjeta"><h2>Contador</h2><div class="valor" data-v="cont">-</div></div>
+      <div class="tarjeta"><h2>Temperatura</h2><div class="valor"><span data-v="temp">-</span> &deg;C</div></div>
+      <div class="tarjeta"><h2>LED</h2><div class="valor" data-v="led">-</div></div>
+      <div class="tarjeta"><h2>Conexion</h2><div data-estado>conectando...</div></div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

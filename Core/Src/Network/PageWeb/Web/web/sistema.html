@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/sistema">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a class="act" href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Mi sistema</h1>
+
+    <!-- =====================================================================
+         ESTA ES TU PAGINA. Cada tarjeta es un bloque que puedes copiar, borrar
+         o editar. Los ID (cont, temp, led, nivel, setpoint) son variables de
+         web_vars.c con PG_SISTEMA. Para usar una tuya:
+           1) web_vars.c: una linea  WV("mi_id", PG_SISTEMA, WV_FLOAT, 1, mi_variable),
+           2) aqui:  <span data-v="mi_id"></span>   (o cualquier widget de /widgets.html)
+         ===================================================================== -->
+
+    <div class="rejilla">
+
+      <!-- BLOQUE: numero grande en pantalla de puntos -->
+      <div class="tarjeta">
+        <h2>Temperatura</h2>
+        <canvas class="dot" data-dot="temp" data-unit="&deg;C" data-digits="4" data-pitch="7"></canvas>
+      </div>
+
+      <!-- BLOQUE: valor + led -->
+      <div class="tarjeta">
+        <h2>Estado</h2>
+        <div class="fila"><span class="led" data-led="led"></span><span class="valor" data-v="led">-</span></div>
+        <p class="dim">Contador: <b data-v="cont">-</b></p>
+      </div>
+
+      <!-- BLOQUE: barra de carga -->
+      <div class="tarjeta">
+        <h2>Nivel <span data-v="nivel"></span> %</h2>
+        <div class="barra" data-bar="nivel" data-min="0" data-max="100"><i></i></div>
+      </div>
+
+      <!-- BLOQUE: modificar un valor (la variable debe ser WVW en web_vars.c) -->
+      <div class="tarjeta">
+        <h2>Consigna</h2>
+        <div class="fila">
+          <input type="number" step="0.5" min="10" max="35" data-set="setpoint">
+          <span class="dim">&deg;C (10 a 35)</span>
+        </div>
+        <p class="dim" data-msg>&nbsp;</p>
+      </div>
+
+      <!-- BLOQUE: grafica de las ultimas variables -->
+      <div class="tarjeta ancha">
+        <h2>Historial (60 s)</h2>
+        <canvas class="grafica" data-chart="temp,nivel" data-seconds="60"></canvas>
+      </div>
+
+      <!-- BLOQUE: terminal (WebTerm_OnLine / WebTerm_Print en web_vars.c) -->
+      <div class="tarjeta ancha">
+        <h2>Terminal</h2>
+        <div data-terminal></div>
+        <p class="dim">Prueba: help, led, cont</p>
+      </div>
+
+      <div class="tarjeta"><h2>Conexion</h2><div data-estado>conectando...</div></div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

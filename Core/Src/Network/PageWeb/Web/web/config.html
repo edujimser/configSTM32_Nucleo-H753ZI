@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Config</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/config">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a class="act" href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Configuracion</h1>
+    <div class="rejilla">
+      <div class="tarjeta"><h2>Contador config</h2><div class="valor" data-v="contador2">-</div></div>
+      <div class="tarjeta">
+        <h2>Valor de la placa</h2>
+        <p>Actual: <b id="valor">-</b></p>
+        <div class="fila" style="margin-top:14px">
+          <input id="nuevo" type="number" value="0">
+          <button class="btn" onclick="enviar()">ENVIAR</button>
+        </div>
+        <p id="resp" class="dim"></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+  <script>
+    async function cargar() {
+      const r = await fetch('/api/valor');
+      const d = await r.json();
+      document.getElementById('valor').textContent = d.valor;
+    }
+    async function enviar() {
+      const v = document.getElementById('nuevo').value;
+      const r = await fetch('/api/valor?v=' + v, { method: 'POST' });
+      document.getElementById('resp').textContent = await r.text();
+      cargar();
+    }
+    cargar();
+  </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Errores</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/errores">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a class="act" href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Errores</h1>
+    <p class="dim" style="margin:-8px 0 8px">Errores en tiempo real con su ID, descripcion y variables que los activan, historico y contadores. Datos simulados.</p>
+    <h3>RESUMEN</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Estado de errores</h2>
+        <span class="etq">data-dot</span><span class="etq">data-show-if</span><span class="etq">lee</span>
+        <div class="fila" style="gap:28px;align-items:center"><div><canvas class="dot" data-dot="er_n" data-digits="2" data-pitch="8" data-color="red"></canvas><p class="dim">ACTIVOS</p></div><div><canvas class="dot" data-dot="er_tot" data-digits="4" data-pitch="4"></canvas><p class="dim">EVENTOS TOTALES</p></div></div><div class="alerta-f" hidden data-show-if="er_n">HAY ERRORES ACTIVOS</div><p class="dim">Errores configurados: <b data-v="er_cfg"></b></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-dot="er_n" data-digits="2" data-color="red"&gt;&lt;/canvas&gt;   &lt;!-- numero de errores activos --&gt;
+&lt;div hidden data-show-if="er_n"&gt;HAY ERRORES ACTIVOS&lt;/div&gt;</pre><pre class="codigo">// web_err.c lo mantiene solo: err_n (activos), err_tot (eventos), err_act (mascara)</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Acciones</h2>
+        <span class="etq">data-cmd</span><span class="etq">data-confirm</span><span class="etq r">escribe</span>
+        <div class="fila"><button class="btn" data-cmd="err_ack" data-arg="">RECONOCER TODOS</button><button class="btn fino" data-cmd="err_clr_cnt" data-confirm="CONFIRMAR BORRAR CONTADORES?">BORRAR CONTADORES</button><button class="btn fino" data-cmd="err_clr_hist" data-confirm="CONFIRMAR BORRAR HISTORICO?">BORRAR HISTORICO</button></div><p class="dim">Reconocer = el operador ha visto el error (deja de parpadear); no lo resuelve. El historico guarda los ultimos 20 eventos en RAM (se pierde al reiniciar).</p><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button data-cmd="err_ack" data-arg=""&gt;RECONOCER TODOS&lt;/button&gt;      &lt;!-- arg vacio = todos; o el ID de un error --&gt;
+&lt;button data-cmd="err_clr_cnt" data-confirm="CONFIRMAR?"&gt;BORRAR CONTADORES&lt;/button&gt;
+&lt;button data-cmd="err_test" data-arg="101"&gt;PROBAR ERROR 101&lt;/button&gt;   &lt;!-- simula el error 8 s --&gt;</pre><pre class="codigo">// web_vars.c: comandos err_ack, err_clr_cnt, err_clr_hist, err_test (ya incluidos)</pre></details>
+      </div>
+    </div>
+    <h3>ERRORES ACTIVOS (TIEMPO REAL)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Activos</h2>
+        <span class="etq">data-errors</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla err" id="tact" data-errors="activos"></table></div>
+        <p class="dim">Ordenados por severidad. En amarillo/rojo parpadeante los NUEVOS (sin reconocer). La columna VARIABLES muestra el valor en vivo de las variables que lo activan.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla err" data-errors="activos"&gt;&lt;/table&gt;
+&lt;!-- se rellena solo con el catalogo (GET /api/errores) y el estado en vivo (er_act, er_una, el0..) --&gt;</pre><pre class="codigo">// los textos, severidades y condiciones salen de web_err_cfg.h; no hay que registrar nada mas</pre></details>
+      </div>
+    </div>
+    <h3>HISTORICO DE ERRORES</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Historico</h2>
+        <span class="etq">data-errors</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla err" id="thist" data-errors="historico"></table></div><div class="fila" style="margin-top:12px"><button class="btn fino" data-export="#thist" data-name="historico_errores.csv">EXPORTAR CSV</button></div>
+        <p class="dim">ACTIVA = aparece el error (con el valor guardado). RESUELTA = desaparece (con la duracion).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla err" id="thist" data-errors="historico"&gt;&lt;/table&gt;
+&lt;button data-export="#thist" data-name="historico_errores.csv"&gt;EXPORTAR CSV&lt;/button&gt;</pre><pre class="codigo">// WEBERR_HIST (web_err.h) = eventos guardados (20). Cada activacion y cada resolucion es un evento.
+// El VALOR es la expresion de la ultima columna de web_err_cfg.h en el instante de activarse.</pre></details>
+      </div>
+    </div>
+    <h3>CONTADORES</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Contadores por error</h2>
+        <span class="etq">data-errors</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla err" id="tcnt" data-errors="contadores"></table></div><div class="fila" style="margin-top:12px"><button class="btn fino" data-export="#tcnt" data-name="contadores_errores.csv">EXPORTAR CSV</button></div>
+        <p class="dim">Muestra TODOS los errores configurados, tambien los que nunca han saltado. PROBAR simula ese error 8 s sin tocar la maquina: sirve para comprobar el aviso.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla err" id="tcnt" data-errors="contadores"&gt;&lt;/table&gt;</pre><pre class="codigo">// err_cnt[i] (veces activado) y err_last[i] (hora de la ultima vez) en web_err.c. Se ponen a cero con BORRAR CONTADORES.</pre></details>
+      </div>
+    </div>
+    <h3>COMO SE CONFIGURAN LOS ERRORES</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>web_err_cfg.h</h2>
+        <span class="etq">configuracion</span>
+        <p>Los errores se definen en <b>un solo archivo</b>: <b>web_err_cfg.h</b>. Una linea por error, asociada a su ID:</p><pre class="codigo">X( 101, AP1_C1, ERR_ALARMA, 0, (al_w &amp; 0x0001u), "al_w c1_hp", "Alta presion circuito 1", c_hp[0]) \
+X( 108, FILTRO, ERR_AVISO,  5, (dp_filt &gt; 250u),  "dp_filt",    "Filtro de aire sucio",     dp_filt)</pre><ul class="ayuda"><li><b>ID</b>: numero unico que ve el usuario.</li><li><b>NOMBRE</b>: identificador corto (sin comillas).</li><li><b>SEVERIDAD</b>: ERR_INFO, ERR_AVISO, ERR_ALARMA, ERR_CRITICO.</li><li><b>RETARDO</b>: segundos que debe mantenerse la condicion antes de activarse (filtra rebotes).</li><li><b>CONDICION</b>: expresion C con tus variables, verdadera cuando hay error.</li><li><b>"VARIABLES"</b>: IDs web que la activan (se muestran con su valor en vivo si estan en la pagina errores).</li><li><b>"DESCRIPCION"</b>: texto para el usuario.</li><li><b>VALOR</b>: expresion que se guarda en el historico al activarse.</li></ul><p class="dim">Para añadir un error: añade una linea (hasta 32). No hay que tocar HTML ni la tabla de variables. Los cambios en variables en vivo de la columna VARIABLES requieren que esa variable tenga PG_ERR en su campo de paginas en web_vars.c.</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">/* web_err_cfg.h */
+#define WEBERR_NOW()  (rtc_epoch)      /* hora UNIX para fechar los errores (cambia por tu RTC) */
+#define WEBERR_LIST(X) \
+  X( ID, NOMBRE, SEVERIDAD, RETARDO_s, (CONDICION), "VARIABLES", "DESCRIPCION", VALOR) \
+  ...</pre><pre class="codigo">// web_err.c evalua las condiciones cada segundo (WebErr_Tick1s, llamada desde network.c)
+// y lleva: err_act (activos), err_una (sin reconocer), err_cnt[], err_last[], err_hist[]</pre></details>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

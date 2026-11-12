@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Empaquetador web para Mongoose</title>
+<style>
+  body { font-family: Consolas, 'Courier New', monospace; background: #0b1020; color: #d6e4f5; margin: 0; padding: 24px; }
+  h1 { color: #00e5ff; font-size: 1.3rem; letter-spacing: 2px; }
+  .caja { background: #111a30; border: 1px solid #1f3050; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+  label { display: block; margin: 8px 0 4px; color: #8fa5c2; }
+  input[type=text], select { background: #0b1020; color: #d6e4f5; border: 1px solid #1f3050; padding: 8px; font-family: inherit; width: 100%; max-width: 420px; }
+  button, .boton { background: #00e5ff; color: #0b1020; border: 0; padding: 10px 16px; font-family: inherit; cursor: pointer; margin: 6px 8px 6px 0; display: inline-block; }
+  button:disabled { background: #33415c; color: #8fa5c2; cursor: not-allowed; }
+  input[type=file] { display: none; }
+  table { border-collapse: collapse; width: 100%; max-width: 640px; }
+  td, th { border-bottom: 1px solid #1f3050; padding: 6px 8px; text-align: left; }
+  td.num, th.num { text-align: right; }
+  textarea { width: 100%; height: 260px; background: #070b17; color: #9ef7c8; border: 1px solid #1f3050; font-family: inherit; font-size: .8rem; }
+  .aviso { color: #ffd166; }
+  .ok { color: #00ff9c; }
+</style>
+</head>
+<body>
+<h1>&gt; EMPAQUETADOR WEB PARA MONGOOSE</h1>
+
+<div class="caja">
+  <p>1. Elige la carpeta con tus archivos web (index.html, style.css...). Todo se procesa en tu navegador, no se sube nada a internet.</p>
+  <label class="boton" for="carpeta">Elegir carpeta</label>
+  <input type="file" id="carpeta" webkitdirectory multiple>
+  <label class="boton" for="archivos">Elegir archivos sueltos</label>
+  <input type="file" id="archivos" multiple>
+
+  <label for="raiz">Carpeta virtual dentro de la placa (debe ser igual que .root_dir en network.c)</label>
+  <input type="text" id="raiz" value="PageWeb">
+
+  <label for="inc">Include de mongoose.h (el mismo que usa tu network.c)</label>
+  <input type="text" id="inc" value="Network/Mongoose/mongoose.h">
+
+  <label for="formato">Formato del archivo generado</label>
+  <select id="formato">
+    <option value="mem">mg_packed_files / mg_mem_file (el que usa tu mongoose.c)</option>
+    <option value="antiguo">mg_unpack / mg_unlist (versiones antiguas, NO sirve con tu mongoose.c)</option>
+  </select>
+</div>
+
+<div class="caja" id="resultado" style="display:none">
+  <p id="resumen"></p>
+  <table>
+    <thead><tr><th>Ruta en la placa</th><th class="num">Bytes</th></tr></thead>
+    <tbody id="lista"></tbody>
+  </table>
+  <p>
+    <button id="descargar">Descargar packed_fs.c</button>
+  </p>
+  <label>Vista previa (principio del archivo)</label>
+  <textarea id="vista" readonly></textarea>
+</div>
+
+<script>
+// ------------------------------------------------------------------
+// Generador (funciones puras, sin DOM, para poder probarlas con node)
+// ------------------------------------------------------------------
+function rutaSegura(r) {
+  return r.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/"/g, '\\"');
+}
+
+function arrayC(nombre, datos) {
+  var trozos = [];
+  for (var i = 0; i < datos.length; i += 24) {
+    trozos.push(Array.prototype.join.call(datos.subarray(i, i + 24), ','));
+  }
+  var cuerpo = trozos.join(',\n  ');
+  cuerpo += (datos.length ? ',0' : '0');   // byte 0 final: el codigo usa sizeof()-1
+  return 'static const unsigned char ' + nombre + '[] = {\n  ' + cuerpo + '\n};\n';
+}
+
+// archivos: [{ ruta: '/web_root/index.html', datos: Uint8Array, mtime: segundos }]
+function generarPackedFs(archivos, formato, inc) {
+  var lista = archivos.slice().sort(function (a, b) { return a.ruta < b.ruta ? -1 : a.ruta > b.ruta ? 1 : 0; });
+  var s = '// DO NOT EDIT. Archivo generado con empaquetar_web.html\n\n';
+
+  if (formato === 'antiguo') {
+    s += '#include <stddef.h>\n#include <string.h>\n#include <time.h>\n\n';
+    s += '#if defined(__cplusplus)\nextern "C" {\n#endif\n';
+    s += 'const char *mg_unlist(size_t no);\n';
+    s += 'const char *mg_unpack(const char *, size_t *, time_t *);\n';
+    s += '#if defined(__cplusplus)\n}\n#endif\n\n';
+  } else {
+    s += '#include "' + (inc || 'mongoose.h') + '"\n\n';
+  }
+
+  lista.forEach(function (f, i) { s += arrayC('v' + i, f.datos) + '\n'; });
+
+  if (formato === 'antiguo') {
+    s += 'const char *mg_unlist(size_t no) {\n  switch (no) {\n';
+    lista.forEach(function (f, i) { s += '    case ' + i + ': return "' + rutaSegura(f.ruta) + '";\n'; });
+    s += '    default: return NULL;\n  }\n}\n\n';
+    s += 'const char *mg_unpack(const char *name, size_t *size, time_t *mtime) {\n';
+    lista.forEach(function (f, i) {
+      s += '  if (strcmp(name, "' + rutaSegura(f.ruta) + '") == 0) {\n';
+      s += '    if (size != NULL) *size = sizeof(v' + i + ') - 1;\n';
+      s += '    if (mtime != NULL) *mtime = ' + f.mtime + ';\n';
+      s += '    return (const char *) v' + i + ';\n  }\n';
+    });
+    s += '  return NULL;\n}\n';
+  } else {
+    s += 'const struct mg_mem_file mg_packed_files[] = {\n';
+    lista.forEach(function (f, i) {
+      s += '  {"' + rutaSegura(f.ruta) + '", v' + i + ', sizeof(v' + i + ') - 1, ' + f.mtime + '},\n';
+    });
+    s += '  {NULL, NULL, 0, 0}\n};\n';
+  }
+  return s;
+}
+
+// ------------------------------------------------------------------
+// Interfaz (solo se activa dentro del navegador)
+// ------------------------------------------------------------------
+if (typeof document !== 'undefined') {
+  var leidos = [];          // [{ nombreRel, datos, mtime }]
+  var ultimoC = '';
+
+  function ignorar(nombre) {
+    var base = nombre.split('/').pop();
+    return base.charAt(0) === '.' || base === 'Thumbs.db' || base === 'desktop.ini';
+  }
+
+  async function leer(ficheros) {
+    leidos = [];
+    for (var i = 0; i < ficheros.length; i++) {
+      var f = ficheros[i];
+      var rel = f.webkitRelativePath || '';
+      // Con "elegir carpeta" la ruta es "carpeta/sub/archivo": se quita la primera parte
+      var partes = rel ? rel.split('/').slice(1) : [f.name];
+      var nombreRel = partes.join('/');
+      if (!nombreRel || ignorar(nombreRel)) continue;
+      var buf = await f.arrayBuffer();
+      leidos.push({ nombreRel: nombreRel, datos: new Uint8Array(buf), mtime: Math.floor(f.lastModified / 1000) });
+    }
+    generar();
+  }
+
+  function generar() {
+    var raiz = document.getElementById('raiz').value.trim().replace(/^\/+|\/+$/g, '') || 'PageWeb';
+    var formato = document.getElementById('formato').value;
+    var archivos = leidos.map(function (l) {
+      return { ruta: '/' + raiz + '/' + l.nombreRel, datos: l.datos, mtime: l.mtime };
+    });
+    var caja = document.getElementById('resultado');
+    if (!archivos.length) { caja.style.display = 'none'; return; }
+
+    ultimoC = generarPackedFs(archivos, formato, document.getElementById('inc').value.trim());
+
+    var total = archivos.reduce(function (a, f) { return a + f.datos.length; }, 0);
+    document.getElementById('resumen').innerHTML =
+      '<span class="ok">' + archivos.length + ' archivos, ' + total + ' bytes en total.</span> ' +
+      'En tu codigo C usa root_dir = "/' + raiz + '".';
+
+    var tb = document.getElementById('lista');
+    tb.innerHTML = '';
+    archivos.slice().sort(function (a, b) { return a.ruta < b.ruta ? -1 : 1; }).forEach(function (f) {
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td'); td1.textContent = f.ruta;
+      var td2 = document.createElement('td'); td2.className = 'num'; td2.textContent = f.datos.length;
+      tr.appendChild(td1); tr.appendChild(td2); tb.appendChild(tr);
+    });
+
+    document.getElementById('vista').value = ultimoC.length > 4000 ? ultimoC.slice(0, 4000) + '\n...' : ultimoC;
+    caja.style.display = 'block';
+  }
+
+  document.getElementById('carpeta').addEventListener('change', function (e) { leer(e.target.files); });
+  document.getElementById('archivos').addEventListener('change', function (e) { leer(e.target.files); });
+  document.getElementById('raiz').addEventListener('input', generar);
+  document.getElementById('inc').addEventListener('input', generar);
+  document.getElementById('formato').addEventListener('change', generar);
+
+  document.getElementById('descargar').addEventListener('click', function () {
+    var blob = new Blob([ultimoC], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'packed_fs.c';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+}
+</script>
+</body>
+</html>

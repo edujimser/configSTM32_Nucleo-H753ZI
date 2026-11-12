@@ -1,0 +1,82 @@
+WEB DE CONTROL PARA NUCLEO-H753ZI (Mongoose 7.23 + FreeRTOS)
+==============================================================
+
+PAGINAS (16 como maximo; ahora hay 13)
+  index, datos (en vivo), config, sistema, widgets (catalogo), industria,
+  interno (STM32: hilos, RAM, CPU), hvac (climatizacion tren), compon (componentes),
+  objeto (identificacion, versiones, hora, red/DHCP, ayuda HVAC, soporte),
+  wdatos (catalogo de widgets de datos), can y trdp (señales y tramas, con forzado individual),
+  errores (errores en vivo, historico y contadores).
+  Cada pagina abre su propio WebSocket /ws/<nombre> y recibe SOLO sus variables.
+
+ARCHIVOS DEL FIRMWARE (copiar al proyecto y anadir a la compilacion)
+  web_vars.c / web_vars.h   tabla de variables, comandos, terminal, ficheros
+  web_demo.c / web_demo.h   simulacion (variables de prueba + HVAC). BORRAR al usar variables reales
+  web_sys.c  / web_sys.h    estado interno: hilos, heap, CPU, reset
+  web_bus.c  / web_bus.h    visor y forzado de tramas CAN y TRDP
+  web_sig.c  / web_sig.h    señales de comunicacion con forzado individual (NUEVO)
+  web_sig_cfg.h             LISTA DE SEÑALES CAN/TRDP: el archivo que editas (NUEVO)
+  web_err.c  / web_err.h    gestor de errores: estado, historico, contadores (NUEVO)
+  web_err_cfg.h             LISTA DE ERRORES: el archivo que editas (NUEVO)
+  network.c                 hilo de red (rutas /ws, /api/upload, /api/download)
+  packed_fs.c               la web empaquetada (generada con empaquetar_web.html)
+  web.zip                   los ficheros de la web sin empaquetar
+
+CONFIGURACION FREERTOS NECESARIA PARA LA PAGINA STM32 (FreeRTOSConfig.h)
+  #define configUSE_TRACE_FACILITY              1
+  #define configGENERATE_RUN_TIME_STATS         1
+  #define INCLUDE_uxTaskGetStackHighWaterMark   1
+  /* en la zona USER CODE de FreeRTOSConfig.h: */
+  extern void WebSys_RunTimeInit(void);
+  extern unsigned long WebSys_RunTimeGet(void);
+  #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() WebSys_RunTimeInit()
+  #define portGET_RUN_TIME_COUNTER_VALUE()         WebSys_RunTimeGet()
+  (usa el contador DWT del Cortex-M7). Sin esto la CPU marca 0 y no hay lista de hilos.
+
+PASAR A VARIABLES REALES
+  1. En web_vars.c seccion 1/2 registra tus variables con WV(...) / WVW(...) (ver paginas "widgets" > Como se usa).
+  2. Borra web_demo.c/.h, la llamada WebVars_DemoTick() en network.c y las variables de demo de la tabla.
+  3. Las variables del HVAC (c1_*, c2_*, m_*, out_w, al_w, in_w...) son los nombres que usan las paginas hvac y compon:
+     conserva los nombres (claves) y apunta cada una a tu variable real.
+  4. Cada variable puede estar en varias paginas (campo pages, mascara PG_*).
+
+AVISOS IMPORTANTES
+  - La web NO TIENE AUTENTICACION: cualquiera en la red puede escribir variables, lanzar comandos,
+    subir ficheros y reiniciar el micro. No la expongas fuera de una red de confianza.
+  - Los botones de mando manual/emergencia de la web NO son una proteccion de seguridad. Las seguridades
+    (presostatos, termicos, parada de emergencia) deben ir por hardware / logica independiente.
+  - Los comandos se ejecutan en el hilo de red: deben ser cortos.
+  - Limite JSON por pagina: 4096 bytes (WEBVARS_JSON_MAX, buffers static en network.c); la mayor (errores) ocupa unos 1700.
+  - packed_fs.c ocupa unos 930 KB de flash.
+  - Probado SOLO en PC (tests con gcc y navegador simulado). No se ha compilado ni probado en la placa
+    con tus cabeceras reales de FreeRTOS/Mongoose: revisa errores de compilacion en web_sys.c y network.c.
+
+NOVEDADES: OBJETO, WIDGETS DE DATOS, CAN Y TRDP
+  - Reloj/fecha: variable rtc (segundos UNIX UTC, escribible) y rtc_tz (minutos). La web puede poner la hora del PC en la placa;
+    tu codigo debe escribirla en el RTC (HAL_RTC_SetTime). Ahora solo se guarda en la variable de demo.
+  - Red: net_dhcp, net_ip, net_mask, net_gw, net_dns, net_dhcp_to, net_lease (escribibles). El boton APLICAR llama a WebNet_Apply():
+    escribe tu propia funcion (hay una version vacia "weak" en web_vars.c y una de demo en web_demo.c que se borra con la demo).
+    Las variables net_st / net_cip / ... son de lectura: rellenalas desde Mongoose (mgr.ifp->ip, mask, gw...).
+  - Versiones: arrays fw_n / fw_v / fw_crc / fw_size / fw_ok (7 archivos). Rellenalos al arrancar.
+  - Buses: en tu driver CAN llama a WebBus_Rx(WEBBUS_CAN, id, len, datos) y WebBus_SetState(); para TRDP, WebBus_Rx(WEBBUS_TRDP, comId, size, datos).
+    Forzado de RX: lee las señales con WebBus_GetRx(). Forzado de TX: en tu bucle de envio usa WebBus_TxPoll() y no transmitas
+    por tu cuenta si WebBus_TxForced() es 1. El forzado se libera solo a los 600 s (WEBBUS_FORCE_TIMEOUT_S).
+    network.c llama a WebBus_Tick1s() cada segundo. Ver web_bus.h.
+  - Ayuda HVAC: las listas "Por que entra en FRIO/CALOR" son condiciones editables en objeto.html; deben reflejar la logica REAL de tu regulador.
+  - TRDP: se asume Train Real-Time Data Protocol (PD). Si querias otra cosa, avisa.
+  - Forzar tramas en un bus real de un tren puede mover equipos: solo en banco o con el tren parado.
+  - Probado solo en PC (tests gcc + navegador simulado); no compilado con tus cabeceras ni probado en la placa.
+
+NOVEDADES: ERRORES Y SEÑALES DE COMUNICACION
+  - ERRORES: edita SOLO web_err_cfg.h (una linea por error: ID, nombre, severidad, retardo, condicion en C, variables, descripcion,
+    valor para el historico). Maximo 32. La pagina "errores" muestra activos (con las variables que los activan y su valor en vivo),
+    historico (20 eventos) y contadores. Comandos: err_ack, err_clr_cnt, err_clr_hist, err_test (simula un error 8 s).
+    Las condiciones se evaluan cada segundo (WebErr_Tick1s, llamada desde network.c). Pon en WEBERR_NOW() tu fuente de hora.
+    Historico y contadores estan en RAM: se pierden al reiniciar (guardalos en flash/backup SRAM si los necesitas).
+    Para ver el valor en vivo de una variable en la columna VARIABLES, esa variable necesita PG_ERR en su campo de paginas.
+  - SEÑALES: edita SOLO web_sig_cfg.h (una linea por señal: trama, bit de inicio, longitud, factor, offset, unidad, descripcion y tu variable).
+    La web las lista solas en CAN y TRDP (pestaña SEÑALES) con casilla FORZAR y valor forzado por señal. Solo actua con FORZAR SEÑALES activo.
+    No hay que llamar a nada nuevo: WebBus_Rx() decodifica las señales RX y WebBus_TxPoll() transmite las tramas TX definidas
+    (id, dlc, periodo) con las señales TX dentro. Un forzado se libera solo a los 600 s.
+  - Rutas nuevas: GET /api/errores y GET /api/senales?bus=0|1 devuelven el catalogo (textos de los .h) en JSON.
+  - Las tablas de errores y señales se rellenan solas desde ese catalogo: no hay que tocar HTML al cambiar la configuracion.

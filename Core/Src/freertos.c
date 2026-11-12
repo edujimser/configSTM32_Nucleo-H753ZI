@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include <stdio.h>
 #include "queue.h"
 #include "LedDataVision/LedData.h"
 #include "usart.h"
@@ -35,6 +36,7 @@
 #include "MsgUart/RxUart/RxUart.h"
 #include "MsgUart/TxUart/TxUart.h"
 #include "SPI_Flash_Memory/SPI_Flash_Memory.h"
+#include "Network/network.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,12 +70,6 @@ const osThreadAttr_t ThreadAttr_InitTask = {
   .priority   = (osPriority_t) osPriorityHigh,
 };
 
-const osThreadAttr_t ThreadAttr_Test = {
-  .name       = "Task_Test",
-  .stack_size = 256 * 12,
-  .priority   = (osPriority_t) osPriorityLow1,
-};
-
 const osThreadAttr_t ThreadAttr_StatusSystem = {
   .name       = "Task_StatusSystem",
   .stack_size = 256 * 4,
@@ -92,35 +88,62 @@ const osThreadAttr_t ThreadAttr_Uart_Rx = {
   .priority   = (osPriority_t) osPriorityBelowNormal,
 };
 
+
+static const osThreadAttr_t ThreadAttr_Network = {
+  .name       = "Task_Network",
+  .stack_size = 2048 * 8,
+  .priority   = (osPriority_t) osPriorityLow1,
+};
+
+
 /* ==============================================================================
  * 2. Definición de Identificadores de Tareas (Thread Handles)
  * ============================================================================== */
 
 osThreadId_t ThreadId_InitTask;
-osThreadId_t ThreadId_Test;
 osThreadId_t ThreadId_StatusSystem;
 osThreadId_t ThreadId_Uart_Tx;
 osThreadId_t ThreadId_Uart_Rx;
+osThreadId_t ThreadId_Network;
+
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void ThreadFunc_InitTask(void *argument);
-void ThreadFunc_Test(void *argument);
 
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
+
+/* Hook prototypes */
+void vApplicationMallocFailedHook(void);
+
+/* USER CODE BEGIN 5 */
+void vApplicationMallocFailedHook(void)
+{
+   /* vApplicationMallocFailedHook() will only be called if
+   configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h. It is a hook
+   function that will get called if a call to pvPortMalloc() fails.
+   pvPortMalloc() is called internally by the kernel whenever a task, queue,
+   timer or semaphore is created. It is also called by various parts of the
+   demo application. If heap_1.c or heap_2.c are used, then the size of the
+   heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
+   FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
+   to query the size of free heap space that remains (although it does not
+   provide information on how the remaining heap might be fragmented). */
+}
+/* USER CODE END 5 */
 
 /**
   * @brief  FreeRTOS initialization
@@ -156,17 +179,17 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
 
 	// 1. Tarea de Inicialización del Sistema
-	ThreadId_InitTask = osThreadNew(ThreadFunc_InitTask, NULL, &ThreadAttr_InitTask);
+		ThreadId_InitTask = osThreadNew(ThreadFunc_InitTask, NULL, &ThreadAttr_InitTask);
 
-	// 2. Tarea de Pruebas (SPI Flash)
-	ThreadId_Test = osThreadNew(ThreadFunc_Test, NULL, &ThreadAttr_Test);
+	// 2. Tarea de Estado del Sistema (LEDs/Sensores)
+		ThreadId_StatusSystem = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &ThreadAttr_StatusSystem);
 
-	// 3. Tarea de Estado del Sistema (LEDs/Sensores)
-	ThreadId_StatusSystem = osThreadNew(StartGreenYellowRedTask, &startConfiguration, &ThreadAttr_StatusSystem);
+	// 3. Tareas UART (Transmisión y Recepción)
+		ThreadId_Uart_Tx = osThreadNew(ThreadFunc_Uart_TX, NULL, &ThreadAttr_Uart_Tx);
+		ThreadId_Uart_Rx = osThreadNew(ThreadFunc_Uart_Rx, NULL, &ThreadAttr_Uart_Rx);
 
-	// 4. Tareas UART (Transmisión y Recepción)
-	ThreadId_Uart_Tx = osThreadNew(ThreadFunc_Uart_TX, NULL, &ThreadAttr_Uart_Tx);
-	ThreadId_Uart_Rx = osThreadNew(ThreadFunc_Uart_Rx, NULL, &ThreadAttr_Uart_Rx);
+	// 4. NetWork
+		//Archivo propio
 
   /* USER CODE END RTOS_THREADS */
 
@@ -184,7 +207,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(5000);
+    osDelay(1000000);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -211,27 +234,13 @@ void ThreadFunc_InitTask(void *argument)
   osDelay(300);
   Flash_Monitor_Init(&spi_flash_memory_1);
   osDelay(300);
-
+  ThreadId_Network = osThreadNew(ThreadFunc_Network, NULL, &ThreadAttr_Network);
+  osDelay(100);
 
   osThreadExit();
 }
 
 
-/**
- * @brief Tarea de pruebas continuas. En este caso, verifica la comunicación
- *        SPI con la memoria Flash periódicamente.
- */
-void ThreadFunc_Test(void *argument)
-{
-    for (;;)
-    {
-    	osDelay(5000);
-
-    	//Flash_Read_ID(&spi_flash_memory_1);
-
-        osDelay(5000);
-    }
-}
 
 /* USER CODE END Application */
 

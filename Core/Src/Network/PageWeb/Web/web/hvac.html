@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Climatizacion</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/hvac">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a class="act" href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Climatizacion</h1>
+    <p class="dim" style="margin:-8px 0 8px">Unidad de climatizacion de tren: dos circuitos frigorificos (C1 con compresor inverter, C2 con arranque estrella-triangulo). Datos simulados.</p>
+    <h3>MODO Y AMBIENTE</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Estado de la unidad</h2>
+        <span class="etq">data-steps</span><span class="etq">data-set</span><span class="etq r">escribe</span>
+        <div class="pasos" data-steps="hreal" data-names="Parado,Ventilacion,Frio,Calor,Desescarche"></div><div class="fila" style="margin-top:16px"><button class="btn fino" data-set="hmodo" data-value="0">OFF</button><button class="btn fino" data-set="hmodo" data-value="1">AUTO</button><button class="btn fino" data-set="hmodo" data-value="2">FRIO</button><button class="btn fino" data-set="hmodo" data-value="3">CALOR</button><button class="btn fino" data-set="hmodo" data-value="4">VENT</button></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="pasos" data-steps="hreal" data-names="Parado,Ventilacion,Frio,Calor,Desescarche"&gt;&lt;/div&gt;
+&lt;button class="btn fino" data-set="hmodo" data-value="2"&gt;FRIO&lt;/button&gt;   &lt;!-- orden de modo (escribible) --&gt;</pre><pre class="codigo">// web_vars.c: variable ESCRIBIBLE (WVW) con limites minimo y maximo
+WVW("hmodo", PG_WIDGETS, WV_U8, 0, modo_ordenado, 0, 4),
+WV ("hreal", PG_HVAC, WV_U8, 0, modo_real),   // modo real de la maquina de estados</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Sondas de temperatura</h2>
+        <span class="etq">data-table</span><span class="etq">data-types</span><span class="etq">lee</span>
+        <table class="tabla" data-table="t_int,t_ext,t_imp,t_ret,hum,co2" data-names="Interior,Exterior,Impulsion,Retorno,Humedad,CO2" data-units="C,C,C,C,%,ppm" data-types="valor,valor,valor,valor,valor,alarma" data-limits=",,,,,:1400"></table><p class="dim">Una sonda con fallo (abierta o en corto) llega como NaN y se ve como "--".</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla" data-table="t_int,t_ext,t_imp,t_ret,hum,co2"
+  data-names="Interior,Exterior,Impulsion,Retorno,Humedad,CO2" data-units="C,C,C,C,%,ppm"
+  data-types="valor,valor,valor,valor,valor,alarma" data-limits=",,,,,:1400"&gt;&lt;/table&gt;</pre><pre class="codigo">// si la sonda falla, escribe NAN en la variable (float): la web la muestra como "--"
+mi_t_ret = sonda_ok ? lectura : NAN;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Consigna</h2>
+        <span class="etq">data-set</span><span class="etq r">escribe</span>
+        <div class="fila"><input type="number" step="0.5" min="10" max="30" data-set="sp_t"><span class="dim">consigna &deg;C (10 a 30)</span></div><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;input type="number" step="0.5" data-set="sp_t"&gt;</pre><pre class="codigo">// web_vars.c: variable ESCRIBIBLE (WVW) con limites minimo y maximo
+WVW("sp_t", PG_WIDGETS, WV_FLOAT, 1, consigna_temp, 10, 30),</pre></details>
+      </div>
+    </div>
+    <h3>REGULACION PID</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Faceplate PID</h2>
+        <span class="etq">data-pid</span><span class="etq r">escribe</span><span class="etq">lee</span>
+        <div data-pid data-pv="t_int" data-sp="sp_t" data-out="pid_out" data-mode="pid_mode" data-man="pid_man" data-kp="pid_kp" data-ki="pid_ki" data-kd="pid_kd" data-unit="C" data-sp-min="10" data-sp-max="30"></div>
+        <p class="dim">Tu regulador PID (en C) lee pid_modo / pid_manual / ganancias y escribe pid_salida: la web solo es el panel de operador.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-pid data-pv="t_int" data-sp="sp_t" data-out="pid_out" data-mode="pid_mode"
+     data-man="pid_man" data-kp="pid_kp" data-ki="pid_ki" data-kd="pid_kd"
+     data-unit="C" data-sp-min="10" data-sp-max="30"&gt;&lt;/div&gt;
+&lt;!-- un solo elemento: la pagina construye PV, SP, salida, AUTO/MANUAL, ganancias y grafica --&gt;</pre><pre class="codigo">// web_vars.c: PV y salida de lectura; consigna, modo, salida manual y ganancias ESCRIBIBLES
+WV ("t_int",    PG_HVAC, WV_FLOAT, 1, temp_interior),
+WV ("pid_out",  PG_HVAC, WV_FLOAT, 1, pid_salida),
+WVW("pid_mode", PG_HVAC, WV_U8,    0, pid_modo,   0, 1),     // 0 AUTO, 1 MANUAL
+WVW("pid_man",  PG_HVAC, WV_FLOAT, 1, pid_manual, 0, 100),
+WVW("pid_kp",   PG_HVAC, WV_FLOAT, 2, pid_kp,     0, 50),    // y pid_ki, pid_kd, sp_t</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Temperaturas</h2>
+        <span class="etq">data-chart</span><span class="etq">lee</span>
+        <canvas class="grafica" data-chart="t_int,t_ext,t_imp,t_ret" data-seconds="120"></canvas><p class="dim">interior, exterior, impulsion, retorno</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="grafica" data-chart="t_int,t_ext,t_imp,t_ret" data-seconds="120"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+    </div>
+    <h3>CIRCUITO FRIGORIFICO 1</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Esquema del circuito (frio / calor)</h2>
+        <span class="etq">data-state</span><span class="etq">data-v</span><span class="etq">lee</span>
+        <svg class="circuito" viewBox="0 0 760 390" data-state="c1_4v" style="width:100%;height:auto;display:block;overflow:visible">
+  <!-- tuberias: la direccion de cada trazado es la del ciclo de FRIO; en calor se invierte -->
+  <path class="tubo p-hot" d="M350,228 V100"/><path class="tubo p-cold" d="M380,100 V228"/>
+  <path class="tubo p-ext" d="M320,80 H140"/><path class="tubo p-int" d="M620,80 H440"/>
+  <path class="tubo p-ext" d="M90,130 V310 H240"/><path class="tubo p-int" d="M300,310 H670 V130"/>
+  <g data-state="c1_st">
+    <path class="flujo" d="M350,228 V100"/><path class="flujo" d="M380,100 V228"/>
+    <g class="inv"><path class="flujo" d="M320,80 H140"/><path class="flujo" d="M620,80 H440"/><path class="flujo" d="M90,130 V310 H240"/><path class="flujo" d="M300,310 H670 V130"/></g>
+    <g transform="translate(365,262)"><circle class="caja" r="36"/>
+      <path class="rotor" d="M0 0 a2 2 0 0 1 4 0 a4 4 0 0 1 -8 0 a6 6 0 0 1 12 0 a8 8 0 0 1 -16 0 a10 10 0 0 1 20 0 a12 12 0 0 1 -24 0"/></g>
+  </g>
+  <rect class="caja" x="320" y="60" width="120" height="40" rx="6"/><text x="380" y="85" text-anchor="middle">4 VIAS</text>
+  <rect class="bat" x="40" y="40" width="100" height="90" rx="6"/><line class="bat" style="stroke:var(--line)" x1="52" y1="46" x2="52" y2="124"/><line class="bat" style="stroke:var(--line)" x1="62" y1="46" x2="62" y2="124"/><line class="bat" style="stroke:var(--line)" x1="72" y1="46" x2="72" y2="124"/><line class="bat" style="stroke:var(--line)" x1="82" y1="46" x2="82" y2="124"/><line class="bat" style="stroke:var(--line)" x1="92" y1="46" x2="92" y2="124"/><line class="bat" style="stroke:var(--line)" x1="102" y1="46" x2="102" y2="124"/><line class="bat" style="stroke:var(--line)" x1="112" y1="46" x2="112" y2="124"/><line class="bat" style="stroke:var(--line)" x1="122" y1="46" x2="122" y2="124"/><line class="bat" style="stroke:var(--line)" x1="132" y1="46" x2="132" y2="124"/>
+  <rect class="bat" x="620" y="40" width="100" height="90" rx="6"/><line class="bat" style="stroke:var(--line)" x1="632" y1="46" x2="632" y2="124"/><line class="bat" style="stroke:var(--line)" x1="642" y1="46" x2="642" y2="124"/><line class="bat" style="stroke:var(--line)" x1="652" y1="46" x2="652" y2="124"/><line class="bat" style="stroke:var(--line)" x1="662" y1="46" x2="662" y2="124"/><line class="bat" style="stroke:var(--line)" x1="672" y1="46" x2="672" y2="124"/><line class="bat" style="stroke:var(--line)" x1="682" y1="46" x2="682" y2="124"/><line class="bat" style="stroke:var(--line)" x1="692" y1="46" x2="692" y2="124"/><line class="bat" style="stroke:var(--line)" x1="702" y1="46" x2="702" y2="124"/><line class="bat" style="stroke:var(--line)" x1="712" y1="46" x2="712" y2="124"/>
+  <g transform="translate(90,85)"><circle fill="#000" stroke="var(--line)" r="17"/><g data-bar="c1_fc" data-min="0" data-max="100" class="v" style="display:contents"><g class="vent"><path d="M0 0 C-4 -10 4 -18 10 -12 C6 -8 3 -3 0 0Z"/><path transform="rotate(120)" d="M0 0 C-4 -10 4 -18 10 -12 C6 -8 3 -3 0 0Z"/><path transform="rotate(240)" d="M0 0 C-4 -10 4 -18 10 -12 C6 -8 3 -3 0 0Z"/></g></g></g>
+  <g transform="translate(670,85)"><circle fill="#000" stroke="var(--line)" r="17"/><g data-bar="ev_fan" data-min="0" data-max="100" style="display:contents"><g class="vent"><path d="M0 0 C-4 -10 4 -18 10 -12 C6 -8 3 -3 0 0Z"/><path transform="rotate(120)" d="M0 0 C-4 -10 4 -18 10 -12 C6 -8 3 -3 0 0Z"/><path transform="rotate(240)" d="M0 0 C-4 -10 4 -18 10 -12 C6 -8 3 -3 0 0Z"/></g></g></g>
+  <path d="M240 310 L300 310 M250 296 L270 310 L250 324 Z M290 296 L270 310 L290 324 Z" fill="#050505" stroke="var(--fg)" stroke-width="2"/>
+  <text x="90" y="28" text-anchor="middle" class="d">EXTERIOR</text><text x="670" y="28" text-anchor="middle" class="d">INTERIOR</text>
+  <text x="365" y="318" text-anchor="middle" class="d" dy="34"></text>
+  <text x="270" y="288" text-anchor="middle" class="d">EEV <tspan data-v="c1_eev"></tspan>%</text>
+  <text x="270" y="346" text-anchor="middle">SH <tspan data-v="c1_sh"></tspan> K &#160; SC <tspan data-v="c1_sc"></tspan> K</text>
+  <text x="342" y="170" text-anchor="end">HP <tspan data-v="c1_hp"></tspan> bar</text><text x="342" y="188" text-anchor="end" class="d">DESCARGA</text>
+  <text x="392" y="170">LP <tspan data-v="c1_lp"></tspan> bar</text><text x="392" y="188" class="d">ASPIRACION</text>
+  <text x="414" y="256">Td <tspan data-v="c1_td"></tspan> &#176;C</text><text x="414" y="274">Ts <tspan data-v="c1_ts"></tspan> &#176;C</text>
+  <text x="365" y="316" text-anchor="middle" class="d" dy="-0"></text>
+  <text x="530" y="215" text-anchor="middle" class="modo"><tspan data-v="hreal" data-map="0:PARADO,1:VENT,2:FRIO,3:CALOR,4:DESESC"></tspan></text>
+  <text x="530" y="236" text-anchor="middle" class="d">CIRCUITO 1</text>
+  <text x="365" y="296" text-anchor="middle" class="d" dy="0"></text>
+  <text x="365" y="266" text-anchor="middle" style="font-size:10px">C1</text>
+</svg>
+        <p class="dim">Tuberias rojas = lado caliente (descarga/condensacion), azules = lado frio. Se invierten con la valvula de 4 vias.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="circuito" data-state="c1_4v"&gt;           &lt;!-- c1_4v: 0 frio, 1 calor (valvula de 4 vias) --&gt;
+  &lt;path class="tubo p-ext" d="M320,80 H140"/&gt;       &lt;!-- el color y el sentido cambian solos --&gt;
+  &lt;g data-state="c1_st"&gt; ...flujo, compresor... &lt;/g&gt; &lt;!-- el flujo se mueve si el compresor marcha --&gt;
+  &lt;text&gt;HP &lt;tspan data-v="c1_hp"&gt;&lt;/tspan&gt; bar&lt;/text&gt; &lt;!-- cualquier dato vivo dentro del dibujo --&gt;
+&lt;/svg&gt;</pre><pre class="codigo">// 4 vias: WV ("c1_4v", PG_HVAC, WV_BOOL, 0, valvula4v_calor), compresor: WV ("c1_st", PG_HVAC, WV_U8, ...)  0 parado 1 arrancando 2 marcha 3 fallo</pre></details>
+      </div>
+    </div>
+    <h3>COMPRESORES</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Compresor 1 (inverter)</h2>
+        <span class="etq">data-state</span><span class="etq">data-bar</span><span class="etq">lee</span>
+        <svg class="hv compresor" viewBox="0 0 120 120" data-state="c1_st" data-bar="c1_hz" data-min="0" data-max="90"><circle class="anillo" cx="60" cy="60" r="52"/><circle class="fino" cx="60" cy="60" r="40"/><path class="rotor" d="M60 60 a4 4 0 0 1 8 0 a8 8 0 0 1 -16 0 a12 12 0 0 1 24 0 a16 16 0 0 1 -32 0 a20 20 0 0 1 40 0 a24 24 0 0 1 -48 0"/><text x="60" y="112" text-anchor="middle" class="d">C1</text></svg><div class="pie-hv"><b data-v="c1_hz"></b> Hz &middot; <b data-v="c1_a"></b> A &middot; <span data-v="c1_st" data-map="0:PARADO,1:ARRANCANDO,2:MARCHA,3:FALLO"></span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="compresor" data-state="c1_st" data-bar="c1_hz" data-min="0" data-max="90"&gt; ... &lt;/svg&gt;
+/* c1_st: 0 parado, 1 arrancando, 2 marcha, 3 fallo (anillo gris/ambar/verde/rojo)
+   c1_hz: velocidad del inverter -&gt; velocidad de giro del dibujo */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c1_st", PG_WIDGETS, WV_U8, 0, estado_comp1),
+WV ("c1_hz", PG_HVAC, WV_U8, 0, frecuencia_inverter),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Compresor 2 (velocidad fija)</h2>
+        <span class="etq">data-state</span><span class="etq">lee</span>
+        <svg class="hv compresor" viewBox="0 0 120 120" data-state="c2_st"><circle class="anillo" cx="60" cy="60" r="52"/><circle class="fino" cx="60" cy="60" r="40"/><path class="rotor" d="M60 60 a4 4 0 0 1 8 0 a8 8 0 0 1 -16 0 a12 12 0 0 1 24 0 a16 16 0 0 1 -32 0 a20 20 0 0 1 40 0 a24 24 0 0 1 -48 0"/><text x="60" y="112" text-anchor="middle" class="d">C2</text></svg><div class="pie-hv"><b data-v="c2_a"></b> A &middot; <span data-v="c2_st" data-map="0:PARADO,1:ARRANCANDO,2:MARCHA,3:FALLO"></span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="compresor" data-state="c2_st"&gt; ... &lt;/svg&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Arranque estrella-triangulo</h2>
+        <span class="etq">data-state</span><span class="etq">lee</span>
+        <svg class="hv yd" viewBox="0 0 300 230" data-state="c2_yd" style="max-width:330px"><g class="km1"><rect class="caja" x="14" y="10" width="76" height="46" rx="6"/><circle class="lamp" cx="34" cy="33" r="9"/><text x="52" y="38">KM1</text></g><g class="km2"><rect class="caja" x="112" y="10" width="76" height="46" rx="6"/><circle class="lamp" cx="132" cy="33" r="9"/><text x="150" y="38">KM2</text></g><g class="km3"><rect class="caja" x="210" y="10" width="76" height="46" rx="6"/><circle class="lamp" cx="230" cy="33" r="9"/><text x="248" y="38">KM3</text></g><text x="52" y="72" text-anchor="middle" class="d">LINEA</text><text x="150" y="72" text-anchor="middle" class="d">ESTRELLA</text><text x="248" y="72" text-anchor="middle" class="d">TRIANGULO</text><line class="linea" x1="52" y1="56" x2="52" y2="140"/><line class="linea" x1="150" y1="56" x2="150" y2="110"/><line class="linea" x1="248" y1="56" x2="248" y2="110"/><g transform="translate(150,170)"><circle class="caja" r="42"/><text y="5" text-anchor="middle">M 3~</text></g><g transform="translate(70,170)"><path class="arr arr-y" d="M0 0 L0 -18 M0 0 L-16 10 M0 0 L16 10"/><text y="32" text-anchor="middle" class="d">Y</text></g><g transform="translate(250,170)"><path class="arr arr-d" d="M0 -18 L-17 12 L17 12 Z"/><text y="32" text-anchor="middle" class="d">DELTA</text></g><text x="150" y="226" text-anchor="middle" class="d">ARRANQUE EN <tspan data-v="c2_tyd"></tspan> S</text></svg><div class="pie-hv"><span data-v="c2_yd" data-map="0:PARADO,1:ESTRELLA,2:TRIANGULO,3:FALLO"></span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="yd" data-state="c2_yd"&gt; ... &lt;/svg&gt;
+/* c2_yd: 0 parado, 1 estrella, 2 triangulo, 3 fallo
+   KM1 (linea) y KM2 (estrella) activos en 1; KM1 y KM3 (triangulo) en 2 */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c2_yd", PG_WIDGETS, WV_U8, 0, estado_estrella_triangulo),
+WV ("c2_tyd", PG_HVAC, WV_U8, 0, segundos_restantes_estrella),</pre></details>
+      </div>
+    </div>
+    <h3>VALVULAS</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Valvula de 4 vias</h2>
+        <span class="etq">data-state</span><span class="etq">lee</span>
+        <div class="fila" style="justify-content:space-around"><svg class="hv v4" viewBox="0 0 160 120" data-state="c1_4v"><rect class="cuerpo" x="30" y="32" width="100" height="44" rx="8"/><g class="m-frio"><line class="hot" x1="55" y1="32" x2="55" y2="76"/><line class="cold" x1="105" y1="32" x2="105" y2="76"/></g><g class="m-calor"><line class="hot" x1="55" y1="32" x2="105" y2="76"/><line class="cold" x1="105" y1="32" x2="55" y2="76"/></g><line class="trazo" x1="55" y1="32" x2="55" y2="12"/><line class="trazo" x1="105" y1="32" x2="105" y2="12"/><line class="trazo" x1="55" y1="76" x2="55" y2="104"/><line class="trazo" x1="105" y1="76" x2="105" y2="104"/><text x="55" y="8" text-anchor="middle" class="d">D</text><text x="105" y="8" text-anchor="middle" class="d">S</text><text x="55" y="116" text-anchor="middle" class="d">C</text><text x="105" y="116" text-anchor="middle" class="d">E</text></svg><svg class="hv v4" viewBox="0 0 160 120" data-state="c2_4v"><rect class="cuerpo" x="30" y="32" width="100" height="44" rx="8"/><g class="m-frio"><line class="hot" x1="55" y1="32" x2="55" y2="76"/><line class="cold" x1="105" y1="32" x2="105" y2="76"/></g><g class="m-calor"><line class="hot" x1="55" y1="32" x2="105" y2="76"/><line class="cold" x1="105" y1="32" x2="55" y2="76"/></g><line class="trazo" x1="55" y1="32" x2="55" y2="12"/><line class="trazo" x1="105" y1="32" x2="105" y2="12"/><line class="trazo" x1="55" y1="76" x2="55" y2="104"/><line class="trazo" x1="105" y1="76" x2="105" y2="104"/><text x="55" y="8" text-anchor="middle" class="d">D</text><text x="105" y="8" text-anchor="middle" class="d">S</text><text x="55" y="116" text-anchor="middle" class="d">C</text><text x="105" y="116" text-anchor="middle" class="d">E</text></svg></div><div class="pie-hv">circuito 1: <b data-v="c1_4v" data-map="0:FRIO,1:CALOR"></b> &middot; circuito 2: <b data-v="c2_4v" data-map="0:FRIO,1:CALOR"></b></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="v4" data-state="c1_4v"&gt; ... &lt;/svg&gt;   &lt;!-- 0 = frio (D-C, E-S), 1 = calor (D-E, C-S) --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c1_4v", PG_WIDGETS, WV_BOOL, 0, v4v1_calor),
+// rojo = gas caliente (descarga), azul = aspiracion</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Valvula hot-gas (desescarche)</h2>
+        <span class="etq">data-state</span><span class="etq">lee</span>
+        <div class="fila" style="justify-content:space-around"><svg class="hv hg" viewBox="0 0 140 110" data-state="c1_hg"><line class="tubo-hg" x1="4" y1="78" x2="136" y2="78"/><path class="valv" d="M48 62 L92 94 L92 62 L48 94 Z"/><line class="trazo" x1="70" y1="78" x2="70" y2="44"/><rect class="bobina" x="52" y="14" width="36" height="30" rx="4"/><path d="M58 29 q4 -8 8 0 t8 0 t8 0" fill="none" stroke="#fff" stroke-width="1.6"/></svg><svg class="hv hg" viewBox="0 0 140 110" data-state="c2_hg"><line class="tubo-hg" x1="4" y1="78" x2="136" y2="78"/><path class="valv" d="M48 62 L92 94 L92 62 L48 94 Z"/><line class="trazo" x1="70" y1="78" x2="70" y2="44"/><rect class="bobina" x="52" y="14" width="36" height="30" rx="4"/><path d="M58 29 q4 -8 8 0 t8 0 t8 0" fill="none" stroke="#fff" stroke-width="1.6"/></svg></div><div class="pie-hv">circuito 1: <b data-v="c1_hg"></b> &middot; circuito 2: <b data-v="c2_hg"></b></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="hg" data-state="c1_hg"&gt; ... &lt;/svg&gt;   &lt;!-- 1 = solenoide energizada --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c1_hg", PG_WIDGETS, WV_BOOL, 0, hotgas1),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Valvula de expansion electronica (EEV)</h2>
+        <span class="etq">data-bar</span><span class="etq">lee</span>
+        <div class="fila" style="justify-content:space-around"><svg class="hv eev" viewBox="0 0 120 120" data-bar="c1_eev" data-min="0" data-max="100"><circle class="fondo" cx="60" cy="60" r="44"/><circle class="arco" cx="60" cy="60" r="44"/><path class="trazo" d="M34 60 L86 60 M40 48 L60 60 L40 72 Z M80 48 L60 60 L80 72 Z"/><text x="60" y="94" text-anchor="middle"><tspan data-v="c1_eev"></tspan>%</text></svg><svg class="hv eev" viewBox="0 0 120 120" data-bar="c2_eev" data-min="0" data-max="100"><circle class="fondo" cx="60" cy="60" r="44"/><circle class="arco" cx="60" cy="60" r="44"/><path class="trazo" d="M34 60 L86 60 M40 48 L60 60 L40 72 Z M80 48 L60 60 L80 72 Z"/><text x="60" y="94" text-anchor="middle"><tspan data-v="c2_eev"></tspan>%</text></svg></div><div class="pie-hv">sobrecalentamiento: <b data-v="c1_sh"></b> / <b data-v="c2_sh"></b> K &middot; subenfriamiento: <b data-v="c1_sc"></b> / <b data-v="c2_sc"></b> K</div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="eev" data-bar="c1_eev" data-min="0" data-max="100"&gt; ... &lt;/svg&gt;   &lt;!-- el arco muestra la apertura 0-100 % --&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c1_eev", PG_WIDGETS, WV_U8, 0, apertura_eev1),</pre></details>
+      </div>
+    </div>
+    <h3>PRESIONES, PRESOSTATOS Y TRANSDUCTORES</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Alta presion C1</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="c1_hp" data-min="0" data-max="32" data-unit="bar" data-zones="0~22:ok,22~26:warn,26~32:crit"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="c1_hp" data-min="0" data-max="32" data-unit="bar" data-zones="0~22:ok,22~26:warn,26~32:crit"&gt;&lt;/canvas&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c1_hp", PG_WIDGETS, WV_FLOAT, 1, presion_alta1),
+// transductor 4-20 mA / 0-5 V convertido a bar en tu codigo</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Baja presion C1</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="c1_lp" data-min="0" data-max="12" data-unit="bar" data-zones="0~2:crit,2~8:ok,8~12:warn"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="c1_lp" data-min="0" data-max="12" data-unit="bar" data-zones="0~2:crit,2~8:ok,8~12:warn"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Alta presion C2</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="c2_hp" data-min="0" data-max="32" data-unit="bar" data-zones="0~22:ok,22~26:warn,26~32:crit"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="c1_hp" data-min="0" data-max="32" data-unit="bar" data-zones="0~22:ok,22~26:warn,26~32:crit"&gt;&lt;/canvas&gt;</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c2_hp", PG_WIDGETS, WV_FLOAT, 1, presion_alta2),
+// transductor 4-20 mA / 0-5 V convertido a bar en tu codigo</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Baja presion C2</h2>
+        <span class="etq">data-dial</span><span class="etq">lee</span>
+        <canvas class="dial" data-dial="c2_lp" data-min="0" data-max="12" data-unit="bar" data-zones="0~2:crit,2~8:ok,8~12:warn"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="c1_lp" data-min="0" data-max="12" data-unit="bar" data-zones="0~2:crit,2~8:ok,8~12:warn"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta ancha">
+        <h2>Presostatos y seguridades</h2>
+        <span class="etq">data-bits</span><span class="etq">lee</span>
+        <div class="bits inv grande" data-bits="in_w" data-count="8" data-names="AP1,BP1,AP2,BP2,TER C1,TER C2,TER EV,TER CD"></div><p class="dim">Verde = contacto cerrado (OK). Rojo = disparado.</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="bits inv" data-bits="in_w" data-count="8" data-names="AP1,BP1,AP2,BP2,TER C1,TER C2,TER EV,TER CD"&gt;&lt;/div&gt;
+&lt;!-- class="inv": el led se pone ROJO cuando el bit es 0 (un presostato cerrado = 1 = OK) --&gt;</pre><pre class="codigo">// un byte con una entrada digital por bit: bit0 = presostato AP1 (1 = cerrado/OK)
+in_w = (ap1 &lt;&lt; 0) | (bp1 &lt;&lt; 1) | (ap2 &lt;&lt; 2) | (bp2 &lt;&lt; 3);
+WV ("in_w", PG_HVAC, WV_U8, 0, in_w),</pre></details>
+      </div>
+    </div>
+    <h3>BATERIAS, VENTILADORES Y TEMPERATURAS DEL CIRCUITO</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Condensador (exterior) y evaporador (interior)</h2>
+        <span class="etq">data-state</span><span class="etq">data-bar</span><span class="etq">lee</span>
+        <div class="fila" style="justify-content:space-around;align-items:flex-start"><svg class="hv bateria ext" viewBox="0 0 200 150" data-state="c1_4v"><rect class="marco" x="20" y="20" width="120" height="100" rx="6"/><line class="aleta" x1="32" y1="20" x2="32" y2="120"/><line class="aleta" x1="42" y1="20" x2="42" y2="120"/><line class="aleta" x1="52" y1="20" x2="52" y2="120"/><line class="aleta" x1="62" y1="20" x2="62" y2="120"/><line class="aleta" x1="72" y1="20" x2="72" y2="120"/><line class="aleta" x1="82" y1="20" x2="82" y2="120"/><line class="aleta" x1="92" y1="20" x2="92" y2="120"/><line class="aleta" x1="102" y1="20" x2="102" y2="120"/><line class="aleta" x1="112" y1="20" x2="112" y2="120"/><line class="aleta" x1="122" y1="20" x2="122" y2="120"/><line class="aleta" x1="132" y1="20" x2="132" y2="120"/><path class="tuberia" d="M28 34 H132 V50 H28 V66 H132 V82 H28 V98 H132 V112"/><g transform="translate(168,70)"><circle class="fino" r="22"/><g data-bar="c1_fc" data-min="0" data-max="100" data-state="c1_fc" style="display:contents"><g class="vent"><path d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(120)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(240)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/></g></g></g><text x="80" y="142" text-anchor="middle" class="d">EXTERIOR (COND)</text></svg><svg class="hv bateria int" viewBox="0 0 200 150" data-state="c1_4v"><rect class="marco" x="20" y="20" width="120" height="100" rx="6"/><line class="aleta" x1="32" y1="20" x2="32" y2="120"/><line class="aleta" x1="42" y1="20" x2="42" y2="120"/><line class="aleta" x1="52" y1="20" x2="52" y2="120"/><line class="aleta" x1="62" y1="20" x2="62" y2="120"/><line class="aleta" x1="72" y1="20" x2="72" y2="120"/><line class="aleta" x1="82" y1="20" x2="82" y2="120"/><line class="aleta" x1="92" y1="20" x2="92" y2="120"/><line class="aleta" x1="102" y1="20" x2="102" y2="120"/><line class="aleta" x1="112" y1="20" x2="112" y2="120"/><line class="aleta" x1="122" y1="20" x2="122" y2="120"/><line class="aleta" x1="132" y1="20" x2="132" y2="120"/><path class="tuberia" d="M28 34 H132 V50 H28 V66 H132 V82 H28 V98 H132 V112"/><g transform="translate(168,70)"><circle class="fino" r="22"/><g data-bar="ev_fan" data-min="0" data-max="100" data-state="ev_fan" style="display:contents"><g class="vent"><path d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(120)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(240)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/></g></g></g><text x="80" y="142" text-anchor="middle" class="d">INTERIOR (EVAP)</text></svg></div><div class="pie-hv">vent. exterior <b data-v="c1_fc"></b> % &middot; vent. interior <b data-v="ev_fan"></b> %</div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;svg class="bateria ext" data-state="c1_4v"&gt; ... &lt;g data-bar="c1_fc"&gt; ...aspas... &lt;/g&gt;&lt;/svg&gt;
+/* El color de las tuberias (rojo = caliente, azul = frio) se intercambia solo con la 4 vias.
+   data-bar="c1_fc": el ventilador gira segun su % de velocidad. */</pre><pre class="codigo">// web_vars.c, tabla web_vars[]   (ID, paginas, tipo, decimales, variable)
+WV("c1_fc", PG_WIDGETS, WV_U8, 0, ventilador_cond1_pct),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Temperaturas del circuito</h2>
+        <span class="etq">data-table</span><span class="etq">lee</span>
+        <table class="tabla" data-table="c1_td,c1_ts,c1_sh,c1_sc,c2_td,c2_ts,c2_sh,c2_sc" data-names="Descarga C1,Aspiracion C1,Sobrecalent. C1,Subenfr. C1,Descarga C2,Aspiracion C2,Sobrecalent. C2,Subenfr. C2" data-units="C,C,K,K,C,C,K,K" data-types="alarma,valor,valor,valor,alarma,valor,valor,valor" data-limits=":105,,,,:105,,,"></table>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla" data-table="c1_td,c1_ts,c1_sh,c1_sc" data-names="Descarga,Aspiracion,Sobrecalent.,Subenfr."
+  data-units="C,C,K,K" data-types="alarma,valor,valor,valor" data-limits=":105,,,"&gt;&lt;/table&gt;</pre></details>
+      </div>
+    </div>
+    <h3>PRESIONES EN EL TIEMPO</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Presiones (C1 y C2)</h2>
+        <span class="etq">data-chart</span><span class="etq">lee</span>
+        <canvas class="grafica" data-chart="c1_hp,c2_hp,c1_lp,c2_lp" data-seconds="120"></canvas><p class="dim">alta C1, alta C2, baja C1, baja C2</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="grafica" data-chart="c1_hp,c2_hp,c1_lp,c2_lp" data-seconds="120"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

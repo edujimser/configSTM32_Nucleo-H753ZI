@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRDP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/trdp">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a class="act" href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>TRDP</h1>
+    <p class="dim" style="margin:-8px 0 8px">Señales y datos de proceso TRDP (Train Real-Time Data Protocol), con envio y forzado individual. Datos simulados.</p>
+    <h3>ESTADO DEL BUS</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Estado</h2>
+        <span class="etq">data-v</span><span class="etq">data-ring</span><span class="etq">lee</span>
+        <div class="fila" style="justify-content:space-between;align-items:center"><div><p class="dim">ESTADO</p><span class="est bus" data-v="db_st" data-map="0:SIN BUS,1:ERROR,2:OK"></span></div><canvas data-ring="db_load" data-min="0" data-max="100" data-unit="% CARGA" style="width:110px;height:110px"></canvas></div><table class="tabla" style="margin-top:10px"><tbody><tr><td class="l">RECIBIDAS</td><td class="v" data-v="db_rxn"></td></tr><tr><td class="l">ENVIADAS</td><td class="v" data-v="db_txn"></td></tr><tr><td class="l">ERRORES</td><td class="v" data-v="db_err" data-alarm="db_err" data-hi="1"></td></tr><tr><td class="l">SIN HUECO (DESCARTADAS)</td><td class="v" data-v="db_drop"></td></tr></tbody></table>
+        <p class="dim">Señales y datos de proceso TRDP (Train Real-Time Data Protocol), con envio y forzado individual.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;span class="est bus" data-v="db_st" data-map="0:SIN BUS,1:ERROR,2:OK"&gt;&lt;/span&gt;
+&lt;canvas data-ring="db_load" data-min="0" data-max="100" data-unit="% CARGA"&gt;&lt;/canvas&gt;</pre><pre class="codigo">// web_bus.c: llama a WebBus_SetState(1, estado, carga_pct) desde tu driver
+// WebBus_Rx(1, id, len, datos) en cada trama recibida</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>MODO FORZADO</h2>
+        <span class="etq">data-cmd</span><span class="etq">data-confirm</span><span class="etq r">escribe</span>
+        <div class="forzado"><div class="fz"><span>FORZAR SEÑALES</span><span class="led rojo" data-led="db_fsg"></span><button class="btn fino" data-cmd="force" data-arg="1,sg,1" data-confirm="CONFIRMAR ACTIVAR?">ACTIVAR</button><button class="btn fino" data-cmd="force" data-arg="1,sg,0">DESACTIVAR</button></div><div class="fz"><span>FORZAR TRAMAS RX</span><span class="led rojo" data-led="db_frx"></span><button class="btn fino" data-cmd="force" data-arg="1,rx,1" data-confirm="CONFIRMAR ACTIVAR?">ACTIVAR</button><button class="btn fino" data-cmd="force" data-arg="1,rx,0">DESACTIVAR</button></div><div class="fz"><span>FORZAR TRAMAS TX</span><span class="led rojo" data-led="db_ftx"></span><button class="btn fino" data-cmd="force" data-arg="1,tx,1" data-confirm="CONFIRMAR ACTIVAR?">ACTIVAR</button><button class="btn fino" data-cmd="force" data-arg="1,tx,0">DESACTIVAR</button></div></div><div class="alerta-f" hidden data-show-if="db_fsg">SEÑALES FORZADAS: las casillas FORZAR de la pestaña SEÑALES estan actuando.</div><div class="alerta-f" hidden data-show-if="db_frx">RECEPCION DE TRAMAS FORZADA: tu aplicacion ve los datos editados.</div><div class="alerta-f" hidden data-show-if="db_ftx">TRANSMISION DE TRAMAS FORZADA: la web envia sus tramas.</div><p class="dim">Se libera todo solo en: <b data-v="db_left" data-fmt="hms"></b></p><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        <p class="dim">Tres sistemas independientes: SEÑALES (valor a valor, el mas fino), TRAMAS RX (datos que ve tu aplicacion) y TRAMAS TX (tramas propias). Activar pide doble pulsacion.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button data-cmd="force" data-arg="1,sg,1" data-confirm="CONFIRMAR?"&gt;ACTIVAR SEÑALES&lt;/button&gt;   &lt;!-- arg = bus,sg|rx|tx,1|0 --&gt;
+&lt;span class="led" data-led="db_fsg"&gt;&lt;/span&gt;
+&lt;div hidden data-show-if="db_fsg"&gt;FORZADO ACTIVO&lt;/div&gt;</pre><pre class="codigo">// SEÑALES (web_sig.c): sin nada que llamar. Mientras "FORZAR SEÑALES" esta activo, las señales con la casilla FORZAR
+//   dan a tu variable el valor forzado (RX) o transmiten el valor forzado (TX).
+// TRAMAS RX/TX (web_bus.c):  WebBus_GetRx(1, id, datos, &amp;len)  y  WebBus_TxPoll(1, HAL_GetTick(), &amp;id, &amp;len, datos)
+// Todo se libera solo a los 600 s (WEBBUS_FORCE_TIMEOUT_S).</pre></details>
+      </div>
+    </div>
+    <div data-tabs><div class="fila tabsbar"><button class="btn fino" data-tab="sg">SEÑALES</button><button class="btn fino" data-tab="rx">TRAMAS RX</button><button class="btn fino" data-tab="tx">TRAMAS TX</button><button class="btn fino" data-tab="ay">AYUDA</button></div><section data-pane="sg" hidden>
+    <h3>SEÑALES (COMID) CON FORZADO INDIVIDUAL</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Señales</h2>
+        <span class="etq">data-signals</span><span class="etq">data-set</span><span class="etq r">escribe</span>
+        <div class="tabla-wrap"><table class="tabla bus" id="tsg" data-signals="t" data-bus="1"></table></div><div class="fila" style="margin-top:12px"><button class="btn fino" data-export="#tsg" data-name="trdp_senales.csv">EXPORTAR CSV</button></div><p class="dim">Marca FORZAR en una señal y escribe su valor fisico. Solo actua si FORZAR SEÑALES esta activo. RX forzada: tu variable recibe ese valor aunque el bus diga otro. TX forzada: se transmite ese valor en vez de tu variable.</p>
+        <p class="dim">Para añadir o quitar señales edita web_sig_cfg.h: no hay que tocar HTML ni la tabla de variables.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;table class="tabla bus" data-signals="t" data-bus="1"&gt;&lt;/table&gt;
+&lt;!-- la tabla se rellena sola con el catalogo de web_sig_cfg.h (GET /api/senales?bus=1) --&gt;
+&lt;!-- por cada señal j:  &lt;input type="checkbox" data-set="tf0"&gt;  (FORZAR)    &lt;input type="number" data-set="tx0"&gt;  (valor forzado) --&gt;</pre><pre class="codigo">// web_sig_cfg.h  (un solo archivo para añadir señales; ver su cabecera)
+//   RX:  X( CAN_T_INT, 0x100u, 0, 16, 0, 0.1f, 0.0f, "C", "Temperatura interior", mi_temp = v)
+//   TX:  X( CAN_SP,    0x200u, 0, 16, 0, 0.1f, 0.0f, "C", "Consigna", consigna)
+//   TRAMA TX: X( 0x200u, 8, 500 )   // id, dlc, periodo ms
+// valor fisico = raw * factor + offset; numeracion de bits Intel (bit 0 = LSB del byte 0).</pre></details>
+      </div>
+    </div></section><section data-pane="rx" hidden>
+    <h3>RECEPCION (COMIDs RECIBIDOS)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Tabla de recepcion</h2>
+        <span class="etq">data-table</span><span class="etq">data-bytes-set</span><span class="etq r">escribe</span>
+        <div class="tabla-wrap"><table class="tabla bus" id="trx"><thead><tr><th>COMID</th><th>TAMANO</th><th>DATOS (HEX, byte0 primero)</th><th>CONT.</th><th>Hz</th><th>EDAD s</th></tr></thead><tbody><tr data-show-if="dr0i"><td><span data-v="dr0i" data-fmt="hex"></span></td><td data-v="dr0l"></td><td><input type="text" class="bytes-in" data-bytes-set="dr0a,dr0b,dr0l" aria-label="datos"></td><td data-v="dr0n"></td><td data-v="dr0h"></td><td data-v="dr0t"></td></tr><tr data-show-if="dr1i"><td><span data-v="dr1i" data-fmt="hex"></span></td><td data-v="dr1l"></td><td><input type="text" class="bytes-in" data-bytes-set="dr1a,dr1b,dr1l" aria-label="datos"></td><td data-v="dr1n"></td><td data-v="dr1h"></td><td data-v="dr1t"></td></tr><tr data-show-if="dr2i"><td><span data-v="dr2i" data-fmt="hex"></span></td><td data-v="dr2l"></td><td><input type="text" class="bytes-in" data-bytes-set="dr2a,dr2b,dr2l" aria-label="datos"></td><td data-v="dr2n"></td><td data-v="dr2h"></td><td data-v="dr2t"></td></tr><tr data-show-if="dr3i"><td><span data-v="dr3i" data-fmt="hex"></span></td><td data-v="dr3l"></td><td><input type="text" class="bytes-in" data-bytes-set="dr3a,dr3b,dr3l" aria-label="datos"></td><td data-v="dr3n"></td><td data-v="dr3h"></td><td data-v="dr3t"></td></tr><tr data-show-if="dr4i"><td><span data-v="dr4i" data-fmt="hex"></span></td><td data-v="dr4l"></td><td><input type="text" class="bytes-in" data-bytes-set="dr4a,dr4b,dr4l" aria-label="datos"></td><td data-v="dr4n"></td><td data-v="dr4h"></td><td data-v="dr4t"></td></tr><tr data-show-if="dr5i"><td><span data-v="dr5i" data-fmt="hex"></span></td><td data-v="dr5l"></td><td><input type="text" class="bytes-in" data-bytes-set="dr5a,dr5b,dr5l" aria-label="datos"></td><td data-v="dr5n"></td><td data-v="dr5h"></td><td data-v="dr5t"></td></tr></tbody></table></div><div class="fila" style="margin-top:12px"><button class="btn fino" data-export="#trx" data-name="trdp_rx.csv">EXPORTAR CSV</button></div><p class="dim">Los datos se pueden editar SOLO si FORZAR TRAMAS RX esta activo: tu aplicacion vera esos valores en lugar de los del bus.</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;tr data-show-if="dr0i"&gt;
+  &lt;td data-v="dr0i" data-fmt="hex"&gt;&lt;/td&gt;             &lt;!-- id / ComId --&gt;
+  &lt;td data-v="dr0l"&gt;&lt;/td&gt;                             &lt;!-- longitud --&gt;
+  &lt;td&gt;&lt;input data-bytes-set="dr0a,dr0b,dr0l"&gt;&lt;/td&gt;   &lt;!-- bytes (editable si forzado) --&gt;
+  &lt;td data-v="dr0n"&gt;&lt;/td&gt;&lt;td data-v="dr0h"&gt;&lt;/td&gt;&lt;td data-v="dr0t"&gt;&lt;/td&gt;
+&lt;/tr&gt;</pre><pre class="codigo">// web_bus.c define las tablas web_bus_rx[bus][6]; el visor se rellena solo con WebBus_Rx().
+// Si llegan mas de 6 ids distintas, las demas se cuentan en "SIN HUECO".</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Tramas por segundo</h2>
+        <span class="etq">data-barchart</span>
+        <canvas class="barras" data-barchart="dr0h,dr1h,dr2h,dr3h,dr4h,dr5h" data-names="#1,#2,#3,#4,#5,#6" data-min="0" data-max="20"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="barras" data-barchart="dr0h,dr1h,dr2h" data-names="#1,#2,#3" data-min="0"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Carga del bus</h2>
+        <span class="etq">data-chart</span>
+        <canvas class="grafica" data-chart="db_load" data-seconds="120" data-min="0" data-max="100" data-hi="80"></canvas><p class="dim">% de carga</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="grafica" data-chart="db_load" data-seconds="120" data-min="0" data-max="100" data-hi="80"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+    </div></section><section data-pane="tx" hidden>
+    <h3>TRANSMISION (COMIDs QUE SE FUERZAN)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Tabla de transmision</h2>
+        <span class="etq">data-set</span><span class="etq">data-hex</span><span class="etq">data-bytes-set</span><span class="etq r">escribe</span>
+        <div class="tabla-wrap"><table class="tabla bus" id="ttx"><thead><tr><th>ON</th><th>COMID (HEX)</th><th>TAMANO</th><th>DATOS (HEX)</th><th>CICLO MS</th></tr></thead><tbody><tr><td><input type="checkbox" data-set="dx0e" aria-label="activa"></td><td><input type="text" data-set="dx0i" data-hex size="9" aria-label="id"></td><td><input type="number" min="0" max="8" data-set="dx0l" style="width:64px" aria-label="len"></td><td><input type="text" class="bytes-in" data-bytes-set="dx0a,dx0b,dx0l" aria-label="datos"></td><td><input type="number" min="0" max="60000" step="10" data-set="dx0p" style="width:90px" aria-label="periodo"></td></tr><tr><td><input type="checkbox" data-set="dx1e" aria-label="activa"></td><td><input type="text" data-set="dx1i" data-hex size="9" aria-label="id"></td><td><input type="number" min="0" max="8" data-set="dx1l" style="width:64px" aria-label="len"></td><td><input type="text" class="bytes-in" data-bytes-set="dx1a,dx1b,dx1l" aria-label="datos"></td><td><input type="number" min="0" max="60000" step="10" data-set="dx1p" style="width:90px" aria-label="periodo"></td></tr><tr><td><input type="checkbox" data-set="dx2e" aria-label="activa"></td><td><input type="text" data-set="dx2i" data-hex size="9" aria-label="id"></td><td><input type="number" min="0" max="8" data-set="dx2l" style="width:64px" aria-label="len"></td><td><input type="text" class="bytes-in" data-bytes-set="dx2a,dx2b,dx2l" aria-label="datos"></td><td><input type="number" min="0" max="60000" step="10" data-set="dx2p" style="width:90px" aria-label="periodo"></td></tr><tr><td><input type="checkbox" data-set="dx3e" aria-label="activa"></td><td><input type="text" data-set="dx3i" data-hex size="9" aria-label="id"></td><td><input type="number" min="0" max="8" data-set="dx3l" style="width:64px" aria-label="len"></td><td><input type="text" class="bytes-in" data-bytes-set="dx3a,dx3b,dx3l" aria-label="datos"></td><td><input type="number" min="0" max="60000" step="10" data-set="dx3p" style="width:90px" aria-label="periodo"></td></tr></tbody></table></div><div class="fila" style="margin-top:12px"><span class="dim">ENVIADAS: <b data-v="db_txn"></b></span></div><p class="dim">Marca ON, escribe id / datos / periodo y activa FORZAR TRAMAS TX. Periodo 0 = una sola vez al marcar ON.</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;input type="checkbox" data-set="dx0e"&gt;                 &lt;!-- activa esta trama --&gt;
+&lt;input type="text" data-set="dx0i" data-hex&gt;              &lt;!-- id en hexadecimal --&gt;
+&lt;input type="number" data-set="dx0l" min="0" max="8"&gt;    &lt;!-- longitud --&gt;
+&lt;input type="text" data-bytes-set="dx0a,dx0b,dx0l"&gt;      &lt;!-- bytes: DE AD BE EF --&gt;
+&lt;input type="number" data-set="dx0p"&gt;                    &lt;!-- periodo ms --&gt;</pre><pre class="codigo">// las filas son web_bus_tx[bus][i]  (id, lo, hi, per, len, en) y son ESCRIBIBLES
+// solo salen al bus si WebBus_TxPoll() las devuelve (forzado de tramas TX activo)</pre></details>
+      </div>
+    </div></section><section data-pane="ay" hidden>
+    <h3>AYUDA</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Como funciona</h2>
+        <span class="etq">ayuda</span>
+        <details class="faq" open><summary>Señales, tramas RX y tramas TX</summary><p><b>Señales</b>: cada valor de una trama (como en un DBC) se muestra en unidades fisicas y se puede forzar uno a uno. <b>Tramas RX</b>: con el forzado activo, tu aplicacion ve los bytes que pones. <b>Tramas TX</b>: la web envia las tramas de su tabla.</p></details><details class="faq"><summary>Seguridad</summary><p>Forzar datos en un bus de un tren puede mover equipos reales. Usalo solo en banco o con el tren parado. Todo se desactiva solo a los 10 minutos y la web no tiene contrasena.</p></details><details class="faq"><summary>Como añado una señal</summary><p>Edita <b>web_sig_cfg.h</b>: una linea por señal con trama, bit de inicio, longitud, factor, offset, unidad, descripcion y tu variable. No hay que tocar nada mas.</p></details><details class="faq"><summary>Orden de bytes</summary><p>Las señales usan numeracion Intel (bit 0 = LSB del byte 0). La vista de tramas muestra el byte 0 primero. Longitud real: Tamano.</p></details><details class="faq"><summary>TRDP</summary><p>Se muestra cada ComId con sus primeros 8 bytes de datos. El tamano real del telegrama aparece en la columna Tamano. Tu pila TRDP (por ejemplo TCNopen) llama a WebBus_Rx(WEBBUS_TRDP, comId, size, datos) en su callback de PD recibido.</p></details>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;details class="faq"&gt;&lt;summary&gt;Titulo&lt;/summary&gt;&lt;p&gt;Texto&lt;/p&gt;&lt;/details&gt;</pre></details>
+      </div>
+    </div></section></div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

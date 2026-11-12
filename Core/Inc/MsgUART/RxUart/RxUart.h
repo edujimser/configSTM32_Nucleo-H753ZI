@@ -11,6 +11,7 @@
 
 #define LONGITUD_MAX_UART_TX_RX 128
 
+
 extern osMessageQueueId_t Queue_Uart_Rx;
 extern osThreadId_t UartRXTaskHandle;
 extern uint8_t rxDmaBuffer[LONGITUD_MAX_UART_TX_RX];

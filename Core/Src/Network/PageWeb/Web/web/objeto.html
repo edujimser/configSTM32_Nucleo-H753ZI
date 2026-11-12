@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Objeto</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/objeto">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a class="act" href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Objeto</h1>
+    <p class="dim" style="margin:-8px 0 8px">Identificacion de la unidad, versiones, red, ayuda del HVAC y soporte. Datos simulados.</p>
+    <h3>IDENTIFICACION Y HORA</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Equipo</h2>
+        <span class="etq">data-v</span><span class="etq">lee</span>
+        <table class="tabla" id="tequipo"><tbody><tr><td class="l">NOMBRE</td><td class="v" data-v="dev_name"></td></tr><tr><td class="l">N. SERIE</td><td class="v" data-v="dev_sn"></td></tr><tr><td class="l">HARDWARE</td><td class="v" data-v="dev_hw"></td></tr><tr><td class="l">MAC</td><td class="v" data-v="dev_mac"></td></tr><tr><td class="l">ENCENDIDO HACE</td><td class="v" data-v="s_up" data-fmt="hms"></td></tr></tbody></table><div class="fila" style="margin-top:12px"><button class="btn fino" data-copy="#tequipo">COPIAR</button></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;td data-v="dev_name"&gt;&lt;/td&gt;            &lt;!-- texto (WV_STR) --&gt;
+&lt;td data-v="s_up" data-fmt="hms"&gt;&lt;/td&gt;   &lt;!-- segundos como hh:mm:ss --&gt;</pre><pre class="codigo">char dev_name[24] = "Unidad HVAC TREN-01";
+WV("dev_name", PG_OBJETO, WV_STR, 23, dev_name),   // el 4o campo es el tamano del array - 1</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Fecha y hora</h2>
+        <span class="etq">data-clock</span><span class="etq r">escribe</span>
+        <canvas data-clock="rtc" data-mode="analog" style="width:100%;max-width:200px;height:200px;display:block;margin:0 auto"></canvas><canvas class="dot" data-clock="rtc" data-mode="digital" data-pitch="5"></canvas><canvas class="dot" data-clock="rtc" data-mode="date" data-pitch="3" style="margin-top:8px"></canvas><div class="fila" style="margin-top:12px"><button class="btn fino" data-settime="rtc">PONER HORA DE ESTE PC</button><label>ZONA (min UTC)<input type="number" step="30" min="-720" max="840" data-set="rtc_tz" style="width:90px"></label></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas data-clock="rtc" data-mode="analog"&gt;&lt;/canvas&gt;   &lt;!-- rtc = segundos UNIX en UTC --&gt;
+&lt;canvas class="dot" data-clock="rtc" data-mode="digital"&gt;&lt;/canvas&gt;
+&lt;button data-settime="rtc"&gt;PONER HORA&lt;/button&gt;   &lt;!-- escribe la hora del PC en "rtc" --&gt;</pre><pre class="codigo">uint32_t rtc_epoch;       // segundos desde 1970 UTC (de tu RTC o SNTP)
+int32_t  rtc_tz;           // minutos respecto a UTC (Espana invierno 60, verano 120)
+WVW("rtc",    PG_OBJETO, WV_U32, 0, rtc_epoch, 0, 4294967295.0),
+WVW("rtc_tz", PG_OBJETO, WV_I32, 0, rtc_tz, -720, 840),
+// al recibir "rtc" desde la web: llama a HAL_RTC_SetTime con ese valor (ver WebNet_Apply para el patron)</pre></details>
+      </div>
+    </div>
+    <h3>VERSIONES (ARCHIVOS EN FLASH / FIRMWARE)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Versiones y CRC</h2>
+        <span class="etq">data-v</span><span class="etq">data-fmt</span><span class="etq">lee</span>
+        <div class="tabla-wrap"><table class="tabla" id="tver"><thead><tr><th>ARCHIVO</th><th>VERSION</th><th>CRC32</th><th>TAMANO</th><th>OK</th></tr></thead><tbody><tr><td data-v="f0_n"></td><td data-v="f0_v"></td><td data-v="f0_c" data-fmt="hex8"></td><td data-v="f0_z" data-fmt="size"></td><td><span class="led" data-led="f0_k"></span></td></tr><tr><td data-v="f1_n"></td><td data-v="f1_v"></td><td data-v="f1_c" data-fmt="hex8"></td><td data-v="f1_z" data-fmt="size"></td><td><span class="led" data-led="f1_k"></span></td></tr><tr><td data-v="f2_n"></td><td data-v="f2_v"></td><td data-v="f2_c" data-fmt="hex8"></td><td data-v="f2_z" data-fmt="size"></td><td><span class="led" data-led="f2_k"></span></td></tr><tr><td data-v="f3_n"></td><td data-v="f3_v"></td><td data-v="f3_c" data-fmt="hex8"></td><td data-v="f3_z" data-fmt="size"></td><td><span class="led" data-led="f3_k"></span></td></tr><tr><td data-v="f4_n"></td><td data-v="f4_v"></td><td data-v="f4_c" data-fmt="hex8"></td><td data-v="f4_z" data-fmt="size"></td><td><span class="led" data-led="f4_k"></span></td></tr><tr><td data-v="f5_n"></td><td data-v="f5_v"></td><td data-v="f5_c" data-fmt="hex8"></td><td data-v="f5_z" data-fmt="size"></td><td><span class="led" data-led="f5_k"></span></td></tr><tr><td data-v="f6_n"></td><td data-v="f6_v"></td><td data-v="f6_c" data-fmt="hex8"></td><td data-v="f6_z" data-fmt="size"></td><td><span class="led" data-led="f6_k"></span></td></tr></tbody></table></div><div class="fila" style="margin-top:12px"><button class="btn fino" data-export="#tver" data-name="versiones.csv">EXPORTAR CSV</button><button class="btn fino" data-copy="#tver">COPIAR</button></div>
+        <p class="dim">Cada archivo de la flash (bootloader, firmware, web, parametros...) con su version y CRC32. Rellena las variables al arrancar leyendo la cabecera de cada imagen.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;td data-v="f1_n"&gt;&lt;/td&gt;                              &lt;!-- nombre del archivo --&gt;
+&lt;td data-v="f1_v"&gt;&lt;/td&gt;                              &lt;!-- version --&gt;
+&lt;td data-v="f1_c" data-fmt="hex8"&gt;&lt;/td&gt;              &lt;!-- CRC en hexadecimal --&gt;
+&lt;td data-v="f1_z" data-fmt="size"&gt;&lt;/td&gt;              &lt;!-- bytes -&gt; KB / MB --&gt;
+&lt;td&gt;&lt;span class="led" data-led="f1_k"&gt;&lt;/span&gt;&lt;/td&gt;   &lt;!-- CRC correcto --&gt;</pre><pre class="codigo">char     fw_n[7][20];  char fw_v[7][16];  uint32_t fw_crc[7], fw_size[7];  uint8_t fw_ok[7];
+WV("f1_n", PG_OBJETO, WV_STR, 19, fw_n[1]),
+WV("f1_v", PG_OBJETO, WV_STR, 15, fw_v[1]),
+WV("f1_c", PG_OBJETO, WV_U32, 0, fw_crc[1]),
+WV("f1_z", PG_OBJETO, WV_U32, 0, fw_size[1]),
+WV("f1_k", PG_OBJETO, WV_BOOL, 0, fw_ok[1]),
+// rellenalos al arrancar: version de las cabeceras de cada imagen y el resultado de verificar su CRC</pre></details>
+      </div>
+    </div>
+    <h3>CONFIGURACION DE RED</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>IP, DHCP y tiempos</h2>
+        <span class="etq">data-ip</span><span class="etq">data-set</span><span class="etq r">escribe</span>
+        <div class="form-red"><label>MODO<select data-set="net_dhcp"><option value="1">DHCP (automatico)</option><option value="0">IP ESTATICA</option></select></label><label>IP ESTATICA<input type="text" data-set="net_ip" data-ip inputmode="decimal" placeholder="192.168.1.100"></label><label>MASCARA<input type="text" data-set="net_mask" data-ip placeholder="255.255.255.0"></label><label>GATEWAY<input type="text" data-set="net_gw" data-ip placeholder="192.168.1.1"></label><label>DNS<input type="text" data-set="net_dns" data-ip placeholder="8.8.8.8"></label><label>ESPERA DHCP (s)<input type="number" min="1" max="300" data-set="net_dto"></label><label>LEASE PEDIDO (s)<input type="number" min="60" max="604800" data-set="net_lease"></label></div><div class="fila" style="margin-top:14px"><button class="btn" data-cmd="net_aplicar" data-confirm="CONFIRMAR? PUEDE CORTAR LA CONEXION">APLICAR</button></div><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        <p class="dim">Cambiar la IP puede cortar esta conexion: vuelve a abrir la web en la IP nueva. En DHCP, si no hay respuesta en "ESPERA DHCP" segundos la placa debe pasar a la IP estatica (lo implementa tu Network_Init).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;select data-set="net_dhcp"&gt;&lt;option value="1"&gt;DHCP&lt;/option&gt;&lt;option value="0"&gt;ESTATICA&lt;/option&gt;&lt;/select&gt;
+&lt;input type="text" data-set="net_ip" data-ip&gt;      &lt;!-- data-ip: escribes 192.168.1.100, la placa recibe un numero --&gt;
+&lt;button data-cmd="net_aplicar" data-confirm="CONFIRMAR?"&gt;APLICAR&lt;/button&gt;</pre><pre class="codigo">uint8_t net_dhcp; uint32_t net_ip, net_mask, net_gw, net_dns, net_lease;  uint16_t net_dhcp_to;
+WVW("net_dhcp", PG_OBJETO, WV_BOOL, 0, net_dhcp, 0, 1),
+WVW("net_ip",   PG_OBJETO, WV_U32,  0, net_ip,   0, 4294967295.0),   // 192.168.1.100 = 0xC0A80164
+...
+// Al pulsar APLICAR la web llama a WebNet_Apply(): defines tu funcion (una "weak" vacia viene en web_vars.c):
+void WebNet_Apply(void) {
+  /* guarda net_* en flash/EEPROM y avisa a tu hilo de red para reiniciar la pila con esos valores */
+}</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Estado actual de la red</h2>
+        <span class="etq">data-v</span><span class="etq">data-map</span><span class="etq">lee</span>
+        <table class="tabla"><tbody><tr><td class="l">ESTADO</td><td class="v"><span class="est net" data-v="net_st" data-map="0:SIN ENLACE,1:BUSCANDO DHCP,2:DHCP OK,3:IP ESTATICA,4:FALLBACK ESTATICA"></span></td></tr><tr><td class="l">IP</td><td class="v" id="ipact" data-v="net_cip" data-fmt="ip"></td></tr><tr><td class="l">MASCARA</td><td class="v" data-v="net_cmask" data-fmt="ip"></td></tr><tr><td class="l">GATEWAY</td><td class="v" data-v="net_cgw" data-fmt="ip"></td></tr><tr><td class="l">DNS</td><td class="v" data-v="net_cdns" data-fmt="ip"></td></tr><tr><td class="l">SERVIDOR DHCP</td><td class="v" data-v="net_srv" data-fmt="ip"></td></tr><tr><td class="l">LEASE RESTANTE</td><td class="v" data-v="net_left" data-fmt="hms"></td></tr><tr><td class="l">RENOVACION (T1)</td><td class="v" data-v="net_t1" data-fmt="hms"></td></tr><tr><td class="l">REENLACE (T2)</td><td class="v" data-v="net_t2" data-fmt="hms"></td></tr></tbody></table><div class="fila" style="margin-top:12px"><button class="btn fino" data-copy="#ipact">COPIAR IP</button></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;td data-v="net_cip" data-fmt="ip"&gt;&lt;/td&gt;     &lt;!-- numero uint32 -&gt; a.b.c.d --&gt;
+&lt;td data-v="net_left" data-fmt="hms"&gt;&lt;/td&gt;   &lt;!-- segundos -&gt; hh:mm:ss --&gt;</pre><pre class="codigo">WV("net_st",  PG_OBJETO, WV_U8,  0, net_state),   // 0 sin enlace 1 buscando 2 DHCP ok 3 estatica 4 fallback
+WV("net_cip", PG_OBJETO, WV_U32, 0, net_cip),     // IP real en uso (de Mongoose: mif-&gt;ip)
+// Mongoose: mgr.ifp-&gt;ip, -&gt;mask, -&gt;gw (formato red: invierte bytes si hace falta)</pre></details>
+      </div>
+    </div>
+    <h3>QUE ESTA HACIENDO LA UNIDAD (AYUDA HVAC)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Modo actual y cambios</h2>
+        <span class="etq">data-steps</span><span class="etq">data-history</span><span class="etq">lee</span>
+        <div class="pasos" data-steps="hreal" data-names="Parado,Ventilacion,Frio,Calor,Desescarche"></div><p class="dim" style="margin-top:14px">Cambios de modo desde que abriste esta pagina:</p><ol class="historial" data-history="hreal" data-map="0:PARADO,1:VENT,2:FRIO,3:CALOR,4:DESESCARCHE" data-max="8"></ol>
+        <p class="dim">Si quieres un historial que sobreviva (y que incluya cuando no habia nadie mirando), guarda los eventos en la placa y expon el ultimo con un WV_STR.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;ol class="historial" data-history="hreal" data-map="0:PARADO,1:VENT,2:FRIO,3:CALOR,4:DESESCARCHE" data-max="8"&gt;&lt;/ol&gt;</pre><pre class="codigo">// no necesita codigo extra: la web anota cada cambio de la variable "hreal" con su hora
+// (el historial vive en el navegador: se pierde al cerrar la pagina)</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Por que entra en FRIO</h2>
+        <span class="etq">data-cond</span><span class="etq">lee</span>
+        <ul class="conds" data-condlist><li class="cond" data-cond="hmodo>=1">Modo seleccionado: AUTO o FRIO</li><li class="cond" data-cond="hmodo<=2">Modo no es CALOR ni VENT forzado</li><li class="cond" data-cond="t_int>sp_t+1">Temperatura interior &gt; consigna + 1 K (en AUTO)</li><li class="cond" data-cond="al_w!&1">Sin alarma de alta presion C1</li><li class="cond" data-cond="pid_out>5">Demanda del PID &gt; 5 % (arranca el compresor 1)</li></ul><div class="resumen" data-resumen="frio"><span>ENTRA EN FRIO:</span> <b class="est" data-v="hreal" data-map="0:NO (PARADO),1:NO (VENT),2:SI,3:NO (CALOR),4:NO (DESESC.)"></b></div>
+        <p class="dim">Edita estas condiciones para que reflejen la logica real de tu regulador. Asi el usuario ve que condicion falta para que la unidad enfrie.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;ul data-condlist&gt;
+  &lt;li data-cond="t_int&gt;sp_t+1"&gt;Interior mayor que consigna + 1 K&lt;/li&gt;   &lt;!-- variable OP variable+numero --&gt;
+  &lt;li data-cond="al_w!&amp;1"&gt;Sin alarma de alta presion&lt;/li&gt;              &lt;!-- !&amp;  = ese bit esta a 0 --&gt;
+  &lt;li data-cond="hmodo&gt;=1"&gt;Modo AUTO o FRIO&lt;/li&gt;
+&lt;/ul&gt;
+&lt;!-- cada &lt;li&gt; pone data-ok="1" (cumple) / "0" / "?" (sin dato); la lista pone data-ok si cumplen todas --&gt;
+&lt;!-- operadores:  &gt;  &lt;  &gt;=  &lt;=  ==  !=  &amp;  (algun bit)  !&amp;  (ningun bit) --&gt;</pre><pre class="codigo">// no necesita codigo: usa variables que ya tienes en la tabla.
+// La logica REAL de la unidad esta en tu control; esta lista debe reflejarla (edita los textos y las condiciones).</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Por que entra en CALOR</h2>
+        <span class="etq">data-cond</span><span class="etq">lee</span>
+        <ul class="conds" data-condlist><li class="cond" data-cond="hmodo!=0">Modo seleccionado distinto de OFF</li><li class="cond" data-cond="hmodo!=2">Modo no es FRIO forzado</li><li class="cond" data-cond="t_int<sp_t-1">Temperatura interior &lt; consigna - 1 K (en AUTO)</li><li class="cond" data-cond="t_ext<25">Temperatura exterior &lt; 25 C</li><li class="cond" data-cond="al_w!&1">Sin alarma de alta presion C1</li></ul><p class="dim">Cada 90 s en calor puede hacer un DESESCARCHE breve (valvula hot-gas) para quitar el hielo del exterior.</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;li data-cond="t_int&lt;sp_t-1"&gt;Interior menor que consigna - 1 K&lt;/li&gt;</pre></details>
+      </div>
+    </div>
+    <h3>ESQUEMA DE LA UNIDAD (PULSA UN COMPONENTE)</h3>
+    <div class="rejilla">
+      <div class="tarjeta ancha">
+        <h2>Componentes del HVAC</h2>
+        <span class="etq">data-tip</span><span class="etq">data-tipbox</span><span class="etq">lee</span>
+        <div data-explain><svg class="unidad" viewBox="0 0 800 330" style="width:100%;height:auto;display:block">
+  <text x="20" y="18" class="d">CIRCUITO DE AIRE</text>
+  <path class="aire-l" d="M82 52 H118 M82 107 H118 M146 80 H168 M240 80 H262 M334 80 H470"/>
+  <g class="hot" data-tip="flap_ext" tabindex="0"><rect x="20" y="30" width="60" height="45" rx="4"/><line x1="30" y1="42" x2="70" y2="62"/><text x="50" y="90" text-anchor="middle" class="d">EXT</text></g>
+  <g class="hot" data-tip="flap_ret" tabindex="0"><rect x="20" y="95" width="60" height="45" rx="4"/><line x1="30" y1="107" x2="70" y2="127"/><text x="50" y="155" text-anchor="middle" class="d">RET</text></g>
+  <g class="hot" data-tip="filtro" tabindex="0"><rect x="120" y="30" width="26" height="110" rx="3"/><path d="M124 38 L142 48 M124 58 L142 68 M124 78 L142 88 M124 98 L142 108 M124 118 L142 128"/><text x="133" y="155" text-anchor="middle" class="d">FILTRO</text></g>
+  <g class="hot" data-tip="evap" tabindex="0"><rect x="170" y="30" width="70" height="110" rx="4"/><path d="M180 38 V132 M192 38 V132 M204 38 V132 M216 38 V132 M228 38 V132"/><text x="205" y="155" text-anchor="middle" class="d">EVAPORADOR</text></g>
+  <g class="hot" data-tip="evfan" tabindex="0"><circle cx="300" cy="85" r="36"/></g><g transform="translate(300,85)"><circle fill="#000" stroke="var(--line)" r="30"/><g data-bar="ev_fan" data-min="0" data-max="100" style="display:contents"><g class="vent"><path d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(120)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(240)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/></g></g></g>
+  <g class="hot" data-tip="sondas" tabindex="0"><circle cx="400" cy="85" r="9"/><circle cx="100" cy="150" r="0"/><text x="400" y="112" text-anchor="middle" class="d">SONDAS</text></g>
+  <text x="470" y="84" class="d">IMPULSION &#9658;</text>
+  <text x="20" y="196" class="d">CIRCUITO FRIGORIFICO</text>
+  <g class="hot" data-tip="cond" tabindex="0"><rect x="20" y="210" width="90" height="100" rx="4"/><path d="M32 218 V302 M44 218 V302 M56 218 V302 M68 218 V302 M80 218 V302 M92 218 V302"/><text x="65" y="326" text-anchor="middle" class="d">CONDENSADOR</text></g>
+  <g class="hot" data-tip="cdfan" tabindex="0"><circle cx="165" cy="260" r="36"/></g><g transform="translate(165,260)"><circle fill="#000" stroke="var(--line)" r="30"/><g data-bar="c1_fc" data-min="0" data-max="100" style="display:contents"><g class="vent"><path d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(120)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/><path transform="rotate(240)" d="M0 0 C-4 -12 4 -20 10 -14 C6 -8 3 -3 0 0Z"/></g></g></g>
+  <path class="tubo-l" d="M110 235 H130 M110 285 H220 V285 M290 262 H330"/>
+  <g class="hot" data-tip="comp" tabindex="0"><rect x="250" y="215" width="110" height="80" rx="8"/><circle cx="288" cy="255" r="22"/><circle cx="330" cy="255" r="22"/><text x="305" y="311" text-anchor="middle" class="d">COMPRESORES</text></g>
+  <g class="hot" data-tip="v4" tabindex="0"><rect x="400" y="225" width="90" height="60" rx="6"/><path d="M420 235 L470 275 M420 275 L470 235"/><text x="445" y="301" text-anchor="middle" class="d">4 VIAS</text></g>
+  <g class="hot" data-tip="eev" tabindex="0"><path d="M540 245 L580 265 L580 245 L540 265 Z"/><text x="560" y="285" text-anchor="middle" class="d">EEV</text></g>
+  <g class="hot" data-tip="presos" tabindex="0"><circle cx="372" cy="215" r="9"/><circle cx="388" cy="215" r="9"/><text x="380" y="198" text-anchor="middle" class="d">AP/BP</text></g>
+  <g class="hot" data-tip="cuadro" tabindex="0"><rect x="620" y="205" width="160" height="105" rx="6"/><text x="700" y="250" text-anchor="middle">CUADRO</text><text x="700" y="270" text-anchor="middle" class="d">ELECTRICO / CONTROL</text></g>
+</svg><div class="tipboxes"><div class="tipbox" data-tipbox="flap_ext" hidden><h4>Trampilla de aire exterior</h4><p>Deja entrar aire fresco del exterior al habitaculo (renovacion). Se abre mas cuando el CO2 sube y se cierra en horas punta de calor o frio para ahorrar energia.</p><p class="dim">Si falla: sin renovacion: el CO2 sube; si queda atascada abierta, la unidad gasta mas potencia.</p><div class="vivo"><span class="kv"><i>POSICION</i><span><span data-v="fl_fre"></span> %</span></span></div></div><div class="tipbox" data-tipbox="flap_ret" hidden><h4>Trampilla de recirculacion</h4><p>Mezcla aire de retorno del habitaculo con el exterior. Si esta mas abierta, la unidad reutiliza el aire ya acondicionado y consume menos.</p><p class="dim">Si falla: temperatura inestable o mala mezcla de aire.</p><div class="vivo"><span class="kv"><i>POSICION</i><span><span data-v="fl_ret"></span> %</span></span></div></div><div class="tipbox" data-tipbox="filtro" hidden><h4>Filtro de aire y presion diferencial</h4><p>Retiene polvo antes del evaporador. Un sensor diferencial mide la caida de presion a traves del filtro: sube cuando se ensucia.</p><p class="dim">Si falla: por encima de 250 Pa: alarma FILTRO SUCIO; el caudal baja y el evaporador puede congelarse.</p><div class="vivo"><span class="kv"><i>PRESION DIF.</i><span><span data-v="dp_filt"></span> Pa</span></span><span class="kv"><i>CAUDAL</i><span><span data-v="caudal"></span> m3/h</span></span></div></div><div class="tipbox" data-tipbox="evap" hidden><h4>Evaporador (bateria interior)</h4><p>En FRIO el refrigerante se evapora aqui y absorbe calor del aire. En CALOR (bomba de calor) funciona como condensador y cede calor.</p><p class="dim">Si falla: poco caudal o poco refrigerante: baja temperatura de aspiracion, hielo en la bateria.</p><div class="vivo"><span class="kv"><i>T. ASPIRACION</i><span><span data-v="c1_ts"></span> C</span></span><span class="kv"><i>SOBRECALENT.</i><span><span data-v="c1_sh"></span> K</span></span></div></div><div class="tipbox" data-tipbox="evfan" hidden><h4>Ventilador del evaporador</h4><p>Mueve el aire por filtro y bateria y lo impulsa al habitaculo. Su velocidad determina el caudal.</p><p class="dim">Si falla: caudal bajo, alarma de ventilador, el compresor puede disparar por baja presion.</p><div class="vivo"><span class="kv"><i>VELOCIDAD</i><span><span data-v="ev_fan"></span> %</span></span><span class="kv"><i>CAUDAL</i><span><span data-v="caudal"></span> m3/h</span></span></div></div><div class="tipbox" data-tipbox="sondas" hidden><h4>Sondas de temperatura</h4><p>Interior, exterior, impulsion y retorno. La regulacion usa la de retorno/interior contra la consigna. Una sonda abierta o en corto se ve como "--" y salta alarma.</p><p class="dim">Si falla: una sonda con fallo hace que la unidad use un valor de seguridad o pare.</p><div class="vivo"><span class="kv"><i>INTERIOR</i><span><span data-v="t_int"></span> C</span></span><span class="kv"><i>IMPULSION</i><span><span data-v="t_imp"></span> C</span></span><span class="kv"><i>RETORNO</i><span><span data-v="t_ret"></span> C</span></span><span class="kv"><i>EXTERIOR</i><span><span data-v="t_ext"></span> C</span></span></div></div><div class="tipbox" data-tipbox="cond" hidden><h4>Condensador (bateria exterior)</h4><p>En FRIO expulsa al exterior el calor del refrigerante (el gas pasa a liquido). En CALOR funciona como evaporador.</p><p class="dim">Si falla: sucio u obstruido: sube la alta presion; puede saltar el presostato de alta.</p><div class="vivo"><span class="kv"><i>ALTA PRESION</i><span><span data-v="c1_hp"></span> bar</span></span><span class="kv"><i>SUBENFR.</i><span><span data-v="c1_sc"></span> K</span></span></div></div><div class="tipbox" data-tipbox="cdfan" hidden><h4>Ventiladores del condensador</h4><p>Se regulan en velocidad para mantener la alta presion estable segun la temperatura exterior.</p><p class="dim">Si falla: poca ventilacion: la alta presion sube rapido y se dispara la seguridad.</p><div class="vivo"><span class="kv"><i>VELOCIDAD</i><span><span data-v="c1_fc"></span> %</span></span><span class="kv"><i>T. EXTERIOR</i><span><span data-v="t_ext"></span> C</span></span></div></div><div class="tipbox" data-tipbox="comp" hidden><h4>Compresores</h4><p>Comprimen el refrigerante. C1 es de velocidad variable (inverter) y modula la potencia; C2 es de velocidad fija con arranque estrella-triangulo para limitar la corriente de arranque.</p><p class="dim">Si falla: fallo de arranque, sobrecorriente o termico: el compresor se para y se registra alarma.</p><div class="vivo"><span class="kv"><i>C1</i><span><span class="est" data-v="c1_st" data-map="0:PARADO,1:ARRANCANDO,2:MARCHA,3:FALLO"></span></span></span><span class="kv"><i>C1 VEL.</i><span><span data-v="c1_hz"></span> Hz</span></span><span class="kv"><i>C1 CORR.</i><span><span data-v="c1_a"></span> A</span></span><span class="kv"><i>C2</i><span><span class="est" data-v="c2_st" data-map="0:PARADO,1:ARRANCANDO,2:MARCHA,3:FALLO"></span></span></span><span class="kv"><i>C2 CORR.</i><span><span data-v="c2_a"></span> A</span></span></div></div><div class="tipbox" data-tipbox="v4" hidden><h4>Valvula de 4 vias</h4><p>Invierte el sentido del refrigerante para pasar de FRIO a CALOR (bomba de calor). No es un modo propio: cambia el camino del gas.</p><p class="dim">Si falla: si queda en la posicion equivocada la unidad enfria cuando debe calentar o al reves.</p><div class="vivo"><span class="kv"><i>POSICION</i><span><span class="est" data-v="c1_4v" data-map="0:FRIO,1:CALOR"></span></span></span><span class="kv"><i>MODO REAL</i><span><span class="est" data-v="hreal" data-map="0:PARADO,1:VENT,2:FRIO,3:CALOR,4:DESESCARCHE"></span></span></span></div></div><div class="tipbox" data-tipbox="eev" hidden><h4>Valvula de expansion electronica (EEV)</h4><p>Reduce la presion del liquido y regula el caudal de refrigerante hacia el evaporador para mantener el sobrecalentamiento objetivo.</p><p class="dim">Si falla: sobrecalentamiento muy alto o muy bajo: riesgo de falta de rendimiento o retorno de liquido al compresor.</p><div class="vivo"><span class="kv"><i>APERTURA</i><span><span data-v="c1_eev"></span> %</span></span><span class="kv"><i>SOBRECALENT.</i><span><span data-v="c1_sh"></span> K</span></span><span class="kv"><i>SUBENFR.</i><span><span data-v="c1_sc"></span> K</span></span></div></div><div class="tipbox" data-tipbox="presos" hidden><h4>Presostatos y transductores</h4><p>Transductores miden alta y baja presion (para regular y mostrar). Los presostatos son seguridades independientes: si la presion sale de limites cortan el compresor.</p><p class="dim">Si falla: AP disparado: se para el compresor y hay que rearmar. BP disparada: falta de refrigerante o evaporador bloqueado.</p><div class="vivo"><span class="kv"><i>ALTA C1</i><span><span data-v="c1_hp"></span> bar</span></span><span class="kv"><i>BAJA C1</i><span><span data-v="c1_lp"></span> bar</span></span><span class="kv"><i>ALTA C2</i><span><span data-v="c2_hp"></span> bar</span></span><span class="kv"><i>BAJA C2</i><span><span data-v="c2_lp"></span> bar</span></span><div class="bits inv compacto" data-bits="in_w" data-count="4" data-names="AP1,BP1,AP2,BP2"></div></div></div><div class="tipbox" data-tipbox="cuadro" hidden><h4>Cuadro electrico y control</h4><p>Alimenta compresores, ventiladores y resistencias, con contactores, protecciones y la electronica de control (esta placa).</p><p class="dim">Si falla: fallo de fase o desequilibrio: la unidad se para y se muestra alarma de fases.</p><div class="vivo"><span class="kv"><i>POTENCIA</i><span><span data-v="kw"></span> kW</span></span><div class="bits alarma compacto" data-bits="al_w" data-count="16" data-names="AP1,BP1,AP2,BP2,SOB1,SOB2,SONDA,FILTRO,VEV,VCD,TRAMP,FASES,CO2,TDESC,R14,R15"></div></div></div></div></div>
+        <p class="dim">Tambien funciona con una imagen: pon &lt;img src="/unidad.png"&gt; y encima botones data-tip posicionados con CSS (position:absolute; left:%; top:%).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-explain&gt;
+  &lt;svg&gt;
+    &lt;g data-tip="comp"&gt; ...dibujo del compresor... &lt;/g&gt;     &lt;!-- zona pulsable --&gt;
+    &lt;g data-tip="eev"&gt;  ...dibujo de la valvula... &lt;/g&gt;
+  &lt;/svg&gt;
+  &lt;div data-tipbox="comp" hidden&gt;
+    &lt;h4&gt;Compresores&lt;/h4&gt;&lt;p&gt;Explicacion...&lt;/p&gt;
+    &lt;span data-v="c1_hz"&gt;&lt;/span&gt; Hz         &lt;!-- datos vivos dentro de la explicacion --&gt;
+  &lt;/div&gt;
+  &lt;div data-tipbox="eev" hidden&gt; ... &lt;/div&gt;
+&lt;/div&gt;</pre><pre class="codigo">// no necesita codigo C: solo HTML. Los datos vivos usan las variables de siempre.</pre></details>
+      </div>
+    </div>
+    <h3>SOPORTE</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Contacto de soporte</h2>
+        <span class="etq">data-copy</span><span class="etq">data-report</span>
+        <table class="tabla"><tbody><tr><td class="l">EMPRESA</td><td class="v">TU EMPRESA S.L.</td></tr><tr><td class="l">CORREO</td><td class="v"><a href="mailto:soporte@tuempresa.com?subject=Soporte%20unidad%20HVAC">soporte@tuempresa.com</a></td></tr><tr><td class="l">TELEFONO</td><td class="v">+34 900 000 000</td></tr><tr><td class="l">HORARIO</td><td class="v">L-V 8:00 - 18:00</td></tr></tbody></table><div class="fila" style="margin-top:12px"><button class="btn" data-report data-name="informe_soporte.txt">DESCARGAR INFORME</button></div><p class="dim">El informe incluye todas las variables de esta pagina (versiones, red, estado). Adjuntalo al correo.</p>
+        <p class="dim">Edita los datos de contacto en el HTML.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button data-report data-name="informe_soporte.txt"&gt;DESCARGAR INFORME&lt;/button&gt;   &lt;!-- guarda todas las variables recibidas --&gt;
+&lt;a href="mailto:soporte@tuempresa.com?subject=Soporte"&gt;Correo&lt;/a&gt;</pre><pre class="codigo">// no necesita codigo C. Cambia empresa, correo y telefono en objeto.html</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Preguntas frecuentes</h2>
+        <span class="etq">details</span>
+        <details class="faq"><summary>La unidad no enfria</summary><p>Mira "Por que entra en FRIO": la condicion en rojo indica que falta. Comprueba tambien alarmas (pagina Componentes) y que el modo no este en OFF.</p></details><details class="faq"><summary>Alarma de alta presion</summary><p>Suele ser el condensador sucio o un ventilador exterior parado. Revisa "Condensador" y "Ventiladores del condensador" en el esquema. El presostato se rearma a mano.</p></details><details class="faq"><summary>Filtro sucio</summary><p>La presion diferencial supera 250 Pa. Sustituye el filtro; la alarma se quita sola al bajar de 200 Pa.</p></details><details class="faq"><summary>No puedo abrir la web tras cambiar la IP</summary><p>Abre la direccion nueva. Si no la sabes, conecta un PC en el mismo rango o usa el terminal serie.</p></details>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;details class="faq"&gt;&lt;summary&gt;Pregunta&lt;/summary&gt;&lt;p&gt;Respuesta...&lt;/p&gt;&lt;/details&gt;   &lt;!-- HTML puro, sin JavaScript --&gt;</pre></details>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

@@ -73,6 +73,9 @@
 									<listOptionValue builtIn="false" value="../Core/ThreadSafe"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Core/Inc/MicroSD}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Core/Inc/Task/MicroSD}&quot;"/>
+									<listOptionValue builtIn="false" value="../Core/Network"/>
+									<listOptionValue builtIn="false" value="../Core/Network/Mongoose"/>
+									<listOptionValue builtIn="false" value="../Core/Network/PageWeb"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.137792426" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>

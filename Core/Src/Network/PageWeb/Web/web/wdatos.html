@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Widgets de datos</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body data-ws="/ws/wdatos">
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a class="act" href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Widgets de datos</h1>
+    <p class="dim" style="margin:-8px 0 8px">Catalogo de relojes, indicadores, formatos y utilidades. Cada tarjeta lleva su codigo.</p>
+    <h3>RELOJES DE HORA</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Reloj analogico</h2>
+        <span class="etq">data-clock</span>
+        <canvas data-clock="rtc" data-mode="analog" style="width:100%;max-width:220px;height:220px;display:block;margin:0 auto"></canvas>
+        <p class="dim">Usa la zona horaria de la variable rtc_tz (o data-tz="minutos" / data-tz="otra_variable").</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas data-clock="rtc" data-mode="analog" style="width:220px;height:220px"&gt;&lt;/canvas&gt;</pre><pre class="codigo">// web_vars.c   (ID, paginas, tipo, decimales, variable)
+WVW("rtc", PG_WDATOS, WV_U32, 0, rtc_epoch, 0, 4294967295.0),   // segundos UNIX UTC
+WVW("rtc_tz", PG_WDATOS, WV_I32, 0, rtc_tz, -720, 840),           // minutos de zona</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Reloj digital y fecha</h2>
+        <span class="etq">data-clock</span><span class="etq">data-dot</span>
+        <canvas class="dot" data-clock="rtc" data-mode="digital" data-pitch="6"></canvas><div style="height:10px"></div><canvas class="dot" data-clock="rtc" data-mode="date" data-pitch="4"></canvas><div style="height:10px"></div><span data-v="rtc" data-fmt="datetime"></span>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-clock="rtc" data-mode="digital"&gt;&lt;/canvas&gt;
+&lt;canvas class="dot" data-clock="rtc" data-mode="date"&gt;&lt;/canvas&gt;
+&lt;span data-v="rtc" data-fmt="datetime"&gt;&lt;/span&gt;   &lt;!-- 03/11/2026 22:40:10 --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Relojes de varias zonas</h2>
+        <span class="etq">data-clock</span><span class="etq">data-tz</span>
+        <table class="tabla"><tbody><tr><td class="l">UTC</td><td class="v"><span data-v="rtc" data-fmt="clock" data-tz="0" id="z0"></span></td></tr><tr><td class="l">LOCAL (rtc_tz)</td><td class="v" data-v="rtc" data-fmt="clock"></td></tr></tbody></table><canvas class="dot" data-clock="rtc" data-tz="0" data-mode="digital" data-pitch="3" style="margin-top:10px"></canvas><p class="dim">UTC fijo</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-clock="rtc" data-tz="0" data-mode="digital"&gt;&lt;/canvas&gt;   &lt;!-- data-tz="0": UTC --&gt;
+&lt;canvas class="dot" data-clock="rtc" data-tz="-300" data-mode="digital"&gt;&lt;/canvas&gt;   &lt;!-- Nueva York --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Tiempo encendido</h2>
+        <span class="etq">data-v</span><span class="etq">data-fmt</span>
+        <canvas class="dot" data-dot="s_up" data-fmt="hms" data-pitch="5"></canvas><p class="dim">DESDE EL ARRANQUE</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dot" data-dot="s_up" data-fmt="hms"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+    </div>
+    <h3>RELOJES DE MEDIDA E INDICADORES</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Anillo de progreso</h2>
+        <span class="etq">data-ring</span>
+        <div class="fila" style="justify-content:space-around"><canvas data-ring="s_cpu" data-min="0" data-max="100" data-unit="% CPU" style="width:150px;height:150px"></canvas><canvas data-ring="s_hpct" data-min="0" data-max="100" data-unit="% HEAP" style="width:150px;height:150px"></canvas></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas data-ring="s_cpu" data-min="0" data-max="100" data-unit="% CPU" style="width:150px;height:150px"&gt;&lt;/canvas&gt;
+&lt;!-- en rojo por encima del 85 % del rango --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Termometro</h2>
+        <span class="etq">data-bar</span><span class="etq">CSS</span>
+        <div class="fila" style="justify-content:space-around;align-items:flex-end"><div class="termo" data-bar="t_int" data-min="10" data-max="40"><i></i><b data-v="t_int"></b></div><div class="termo" data-bar="t_ext" data-min="10" data-max="40"><i></i><b data-v="t_ext"></b></div></div><p class="dim" style="text-align:center">INTERIOR &middot; EXTERIOR (C)</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="termo" data-bar="t_int" data-min="10" data-max="40"&gt;&lt;i&gt;&lt;/i&gt;&lt;b data-v="t_int"&gt;&lt;/b&gt;&lt;/div&gt;
+&lt;!-- vars.js pone --p (0..1); .termo en style.css lo dibuja --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Bateria y señal</h2>
+        <span class="etq">data-bar</span><span class="etq">data-led</span><span class="etq">CSS</span>
+        <div class="fila" style="justify-content:space-around;align-items:center"><div class="pila" data-bar="bat" data-min="0" data-max="100"><i></i><b data-v="bat"></b></div><div class="senal" data-bar="rssi" data-min="0" data-max="100"><s style="--n:.1"></s><s style="--n:.35"></s><s style="--n:.6"></s><s style="--n:.85"></s></div></div><div class="fila" style="justify-content:space-around"><span><span class="led" data-led="bat_chg"></span> CARGANDO</span><span class="dim">COBERTURA <span data-v="rssi"></span>%</span></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="pila" data-bar="bat" data-min="0" data-max="100"&gt;&lt;i&gt;&lt;/i&gt;&lt;b data-v="bat"&gt;&lt;/b&gt;&lt;/div&gt;
+&lt;div class="senal" data-bar="rssi" data-min="0" data-max="100"&gt;
+  &lt;s style="--n:.1"&gt;&lt;/s&gt;&lt;s style="--n:.35"&gt;&lt;/s&gt;&lt;s style="--n:.6"&gt;&lt;/s&gt;&lt;s style="--n:.85"&gt;&lt;/s&gt;
+&lt;/div&gt;
+&lt;span class="led" data-led="bat_chg"&gt;&lt;/span&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Brujula / rotacion</h2>
+        <span class="etq">data-bar</span><span class="etq">CSS</span>
+        <div class="brujula" data-bar="yaw" data-min="0" data-max="360"><span class="n">N</span><div class="aguja"></div></div><p class="dim" style="text-align:center"><span data-v="yaw"></span> &deg;</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div class="brujula" data-bar="yaw" data-min="0" data-max="360"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;div class="aguja"&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;!-- la aguja gira --p x 360 grados --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Relojes de aguja</h2>
+        <span class="etq">data-dial</span>
+        <canvas class="dial" data-dial="c1_hp" data-min="0" data-max="32" data-unit="bar" data-zones="0~22:ok,22~26:warn,26~32:crit"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="c1_hp" data-min="0" data-max="32" data-unit="bar" data-zones="0~22:ok,22~26:warn,26~32:crit"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Reloj de puntos</h2>
+        <span class="etq">data-gauge</span>
+        <canvas class="gauge" data-gauge="pid_out" data-min="0" data-max="100" data-unit="% PID" style="width:100%;height:200px"></canvas>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="gauge" data-gauge="pid_out" data-min="0" data-max="100" data-unit="% PID"&gt;&lt;/canvas&gt;</pre></details>
+      </div>
+    </div>
+    <h3>TEXTO Y FORMATOS</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Formatos de numero</h2>
+        <span class="etq">data-v</span><span class="etq">data-fmt</span>
+        <table class="tabla"><tbody><tr><td class="l">TIEMPO hms</td><td class="v" data-v="s_up" data-fmt="hms"></td></tr><tr><td class="l">CRC hex8</td><td class="v" data-v="f1_c" data-fmt="hex8"></td></tr><tr><td class="l">hex</td><td class="v" data-v="f1_c" data-fmt="hex"></td></tr><tr><td class="l">TAMANO size</td><td class="v" data-v="f2_z" data-fmt="size"></td></tr><tr><td class="l">IP ip</td><td class="v" data-v="net_cip" data-fmt="ip"></td></tr><tr><td class="l">FECHA datetime</td><td class="v" data-v="rtc" data-fmt="datetime"></td></tr></tbody></table>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;span data-v="s_up"  data-fmt="hms"&gt;&lt;/span&gt;        &lt;!-- 01:02:03 --&gt;
+&lt;span data-v="f1_c"  data-fmt="hex8"&gt;&lt;/span&gt;       &lt;!-- 9F00AA11 --&gt;
+&lt;span data-v="f2_z"  data-fmt="size"&gt;&lt;/span&gt;       &lt;!-- 566.4 KB --&gt;
+&lt;span data-v="net_cip" data-fmt="ip"&gt;&lt;/span&gt;      &lt;!-- 192.168.1.100 --&gt;
+&lt;span data-v="rtc"   data-fmt="datetime"&gt;&lt;/span&gt;   &lt;!-- 03/11/2026 22:40:10 --&gt;
+&lt;!-- otros: bin, hex, clock, date --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Versiones (lista)</h2>
+        <span class="etq">data-v</span><span class="etq">WV_STR</span>
+        <table class="tabla"><tbody><tr><td class="l" data-v="f0_n"></td><td class="v" data-v="f0_v"></td></tr><tr><td class="l" data-v="f1_n"></td><td class="v" data-v="f1_v"></td></tr><tr><td class="l" data-v="f2_n"></td><td class="v" data-v="f2_v"></td></tr><tr><td class="l" data-v="f3_n"></td><td class="v" data-v="f3_v"></td></tr><tr><td class="l" data-v="f4_n"></td><td class="v" data-v="f4_v"></td></tr><tr><td class="l" data-v="f5_n"></td><td class="v" data-v="f5_v"></td></tr><tr><td class="l" data-v="f6_n"></td><td class="v" data-v="f6_v"></td></tr></tbody></table>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;td data-v="f1_n"&gt;&lt;/td&gt;&lt;td data-v="f1_v"&gt;&lt;/td&gt;   &lt;!-- texto desde variables WV_STR --&gt;</pre><pre class="codigo">// web_vars.c   (ID, paginas, tipo, decimales, variable)
+char fw_n[7][20], fw_v[7][16];
+WV("f1_n", PG_WDATOS, WV_STR, 19, fw_n[1]),
+WV("f1_v", PG_WDATOS, WV_STR, 15, fw_v[1]),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Direccion IP editable</h2>
+        <span class="etq">data-ip</span><span class="etq r">escribe</span>
+        <input type="text" data-set="net_ip" data-ip placeholder="192.168.1.100"><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        <p class="dim">En esta pagina no esta registrada con escritura (solo la pagina Objeto lo permite).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;input type="text" data-set="net_ip" data-ip&gt;   &lt;!-- escribes a.b.c.d; la placa recibe un uint32 --&gt;</pre><pre class="codigo">// web_vars.c   (ID, paginas, tipo, decimales, variable)
+WVW("net_ip", PG_OBJETO, WV_U32, 0, net_ip, 0, 4294967295.0),</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Trama (bytes)</h2>
+        <span class="etq">data-bytes</span><span class="etq">data-bytes-set</span>
+        <p class="dim">Lectura:</p><div class="bytes" data-bytes="cr0a,cr0b,cr0l"></div><p class="dim" style="margin-top:10px">Editable (pagina CAN):</p><input type="text" data-bytes-set="cx0a,cx0b,cx0l" placeholder="DE AD BE EF">
+        <p class="dim">Ver las paginas CAN y TRDP.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;span class="bytes" data-bytes="cr0a,cr0b,cr0l"&gt;&lt;/span&gt;          &lt;!-- lo, hi, longitud --&gt;
+&lt;input type="text" data-bytes-set="cx0a,cx0b,cx0l"&gt;   &lt;!-- editor: escribes DE AD BE EF --&gt;</pre><pre class="codigo">// dos variables uint32 (lo = bytes 0-3, hi = bytes 4-7) y la longitud. Ver web_bus.c.</pre></details>
+      </div>
+    </div>
+    <h3>CONDICIONES, HISTORIAL Y EXPLICACIONES</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Condiciones en vivo</h2>
+        <span class="etq">data-cond</span>
+        <ul class="conds" data-condlist><li class="cond" data-cond="t_int>t_ext">Interior mayor que exterior</li><li class="cond" data-cond="s_cpu<80">CPU por debajo del 80 %</li><li class="cond" data-cond="s_hpct<85">Heap por debajo del 85 %</li></ul>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;ul data-condlist&gt;
+  &lt;li data-cond="s_cpu&lt;80"&gt;CPU por debajo del 80 %&lt;/li&gt;
+  &lt;li data-cond="t_int&gt;sp_t+1"&gt;Interior mayor que consigna + 1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;!-- operadores: &gt; &lt; &gt;= &lt;= == != &amp; (algun bit) !&amp; (ningun bit); sumas y restas con numero o variable --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Historial de cambios</h2>
+        <span class="etq">data-history</span>
+        <ol class="historial" data-history="net_st" data-map="0:SIN ENLACE,1:BUSCANDO,2:DHCP OK,3:ESTATICA,4:FALLBACK" data-max="6"></ol><p class="dim">Anota cuando cambia el estado de red.</p>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;ol class="historial" data-history="net_st" data-map="0:SIN ENLACE,2:DHCP OK" data-max="6"&gt;&lt;/ol&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Pestañas</h2>
+        <span class="etq">data-tabs</span>
+        <div data-tabs><div class="fila"><button class="btn fino" data-tab="a">TEMPERATURAS</button><button class="btn fino" data-tab="b">PRESION</button></div><section data-pane="a" style="margin-top:12px"><table class="tabla"><tbody><tr><td class="l">INTERIOR</td><td class="v" data-v="t_int"></td></tr><tr><td class="l">EXTERIOR</td><td class="v" data-v="t_ext"></td></tr></tbody></table></section><section data-pane="b" hidden style="margin-top:12px"><table class="tabla"><tbody><tr><td class="l">ALTA C1</td><td class="v" data-v="c1_hp"></td></tr></tbody></table></section></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;div data-tabs&gt;
+  &lt;button data-tab="a"&gt;A&lt;/button&gt; &lt;button data-tab="b"&gt;B&lt;/button&gt;
+  &lt;section data-pane="a"&gt; ... &lt;/section&gt;
+  &lt;section data-pane="b" hidden&gt; ... &lt;/section&gt;
+&lt;/div&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Zonas pulsables con explicacion</h2>
+        <span class="etq">data-tip</span>
+        <div data-explain><div class="fila"><button class="btn fino" data-tip="x">TEMPERATURA</button><button class="btn fino" data-tip="y">CPU</button></div><div class="tipbox" data-tipbox="x"><h4>Temperatura interior</h4><p>Es la que regula la unidad: <b data-v="t_int"></b> C.</p></div><div class="tipbox" data-tipbox="y" hidden><h4>CPU</h4><p>Carga del procesador: <b data-v="s_cpu"></b> %.</p></div></div>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button data-tip="x"&gt;A&lt;/button&gt;  &lt;button data-tip="y"&gt;B&lt;/button&gt;
+&lt;div data-tipbox="x"&gt;Explicacion A con &lt;span data-v="t_int"&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;div data-tipbox="y" hidden&gt;Explicacion B&lt;/div&gt;
+&lt;!-- Cualquier elemento (boton, &lt;g&gt; de un SVG, &lt;area&gt;...) puede ser data-tip. Ver pagina Objeto. --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Plegables (FAQ)</h2>
+        <span class="etq">details</span>
+        <details class="faq"><summary>Que es esto</summary><p>HTML puro: &lt;details&gt;&lt;summary&gt;. Sin JavaScript.</p></details><details class="faq"><summary>Otra pregunta</summary><p>Respuesta.</p></details>
+        
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;details class="faq"&gt;&lt;summary&gt;Pregunta&lt;/summary&gt;&lt;p&gt;Respuesta&lt;/p&gt;&lt;/details&gt;</pre></details>
+      </div>
+    </div>
+    <h3>SOPORTE Y UTILIDADES</h3>
+    <div class="rejilla">
+      <div class="tarjeta">
+        <h2>Informe y copiar</h2>
+        <span class="etq">data-report</span><span class="etq">data-copy</span>
+        <div class="fila"><button class="btn" data-report data-name="informe.txt">DESCARGAR INFORME</button><button class="btn fino" data-copy="#vtxt">COPIAR NUMERO DE SERIE</button></div><p class="dim">Serie: <span id="vtxt" data-v="dev_sn"></span></p>
+        <p class="dim">Aqui no hay dev_sn (solo en Objeto), asi que sale vacio.</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button data-report data-name="informe.txt"&gt;INFORME&lt;/button&gt;   &lt;!-- descarga todas las variables recibidas --&gt;
+&lt;button data-copy="#vtxt"&gt;COPIAR&lt;/button&gt;   &lt;!-- copia el texto de #vtxt --&gt;</pre></details>
+      </div>
+      <div class="tarjeta">
+        <h2>Hora del PC a la placa</h2>
+        <span class="etq">data-settime</span><span class="etq r">escribe</span>
+        <button class="btn" data-settime="rtc">PONER HORA DE ESTE PC</button><p class="dim">Respuesta: <span data-msg>&nbsp;</span></p>
+        <p class="dim">Solo funciona si la variable es escribible en esta pagina (en Objeto lo es).</p>
+        <details><summary>Como se usa</summary><pre class="codigo">&lt;button data-settime="rtc"&gt;PONER HORA&lt;/button&gt;   &lt;!-- escribe Math.floor(Date.now()/1000) en la variable --&gt;</pre><pre class="codigo">WVW("rtc", PG_OBJETO, WV_U32, 0, rtc_epoch, 0, 4294967295.0),</pre></details>
+      </div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

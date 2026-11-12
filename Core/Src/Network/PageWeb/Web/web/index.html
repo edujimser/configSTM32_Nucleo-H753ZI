@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
+
+  <nav class="menu" id="menu">
+    <div class="logo">CONTROL</div>
+    <a class="act" href="/index.html">Inicio</a>
+    <a href="/sistema.html">Sistema</a>
+    <a href="/widgets.html">Widgets</a>
+    <a href="/industria.html">Industria</a>
+    <a href="/interno.html">STM32</a>
+    <a href="/hvac.html">Climatizacion</a>
+    <a href="/compon.html">Componentes</a>
+    <a href="/objeto.html">Objeto</a>
+    <a href="/wdatos.html">Widgets de datos</a>
+    <a href="/can.html">CAN</a>
+    <a href="/trdp.html">TRDP</a>
+    <a href="/errores.html">Errores</a>
+    <a href="/datos.html">Datos en vivo</a>
+    <a href="/config.html">Configuracion</a>
+  </nav>
+
+  <main class="cont">
+    <h1>Panel de control</h1>
+    <div class="rejilla">
+      <div class="tarjeta"><h2>Sistema</h2><p>Menu: <b>Sistema</b> es tu pagina para tus datos. <b>Widgets</b> es el catalogo con todos los elementos y como usarlos.</p></div>
+      <div class="tarjeta"><h2>Estado</h2><p class="dim">Pagina estatica servida desde la flash de la placa.</p></div>
+    </div>
+  </main>
+
+  <script src="/vars.js"></script>
+</body>
+</html>

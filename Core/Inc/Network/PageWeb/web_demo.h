@@ -1,0 +1,117 @@
+/* web_demo.h - variables y simulacion de DEMOSTRACION. Borra este archivo (y web_demo.c)
+ * cuando uses tus variables reales. Lo genera el proyecto de ejemplo. */
+#ifndef WEB_DEMO_H
+#define WEB_DEMO_H
+#include <stdint.h>
+
+extern volatile uint32_t demo_contador ;
+extern volatile float demo_temp ;
+extern volatile uint8_t demo_led ;
+extern volatile uint32_t demo_contador2;
+extern volatile uint8_t demo_nivel ;
+extern volatile float demo_roll ;
+extern volatile float demo_pitch ;
+extern volatile float demo_yaw ;
+extern volatile uint16_t demo_rpm ;
+extern volatile float demo_setpoint ;
+extern volatile uint8_t demo_modo ;
+extern volatile uint8_t demo_enable ;
+extern volatile uint8_t demo_brillo ;
+extern volatile uint8_t ind_run[3] ;
+extern volatile uint16_t ind_rpm[3] ;
+extern volatile float ind_temp[3] ;
+extern volatile float ind_amp[3] ;
+extern volatile uint8_t ind_estado ;
+extern volatile uint8_t ind_auto ;
+extern volatile uint8_t ind_entradas ;
+extern volatile uint8_t ind_salidas ;
+extern volatile float ind_presion ;
+extern volatile float ind_caudal ;
+extern volatile uint32_t ind_piezas ;
+extern volatile uint32_t ind_uptime ;
+extern volatile uint8_t ind_valvula ;
+extern volatile uint8_t hv_modo ;
+extern volatile uint8_t hv_real ;
+extern volatile float sp_t ;
+extern volatile float t_int ;
+extern volatile float t_ext ;
+extern volatile float t_imp ;
+extern volatile float t_ret ;
+extern volatile uint8_t hum ;
+extern volatile uint16_t co2 ;
+extern volatile float pid_out ;
+extern volatile uint8_t pid_mode ;
+extern volatile float pid_man ;
+extern volatile float pid_kp ;
+extern volatile float pid_ki ;
+extern volatile float pid_kd ;
+extern volatile uint8_t c_st[2] ;
+extern volatile uint8_t c1_hz ;
+extern volatile float c_a[2] ;
+extern volatile float c_hp[2] ;
+extern volatile float c_lp[2] ;
+extern volatile float c_td[2] ;
+extern volatile float c_ts[2] ;
+extern volatile uint8_t c_eev[2] ;
+extern volatile float c_sh[2] ;
+extern volatile float c_sc[2] ;
+extern volatile uint8_t c_fc[2] ;
+extern volatile uint8_t c_4v[2] ;
+extern volatile uint8_t c_hg[2] ;
+extern volatile uint8_t c2_yd ;
+extern volatile uint8_t c2_tyd ;
+extern volatile uint16_t out_w ;
+extern volatile uint8_t in_w ;
+extern volatile uint16_t al_w ;
+extern volatile uint8_t ev_fan ;
+extern volatile uint16_t dp_filt ;
+extern volatile uint16_t caudal_aire ;
+extern volatile uint8_t m_c1, m_c2, m_ev, m_cd, m_hg, m_4v, m_cv, m_fl;
+extern volatile float i_l[3] ;
+extern volatile uint16_t v_ll ;
+extern volatile float kw ;
+extern volatile uint32_t wh ;
+extern volatile float desq ;
+extern volatile uint8_t fl_fre ;
+extern volatile uint8_t fl_fre_sp ;
+extern volatile uint8_t fl_ret ;
+extern volatile uint8_t fl_ret_sp ;
+extern volatile float cv_a ;
+extern volatile float ev_a ;
+extern volatile float sg_can_rx[6] ;
+extern volatile float sg_trdp_rx[3] ;
+extern char dev_name[24] ;
+extern char dev_sn[16] ;
+extern char dev_hw[12] ;
+extern char dev_mac[18] ;
+extern char fw_n[7][20] ;
+extern char fw_v[7][16] ;
+extern uint32_t fw_crc[7] ;
+extern uint32_t fw_size[7] ;
+extern uint8_t fw_ok[7] ;
+extern uint32_t rtc_epoch ;
+extern int32_t rtc_tz ;
+extern uint8_t net_dhcp ;
+extern uint32_t net_ip ;
+extern uint32_t net_mask ;
+extern uint32_t net_gw ;
+extern uint32_t net_dns ;
+extern uint16_t net_dhcp_to ;
+extern uint32_t net_lease ;
+extern uint8_t net_state ;
+extern uint32_t net_cip ;
+extern uint32_t net_cmask ;
+extern uint32_t net_cgw ;
+extern uint32_t net_cdns ;
+extern uint32_t net_left ;
+extern uint32_t net_t1 ;
+extern uint32_t net_t2 ;
+extern uint32_t net_srv ;
+extern uint8_t dem_bat ;
+extern uint8_t dem_rssi ;
+extern uint8_t dem_chg ;
+
+/* Hace cambiar todas las variables de demo. Llamala cada segundo. */
+void WebVars_DemoTick(void);
+
+#endif
