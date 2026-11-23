@@ -15,6 +15,10 @@
 #include "Network/PageWeb/web_bus.h"       /* visor y forzado de tramas CAN / TRDP */
 #include "Network/PageWeb/web_sig.h"       /* señales de comunicacion con forzado individual */
 #include "Network/PageWeb/web_err.h"       /* errores: estado, historico, contadores */
+#include "Network/PageWeb/Modulo1_memory.h" /* RAM del micro: Modulo1_Memory() */
+#include "Network/PageWeb/modulo2_threads.h" /* hilos de FreeRTOS: RtosInfo_Update() */
+#include "Network/PageWeb/modulo3_clocks.h" /* relojes y temperatura del micro: Modulo3_Clocks() */
+#include "Network/PageWeb/modulo4_gpio.h" /* visor de pines GPIO: Modulo4_Gpio() */
 
 extern I_TestUart Uart1;
 
@@ -226,6 +230,10 @@ void ThreadFunc_Network(void *argument) {
       WebSig_Tick1s();               /* edad de las señales recibidas y mantenimiento del forzado */
       WebErr_Tick1s();               /* evalua los errores de web_err_cfg.h */
       WebSys_Update();               /* hilos, RAM y CPU del STM32 (pagina interno) */
+      Modulo1_Memory();              /* RAM del microprocesador (pagina interno) */
+      Modulo2_Update();              /* hilos de FreeRTOS: estado, CPU y pila (modulo 2) */ 
+      Modulo3_Clocks();              /* relojes y temperatura del micro (modulo 3) */
+      Modulo4_Gpio();                /* visor de pines GPIO (modulo 4) */
 
       uint16_t activas = 0;          /* bit por pagina con algun navegador conectado */
       uint8_t  nws = 0;

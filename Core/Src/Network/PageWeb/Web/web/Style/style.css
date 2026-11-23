@@ -28,29 +28,6 @@ body {
   background-size: 22px 22px;
 }
 
-/* ---------- Menu lateral (ordenador) ---------- */
-.menu {
-  position: fixed; top: 0; left: 0; bottom: 0; width: 230px;
-  background: var(--bg); border-right: 1px dotted var(--line);
-  padding: 28px 18px; z-index: 20; transition: transform .25s;
-  overflow-y: auto;
-}
-.logo { font-size: .95rem; letter-spacing: 5px; margin: 0 8px 30px; text-transform: uppercase; }
-.logo::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
-  background: var(--acc); margin-right: 12px; box-shadow: 0 0 10px var(--acc); }
-.menu a {
-  display: block; padding: 11px 16px; margin-bottom: 6px; border-radius: 999px;
-  color: var(--dim); text-decoration: none; text-transform: uppercase; letter-spacing: 2px; font-size: .75rem;
-  border: 1px solid transparent; transition: .15s;
-}
-.menu a:hover { color: var(--fg); border-color: var(--line); }
-.menu a.act { background: var(--fg); color: #000; }
-
-.burger {
-  display: none; position: fixed; top: 14px; left: 14px; z-index: 30; width: 46px; height: 46px;
-  border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
-  font-size: 1.2rem; cursor: pointer;
-}
 
 .cont { margin-left: 230px; padding: 34px 34px 60px; max-width: 1200px; }
 .cont > h1 { margin-bottom: 28px; }
@@ -203,10 +180,6 @@ h3::before { content: "// "; color: var(--acc); }
 
 /* ---------- Movil ---------- */
 @media (max-width: 768px) {
-  .burger { display: block; }
-  .menu { transform: translateX(-100%); width: 78%; max-width: 300px; padding-top: 80px; }
-  .menu.abierto { transform: translateX(0); box-shadow: 0 0 60px #000; }
-  .menu a { padding: 16px 18px; font-size: .85rem; }
   .cont { margin-left: 0; padding: 78px 16px 40px; }
   .valor { font-size: 1.8rem; }
 }

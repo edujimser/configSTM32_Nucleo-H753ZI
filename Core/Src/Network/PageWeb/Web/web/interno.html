@@ -4,29 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>STM32</title>
-  <link rel="stylesheet" href="/style.css">
+  
+  <link rel="stylesheet" href="Style/style.css">
+  <link rel="stylesheet" href="Style/menu.css">
 </head>
 <body data-ws="/ws/interno">
-  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
-
-  <nav class="menu" id="menu">
-    <div class="logo">CONTROL</div>
-    <a href="/index.html" target="_blank">Inicio</a>
-    <a class="act" href="/sistema.html" target="_blank">Sistema</a>
-    <a href="/widgets.html" target="_blank">Widgets</a>
-    <a href="/industria.html" target="_blank">Industria</a>
-    <a href="/interno.html" target="_blank">STM32</a>
-    <a href="/hvac.html" target="_blank">Climatizacion</a>
-    <a href="/compon.html" target="_blank">Componentes</a>
-    <a href="/objeto.html" target="_blank">Objeto</a>
-    <a href="/wdatos.html" target="_blank">Widgets de datos</a>
-    <a href="/can.html" target="_blank">CAN</a>
-    <a href="/trdp.html" target="_blank">TRDP</a>
-    <a href="/errores.html" target="_blank">Errores</a>
-    <a href="/datos.html" target="_blank">Datos en vivo</a>
-    <a href="/config.html" target="_blank">Configuracion</a>
-    <a href="/config.html" target="_blank">STM32 Data</a>
-  </nav>
+  <script src="JS/menu.js"></script>
 
   <main class="cont">
     <h1>STM32</h1>
@@ -40,7 +23,8 @@
         <p class="dim">Si marca 0 y el led esta apagado, faltan las estadisticas de FreeRTOS (ver LEEME).</p>
         <details><summary>Como se usa</summary><pre class="codigo">&lt;canvas class="dial" data-dial="s_cpu" data-min="0" data-max="100" data-unit="% CPU"
   data-zones="0~70:ok,70~90:warn,90~100:crit"&gt;&lt;/canvas&gt;</pre><pre class="codigo">// web_sys.c rellena sys_cpu cada segundo (se registra en web_vars.c como "s_cpu")
-// Necesita en FreeRTOS: USE_TRACE_FACILITY, GENERATE_RUN_TIME_STATS (ver LEEME.txt)</pre></details>
+
+    // Necesita en FreeRTOS: USE_TRACE_FACILITY, GENERATE_RUN_TIME_STATS (ver LEEME.txt)</pre></details>
       </div>
       <div class="tarjeta">
         <h2>Heap de FreeRTOS</h2>
@@ -109,6 +93,6 @@
     </div>
   </main>
 
-  <script src="/vars.js"></script>
+  <script src="JS/vars.js"></script>
 </body>
 </html>

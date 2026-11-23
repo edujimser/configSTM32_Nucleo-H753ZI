@@ -1,0 +1,96 @@
+.menu {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 20;
+  overflow-y: auto; transition: transform .25s;
+  width: 240px; padding: 26px 0 70px;
+  background: linear-gradient(180deg, #050505 0%, #000 100%);
+  border-right: 1px solid var(--line);
+  counter-reset: pag;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+}
+ 
+/* --- base (logo, boton movil) --- */
+.logo { text-transform: uppercase; }
+.logo::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--acc); margin-right: 12px; box-shadow: 0 0 10px var(--acc); }
+.burger {
+  display: none; position: fixed; top: 14px; left: 14px; z-index: 30; width: 46px; height: 46px;
+  border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  font-size: 1.2rem; cursor: pointer;
+}
+ 
+/* --- cabecera --- */
+.menu .logo {
+  margin: 0 22px 26px; padding-bottom: 18px;
+  font-size: .9rem; letter-spacing: 6px;
+  border-bottom: 1px dotted var(--line);
+}
+.menu .logo::before { animation: led-a 2.4s ease-in-out infinite; }
+.menu .logo::after {                       /* subtitulo bajo el logo */
+  content: "STM32H7 \00B7  WEB"; display: block; margin-top: 8px;
+  font-size: .55rem; letter-spacing: 3px; color: var(--dim);
+}
+ 
+/* --- linea vertical que une las entradas --- */
+.menu::before {
+  content: ""; position: absolute; left: 39px; top: 120px; bottom: 80px;
+  border-left: 1px dotted #2a2a2a; pointer-events: none;
+}
+ 
+/* --- entradas --- */
+.menu a {
+  display: block; text-decoration: none; text-transform: uppercase;
+  position: relative; display: flex; align-items: center; gap: 14px;
+  margin: 0 12px 2px; padding: 10px 12px 10px 14px;
+  border: 0; border-radius: 10px;
+  font-size: .7rem; letter-spacing: 2.5px; color: var(--dim);
+  counter-increment: pag;
+  transition: color .15s, background .15s, padding-left .15s;
+}
+.menu a::before {                          /* numero 01, 02, ... */
+  content: counter(pag, decimal-leading-zero);
+  flex: 0 0 26px; text-align: center;
+  font-size: .6rem; letter-spacing: 1px; color: #4a4a4a;
+  background: var(--bg); padding: 3px 0; border-radius: 6px;
+  transition: color .15s, box-shadow .15s;
+}
+.menu a::after {                           /* cursor ">" del hover */
+  content: ">"; position: absolute; right: 14px;
+  color: var(--acc); opacity: 0; transform: translateX(-6px);
+  transition: opacity .15s, transform .15s;
+}
+.menu a:hover { color: var(--fg); background: #0e0e0e; padding-left: 18px; border-color: transparent; }
+.menu a:hover::before { color: var(--fg); }
+.menu a:hover::after { opacity: 1; transform: none; }
+ 
+/* --- pagina activa --- */
+.menu a.act {
+  color: var(--fg); background: linear-gradient(90deg, rgba(215,25,33,.16), rgba(215,25,33,0) 85%);
+}
+.menu a.act::before {
+  color: #fff; background: var(--acc);
+  box-shadow: 0 0 12px rgba(215,25,33,.7);
+}
+.menu a.act::after { content: "\25CF"; opacity: 1; transform: none; font-size: .55rem; animation: led-a 1.6s infinite; }
+.menu a.act { box-shadow: inset 2px 0 0 var(--acc); }
+ 
+/* --- pie: estado --- */
+.menu::after {
+  content: "\25CF  SISTEMA EN LINEA"; position: fixed; left: 0; bottom: 0; width: 240px; box-sizing: border-box;
+  padding: 16px 22px; font-size: .55rem; letter-spacing: 2.5px; color: #3fbf6f;
+  background: linear-gradient(0deg, #000 60%, transparent); border-top: 1px dotted var(--line);
+}
+ 
+@keyframes led-a { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+ 
+.cont { margin-left: 240px; }
+.burger { border-color: var(--acc); }
+ 
+/* --- movil: cajon deslizante --- */
+@media (max-width: 768px) {
+  .burger { display: block; }
+  .menu { width: 82%; max-width: 300px; padding-top: 84px; transform: translateX(-100%); }
+  .menu.abierto { transform: none; box-shadow: 0 0 0 100vmax rgba(0,0,0,.65); }
+  .menu::after { width: 82%; max-width: 300px; }
+  .menu a { padding: 14px 14px; font-size: .8rem; }
+  .cont { margin-left: 0; }
+}

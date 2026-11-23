@@ -95,7 +95,7 @@ Copia cualquiera de las paginas de `web/` (por ejemplo `sistema.html`) a `web/mi
     </div>
   </main>
 
-  <script src="/vars.js"></script>   <!-- siempre al final -->
+  <script src="JS/vars.js"></script>   <!-- siempre al final -->
 </body>
 </html>
 ```

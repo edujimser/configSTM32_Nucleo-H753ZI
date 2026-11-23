@@ -4,43 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sistema</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="Style/style.css">
+  <link rel="stylesheet" href="Style/menu.css">
 </head>
 <body data-ws="/ws/stm32">
-  <button class="burger" onclick="document.getElementById('menu').classList.toggle('abierto')">&#9776;</button>
-
-  <nav class="menu" id="menu">
-    <div class="logo">CONTROL</div>
-    <a href="/index.html" target="_blank">Inicio</a>
-    <a class="act" href="/sistema.html" target="_blank">Sistema</a>
-    <a href="/widgets.html" target="_blank">Widgets</a>
-    <a href="/industria.html" target="_blank">Industria</a>
-    <a href="/interno.html" target="_blank">STM32</a>
-    <a href="/hvac.html" target="_blank">Climatizacion</a>
-    <a href="/compon.html" target="_blank">Componentes</a>
-    <a href="/objeto.html" target="_blank">Objeto</a>
-    <a href="/wdatos.html" target="_blank">Widgets de datos</a>
-    <a href="/can.html" target="_blank">CAN</a>
-    <a href="/trdp.html" target="_blank">TRDP</a>
-    <a href="/errores.html" target="_blank">Errores</a>
-    <a href="/datos.html" target="_blank">Datos en vivo</a>
-    <a href="/config.html" target="_blank">Configuracion</a>
-    <a href="/stm32.html" target="_blank">STM32 Data</a>
-  </nav>
+  <script src="JS/menu.js"></script>
 
   <main class="cont">
-    <h1>Mi sistema</h1>
+    <h1>STM32</h1>
+    <h3>PROCESADOR Y MEMORIA</h3>
 
-    <div class="rejilla">
+    <script src="JS/modulo1_memory.js"></script>
 
+    <h3>THREADS</h3>
+    <script src="JS/modulo2_threads.js"></script>
 
-      <div class="tarjeta">
-        <h2>Temperatura</h2>
-        <canvas data-dial="tm" class="dot" data-dot="temp" data-unit="&deg;C" data-digits="4" data-pitch="7"></canvas>
-      </div>
-
+    <h3>CLOCK INFO</h3>
+    <script src="JS/modulo3_clocks.js"></script>
   </main>
+  
 
-  <script src="/vars.js"></script>
+  <script src="JS/vars.js"></script>
 </body>
 </html>

@@ -11,6 +11,10 @@
 #include "Network/PageWeb/web_sig.h"      /* señales de comunicacion con forzado individual */
 #include "Network/PageWeb/web_err.h"      /* errores: estado, historico, contadores */
 #include "Network/PageWeb/web_stm32.h"    /* pagina de datos de control de stm32 */
+#include "Network/PageWeb/Modulo1_memory.h"
+#include "Network/PageWeb/modulo2_threads.h"
+#include "Network/PageWeb/modulo3_clocks.h"
+#include "Network/PageWeb/modulo4_gpio.h"
 
 void WebTerm_OnLine(const char *line);   /* la defines tu en la seccion 5 */
 
@@ -83,6 +87,285 @@ static const struct { const char *name; uint16_t pg; } web_pages[] = {
  *   2. SET  2.1 una sola pagina (por pagina)   2.2 varias paginas (por la primera pagina)
  * ============================================================================================= */
 static const WebVar_t web_vars[] = {
+
+  /* #############################################################################################
+   * MODULO 1  - RAM DEL MICROPROCESADOR
+   * ############################################################################################# */
+   //MACRO     ID              PAGINAS     TIPO      DEC VARIABLE
+ 
+    /* --- bloque principal --- */
+    DATAEGETWEB("ram_reg",      PG_STM32, WV_STR,   16, ram_info.region_txt),
+    DATAEGETWEB("ram_regsz",    PG_STM32, WV_U32,   0,  ram_info.main_size),
+    DATAEGETWEB("ram_usado",    PG_STM32, WV_U32,   0,  ram_info.main_used),
+    DATAEGETWEB("ram_libre",    PG_STM32, WV_U32,   0,  ram_info.main_free),
+    DATAEGETWEB("ram_pct",      PG_STM32, WV_U8,    0,  ram_info.main_pct),
+    DATAEGETWEB("ram_total",    PG_STM32, WV_U32,   0,  ram_info.ram_total),
+  
+    /* --- variables globales --- */
+    DATAEGETWEB("ram_data",     PG_STM32, WV_U32,   0,  ram_info.data),
+    DATAEGETWEB("ram_bss",      PG_STM32, WV_U32,   0,  ram_info.bss),
+    DATAEGETWEB("ram_stat",     PG_STM32, WV_U32,   0,  ram_info.statics),
+  
+    /* --- heap de FreeRTOS --- */
+    DATAEGETWEB("ram_rt_tot",   PG_STM32, WV_U32,   0,  ram_info.rtos_total),
+    DATAEGETWEB("ram_rt_lib",   PG_STM32, WV_U32,   0,  ram_info.rtos_free),
+    DATAEGETWEB("ram_rt_min",   PG_STM32, WV_U32,   0,  ram_info.rtos_min_free),
+    DATAEGETWEB("ram_rt_may",   PG_STM32, WV_U32,   0,  ram_info.rtos_largest),
+    DATAEGETWEB("ram_rt_alloc", PG_STM32, WV_U32,   0,  ram_info.rtos_allocs),
+    DATAEGETWEB("ram_rt_free",  PG_STM32, WV_U32,   0,  ram_info.rtos_frees),
+    DATAEGETWEB("ram_rt_pct",   PG_STM32, WV_U8,    0,  ram_info.rtos_pct),
+  
+    /* --- heap de malloc (libc) --- */
+    DATAEGETWEB("ram_lc_arena", PG_STM32, WV_U32,   0,  ram_info.libc_arena),
+    DATAEGETWEB("ram_lc_uso",   PG_STM32, WV_U32,   0,  ram_info.libc_used),
+    DATAEGETWEB("ram_lc_lib",   PG_STM32, WV_U32,   0,  ram_info.libc_free),
+  
+    /* --- pila principal (MSP) --- */
+    DATAEGETWEB("ram_pi_res",   PG_STM32, WV_U32,   0,  ram_info.stack_reserved),
+    DATAEGETWEB("ram_pi_act",   PG_STM32, WV_U32,   0,  ram_info.stack_now),
+    DATAEGETWEB("ram_pi_max",   PG_STM32, WV_U32,   0,  ram_info.stack_max),
+    DATAEGETWEB("ram_pi_pct",   PG_STM32, WV_U8,    0,  ram_info.stack_pct),
+
+  /* #############################################################################################
+   * MODULO 2  - TREHADS DE FREERTOS
+   * ############################################################################################# */
+	//MACRO     ID           PAGINAS     TIPO      DEC VARIABLE
+
+	/* --- resumen --- */
+	DATAEGETWEB("hl_n",     PG_STM32, WV_U8,   0,  rtos_info.count),                /* hilos que existen */
+	DATAEGETWEB("hl_vis",   PG_STM32, WV_U8,   0,  rtos_info.shown),                /* hilos detallados (<= MAX) */
+	DATAEGETWEB("hl_ok",    PG_STM32, WV_BOOL, 0,  rtos_info.stats_ok),             /* 1 = hay estadisticas de CPU */
+	DATAEGETWEB("hl_cpu",   PG_STM32, WV_U8,   0,  rtos_info.cpu_total),            /* % CPU total */
+	DATAEGETWEB("hl_up",    PG_STM32, WV_U32,  0,  rtos_info.uptime_s),             /* segundos desde el arranque */
+	DATAEGETWEB("hl_stot",  PG_STM32, WV_U32,  0,  rtos_info.stack_total),          /* pila reservada (suma) */
+	DATAEGETWEB("hl_suso",  PG_STM32, WV_U32,  0,  rtos_info.stack_used),           /* pila usada (suma de maximos) */
+	DATAEGETWEB("hl_spct",  PG_STM32, WV_U8,   0,  rtos_info.stack_pct),            /* % de pila usado en total */
+	DATAEGETWEB("hl_tcb",   PG_STM32, WV_U32,  0,  rtos_info.tcb_bytes),            /* memoria de los TCB */
+	DATAEGETWEB("hl_mem",   PG_STM32, WV_U32,  0,  rtos_info.mem_total),            /* pilas + TCB */
+	DATAEGETWEB("hl_peor",  PG_STM32, WV_STR,  16, rtos_info.worst_name),           /* hilo con la pila mas llena */
+	DATAEGETWEB("hl_peorp", PG_STM32, WV_U8,   0,  rtos_info.worst_pct),            /* su % de pila */
+
+	/* --- hilo 0 --- */
+	DATAEGETWEB("h0_n",     PG_STM32, WV_STR,  16, rtos_info.th[0].name),
+	DATAEGETWEB("h0_s",     PG_STM32, WV_U8,   0,  rtos_info.th[0].state),
+	DATAEGETWEB("h0_p",     PG_STM32, WV_U8,   0,  rtos_info.th[0].prio),
+	DATAEGETWEB("h0_c",     PG_STM32, WV_U8,   0,  rtos_info.th[0].cpu),
+	DATAEGETWEB("h0_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[0].stack_size),
+	DATAEGETWEB("h0_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[0].stack_free),
+	DATAEGETWEB("h0_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[0].stack_pct),
+
+	/* --- hilo 1 --- */
+	DATAEGETWEB("h1_n",     PG_STM32, WV_STR,  16, rtos_info.th[1].name),
+	DATAEGETWEB("h1_s",     PG_STM32, WV_U8,   0,  rtos_info.th[1].state),
+	DATAEGETWEB("h1_p",     PG_STM32, WV_U8,   0,  rtos_info.th[1].prio),
+	DATAEGETWEB("h1_c",     PG_STM32, WV_U8,   0,  rtos_info.th[1].cpu),
+	DATAEGETWEB("h1_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[1].stack_size),
+	DATAEGETWEB("h1_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[1].stack_free),
+	DATAEGETWEB("h1_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[1].stack_pct),
+
+	/* --- hilo 2 --- */
+	DATAEGETWEB("h2_n",     PG_STM32, WV_STR,  16, rtos_info.th[2].name),
+	DATAEGETWEB("h2_s",     PG_STM32, WV_U8,   0,  rtos_info.th[2].state),
+	DATAEGETWEB("h2_p",     PG_STM32, WV_U8,   0,  rtos_info.th[2].prio),
+	DATAEGETWEB("h2_c",     PG_STM32, WV_U8,   0,  rtos_info.th[2].cpu),
+	DATAEGETWEB("h2_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[2].stack_size),
+	DATAEGETWEB("h2_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[2].stack_free),
+	DATAEGETWEB("h2_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[2].stack_pct),
+
+	/* --- hilo 3 --- */
+	DATAEGETWEB("h3_n",     PG_STM32, WV_STR,  16, rtos_info.th[3].name),
+	DATAEGETWEB("h3_s",     PG_STM32, WV_U8,   0,  rtos_info.th[3].state),
+	DATAEGETWEB("h3_p",     PG_STM32, WV_U8,   0,  rtos_info.th[3].prio),
+	DATAEGETWEB("h3_c",     PG_STM32, WV_U8,   0,  rtos_info.th[3].cpu),
+	DATAEGETWEB("h3_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[3].stack_size),
+	DATAEGETWEB("h3_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[3].stack_free),
+	DATAEGETWEB("h3_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[3].stack_pct),
+
+	/* --- hilo 4 --- */
+	DATAEGETWEB("h4_n",     PG_STM32, WV_STR,  16, rtos_info.th[4].name),
+	DATAEGETWEB("h4_s",     PG_STM32, WV_U8,   0,  rtos_info.th[4].state),
+	DATAEGETWEB("h4_p",     PG_STM32, WV_U8,   0,  rtos_info.th[4].prio),
+	DATAEGETWEB("h4_c",     PG_STM32, WV_U8,   0,  rtos_info.th[4].cpu),
+	DATAEGETWEB("h4_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[4].stack_size),
+	DATAEGETWEB("h4_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[4].stack_free),
+	DATAEGETWEB("h4_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[4].stack_pct),
+
+	/* --- hilo 5 --- */
+	DATAEGETWEB("h5_n",     PG_STM32, WV_STR,  16, rtos_info.th[5].name),
+	DATAEGETWEB("h5_s",     PG_STM32, WV_U8,   0,  rtos_info.th[5].state),
+	DATAEGETWEB("h5_p",     PG_STM32, WV_U8,   0,  rtos_info.th[5].prio),
+	DATAEGETWEB("h5_c",     PG_STM32, WV_U8,   0,  rtos_info.th[5].cpu),
+	DATAEGETWEB("h5_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[5].stack_size),
+	DATAEGETWEB("h5_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[5].stack_free),
+	DATAEGETWEB("h5_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[5].stack_pct),
+
+	/* --- hilo 6 --- */
+	DATAEGETWEB("h6_n",     PG_STM32, WV_STR,  16, rtos_info.th[6].name),
+	DATAEGETWEB("h6_s",     PG_STM32, WV_U8,   0,  rtos_info.th[6].state),
+	DATAEGETWEB("h6_p",     PG_STM32, WV_U8,   0,  rtos_info.th[6].prio),
+	DATAEGETWEB("h6_c",     PG_STM32, WV_U8,   0,  rtos_info.th[6].cpu),
+	DATAEGETWEB("h6_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[6].stack_size),
+	DATAEGETWEB("h6_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[6].stack_free),
+	DATAEGETWEB("h6_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[6].stack_pct),
+
+	/* --- hilo 7 --- */
+	DATAEGETWEB("h7_n",     PG_STM32, WV_STR,  16, rtos_info.th[7].name),
+	DATAEGETWEB("h7_s",     PG_STM32, WV_U8,   0,  rtos_info.th[7].state),
+	DATAEGETWEB("h7_p",     PG_STM32, WV_U8,   0,  rtos_info.th[7].prio),
+	DATAEGETWEB("h7_c",     PG_STM32, WV_U8,   0,  rtos_info.th[7].cpu),
+	DATAEGETWEB("h7_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[7].stack_size),
+	DATAEGETWEB("h7_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[7].stack_free),
+	DATAEGETWEB("h7_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[7].stack_pct),
+
+	/* --- hilo 8 --- */
+	DATAEGETWEB("h8_n",     PG_STM32, WV_STR,  16, rtos_info.th[8].name),
+	DATAEGETWEB("h8_s",     PG_STM32, WV_U8,   0,  rtos_info.th[8].state),
+	DATAEGETWEB("h8_p",     PG_STM32, WV_U8,   0,  rtos_info.th[8].prio),
+	DATAEGETWEB("h8_c",     PG_STM32, WV_U8,   0,  rtos_info.th[8].cpu),
+	DATAEGETWEB("h8_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[8].stack_size),
+	DATAEGETWEB("h8_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[8].stack_free),
+	DATAEGETWEB("h8_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[8].stack_pct),
+
+	/* --- hilo 9 --- */
+	DATAEGETWEB("h9_n",     PG_STM32, WV_STR,  16, rtos_info.th[9].name),
+	DATAEGETWEB("h9_s",     PG_STM32, WV_U8,   0,  rtos_info.th[9].state),
+	DATAEGETWEB("h9_p",     PG_STM32, WV_U8,   0,  rtos_info.th[9].prio),
+	DATAEGETWEB("h9_c",     PG_STM32, WV_U8,   0,  rtos_info.th[9].cpu),
+	DATAEGETWEB("h9_sz",    PG_STM32, WV_U32,  0,  rtos_info.th[9].stack_size),
+	DATAEGETWEB("h9_lib",   PG_STM32, WV_U32,  0,  rtos_info.th[9].stack_free),
+	DATAEGETWEB("h9_pct",   PG_STM32, WV_U8,   0,  rtos_info.th[9].stack_pct),
+
+  /* #############################################################################################
+  * MODULO 3  - CLOCKS
+  * ############################################################################################# */
+    //MACRO     ID           PAGINAS     TIPO      DEC VARIABLE
+
+	/* --- Frecuencias (Hz) --- */
+	DATAEGETWEB("ck_sys",  PG_STM32, WV_U32,   0,  clock_info.sysclk),            /* reloj del sistema */
+	DATAEGETWEB("ck_cpu",  PG_STM32, WV_U32,   0,  clock_info.cpu),               /* Cortex-M7 (SystemCoreClock) */
+	DATAEGETWEB("ck_hclk", PG_STM32, WV_U32,   0,  clock_info.hclk),              /* bus AHB */
+	DATAEGETWEB("ck_apb1", PG_STM32, WV_U32,   0,  clock_info.apb1),              /* APB1 */
+	DATAEGETWEB("ck_apb2", PG_STM32, WV_U32,   0,  clock_info.apb2),              /* APB2 */
+	DATAEGETWEB("ck_apb3", PG_STM32, WV_U32,   0,  clock_info.apb3),              /* APB3 */
+	DATAEGETWEB("ck_apb4", PG_STM32, WV_U32,   0,  clock_info.apb4),              /* APB4 */
+	DATAEGETWEB("ck_p1p",  PG_STM32, WV_U32,   0,  clock_info.pll1_p),            /* PLL1 P */
+	DATAEGETWEB("ck_p1q",  PG_STM32, WV_U32,   0,  clock_info.pll1_q),            /* PLL1 Q */
+	DATAEGETWEB("ck_p1r",  PG_STM32, WV_U32,   0,  clock_info.pll1_r),            /* PLL1 R */
+	DATAEGETWEB("ck_p2p",  PG_STM32, WV_U32,   0,  clock_info.pll2_p),            /* PLL2 P */
+	DATAEGETWEB("ck_p2q",  PG_STM32, WV_U32,   0,  clock_info.pll2_q),            /* PLL2 Q */
+	DATAEGETWEB("ck_p2r",  PG_STM32, WV_U32,   0,  clock_info.pll2_r),            /* PLL2 R */
+	DATAEGETWEB("ck_p3p",  PG_STM32, WV_U32,   0,  clock_info.pll3_p),            /* PLL3 P */
+	DATAEGETWEB("ck_p3q",  PG_STM32, WV_U32,   0,  clock_info.pll3_q),            /* PLL3 Q */
+	DATAEGETWEB("ck_p3r",  PG_STM32, WV_U32,   0,  clock_info.pll3_r),            /* PLL3 R */
+	DATAEGETWEB("ck_hse",  PG_STM32, WV_U32,   0,  clock_info.hse_hz),            /* cristal externo */
+	DATAEGETWEB("ck_hsi",  PG_STM32, WV_U32,   0,  clock_info.hsi_hz),            /* oscilador interno */
+
+	/* --- Estado --- */
+	DATAEGETWEB("ck_src",  PG_STM32, WV_U8,    0,  clock_info.sys_src),           /* origen SYSCLK: 0 HSI, 1 CSI, 2 HSE, 3 PLL1 */
+	DATAEGETWEB("ck_psrc", PG_STM32, WV_U8,    0,  clock_info.pll_src),           /* entrada PLL: 0 HSI, 1 CSI, 2 HSE, 3 ninguna */
+	DATAEGETWEB("ck_osc",  PG_STM32, WV_U16,   0,  clock_info.osc_on),            /* bits OSC_xxx (que osciladores van) */
+	DATAEGETWEB("ck_vos",  PG_STM32, WV_U8,    0,  clock_info.vos),               /* escala de tension 0..3 */
+	DATAEGETWEB("ck_ws",   PG_STM32, WV_U8,    0,  clock_info.flash_ws),          /* esperas de la flash */
+	DATAEGETWEB("ck_dev",  PG_STM32, WV_U16,   0,  clock_info.dev_id),            /* 0x450 = H74x/H75x */
+	DATAEGETWEB("ck_rev",  PG_STM32, WV_U16,   0,  clock_info.rev_id),            /* 0x1003 = Y, 0x2003 = V */
+	DATAEGETWEB("ck_revt", PG_STM32, WV_STR,   4,  clock_info.rev_txt),           /* revision en texto */
+
+	/* --- Analogico (ADC3) --- */
+	DATAEGETWEB("ck_adc",  PG_STM32, WV_BOOL,  0,  clock_info.adc_ok),            /* 1 = ADC3 midiendo */
+	DATAEGETWEB("ck_t",    PG_STM32, WV_FLOAT, 1,  clock_info.temp_c),            /* temperatura del chip (C) */
+	DATAEGETWEB("ck_tmin", PG_STM32, WV_FLOAT, 1,  clock_info.temp_min),          /* minima desde el arranque */
+	DATAEGETWEB("ck_tmax", PG_STM32, WV_FLOAT, 1,  clock_info.temp_max),          /* maxima desde el arranque */
+	DATAEGETWEB("ck_vref", PG_STM32, WV_U16,   0,  clock_info.vref_mv),           /* Vref+ (mV) */
+	DATAEGETWEB("ck_vbat", PG_STM32, WV_U16,   0,  clock_info.vbat_mv),           /* pila RTC (mV) */
+
+
+
+  /* #############################################################################################
+  * MODULO 4  - GPIO
+  * ############################################################################################# */
+  //MACRO     ID          PAGINAS   TIPO      DEC VARIABLE
+
+  DATAEGETWEB("gp_on",    PG_STM32, WV_U8,    0,  gpio_info.ports_on),   /* puertos con reloj */
+
+  /* --- GPIOA --- */
+  DATAEGETWEB("ga_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[0].clk),     /* reloj activado */
+  DATAEGETWEB("ga_i",    PG_STM32, WV_U16,   0,  gpio_info.p[0].idr),     /* nivel real de los pines */
+  DATAEGETWEB("ga_o",    PG_STM32, WV_U16,   0,  gpio_info.p[0].odr),     /* salidas programadas */
+  DATAEGETWEB("ga_t",    PG_STM32, WV_U16,   0,  gpio_info.p[0].otyper),  /* 1 = open-drain */
+  DATAEGETWEB("ga_m",    PG_STM32, WV_U32,   0,  gpio_info.p[0].moder),   /* modo, 2 bits por pin */
+  DATAEGETWEB("ga_p",    PG_STM32, WV_U32,   0,  gpio_info.p[0].pupdr),   /* pull, 2 bits por pin */
+  DATAEGETWEB("ga_al",   PG_STM32, WV_U32,   0,  gpio_info.p[0].afrl),    /* AF pines 0-7 */
+  DATAEGETWEB("ga_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[0].afrh),    /* AF pines 8-15 */
+
+  /* --- GPIOB --- */
+  DATAEGETWEB("gb_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[1].clk),
+  DATAEGETWEB("gb_i",    PG_STM32, WV_U16,   0,  gpio_info.p[1].idr),
+  DATAEGETWEB("gb_o",    PG_STM32, WV_U16,   0,  gpio_info.p[1].odr),
+  DATAEGETWEB("gb_t",    PG_STM32, WV_U16,   0,  gpio_info.p[1].otyper),
+  DATAEGETWEB("gb_m",    PG_STM32, WV_U32,   0,  gpio_info.p[1].moder),
+  DATAEGETWEB("gb_p",    PG_STM32, WV_U32,   0,  gpio_info.p[1].pupdr),
+  DATAEGETWEB("gb_al",   PG_STM32, WV_U32,   0,  gpio_info.p[1].afrl),
+  DATAEGETWEB("gb_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[1].afrh),
+
+  /* --- GPIOC --- */
+  DATAEGETWEB("gc_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[2].clk),
+  DATAEGETWEB("gc_i",    PG_STM32, WV_U16,   0,  gpio_info.p[2].idr),
+  DATAEGETWEB("gc_o",    PG_STM32, WV_U16,   0,  gpio_info.p[2].odr),
+  DATAEGETWEB("gc_t",    PG_STM32, WV_U16,   0,  gpio_info.p[2].otyper),
+  DATAEGETWEB("gc_m",    PG_STM32, WV_U32,   0,  gpio_info.p[2].moder),
+  DATAEGETWEB("gc_p",    PG_STM32, WV_U32,   0,  gpio_info.p[2].pupdr),
+  DATAEGETWEB("gc_al",   PG_STM32, WV_U32,   0,  gpio_info.p[2].afrl),
+  DATAEGETWEB("gc_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[2].afrh),
+
+  /* --- GPIOD --- */
+  DATAEGETWEB("gd_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[3].clk),
+  DATAEGETWEB("gd_i",    PG_STM32, WV_U16,   0,  gpio_info.p[3].idr),
+  DATAEGETWEB("gd_o",    PG_STM32, WV_U16,   0,  gpio_info.p[3].odr),
+  DATAEGETWEB("gd_t",    PG_STM32, WV_U16,   0,  gpio_info.p[3].otyper),
+  DATAEGETWEB("gd_m",    PG_STM32, WV_U32,   0,  gpio_info.p[3].moder),
+  DATAEGETWEB("gd_p",    PG_STM32, WV_U32,   0,  gpio_info.p[3].pupdr),
+  DATAEGETWEB("gd_al",   PG_STM32, WV_U32,   0,  gpio_info.p[3].afrl),
+  DATAEGETWEB("gd_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[3].afrh),
+
+  /* --- GPIOE --- */
+  DATAEGETWEB("ge_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[4].clk),
+  DATAEGETWEB("ge_i",    PG_STM32, WV_U16,   0,  gpio_info.p[4].idr),
+  DATAEGETWEB("ge_o",    PG_STM32, WV_U16,   0,  gpio_info.p[4].odr),
+  DATAEGETWEB("ge_t",    PG_STM32, WV_U16,   0,  gpio_info.p[4].otyper),
+  DATAEGETWEB("ge_m",    PG_STM32, WV_U32,   0,  gpio_info.p[4].moder),
+  DATAEGETWEB("ge_p",    PG_STM32, WV_U32,   0,  gpio_info.p[4].pupdr),
+  DATAEGETWEB("ge_al",   PG_STM32, WV_U32,   0,  gpio_info.p[4].afrl),
+  DATAEGETWEB("ge_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[4].afrh),
+
+  /* --- GPIOF --- */
+  DATAEGETWEB("gf_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[5].clk),
+  DATAEGETWEB("gf_i",    PG_STM32, WV_U16,   0,  gpio_info.p[5].idr),
+  DATAEGETWEB("gf_o",    PG_STM32, WV_U16,   0,  gpio_info.p[5].odr),
+  DATAEGETWEB("gf_t",    PG_STM32, WV_U16,   0,  gpio_info.p[5].otyper),
+  DATAEGETWEB("gf_m",    PG_STM32, WV_U32,   0,  gpio_info.p[5].moder),
+  DATAEGETWEB("gf_p",    PG_STM32, WV_U32,   0,  gpio_info.p[5].pupdr),
+  DATAEGETWEB("gf_al",   PG_STM32, WV_U32,   0,  gpio_info.p[5].afrl),
+  DATAEGETWEB("gf_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[5].afrh),
+
+  /* --- GPIOG --- */
+  DATAEGETWEB("gg_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[6].clk),
+  DATAEGETWEB("gg_i",    PG_STM32, WV_U16,   0,  gpio_info.p[6].idr),
+  DATAEGETWEB("gg_o",    PG_STM32, WV_U16,   0,  gpio_info.p[6].odr),
+  DATAEGETWEB("gg_t",    PG_STM32, WV_U16,   0,  gpio_info.p[6].otyper),
+  DATAEGETWEB("gg_m",    PG_STM32, WV_U32,   0,  gpio_info.p[6].moder),
+  DATAEGETWEB("gg_p",    PG_STM32, WV_U32,   0,  gpio_info.p[6].pupdr),
+  DATAEGETWEB("gg_al",   PG_STM32, WV_U32,   0,  gpio_info.p[6].afrl),
+  DATAEGETWEB("gg_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[6].afrh),
+
+  /* --- GPIOH --- */
+  DATAEGETWEB("gh_en",   PG_STM32, WV_BOOL,  0,  gpio_info.p[7].clk),
+  DATAEGETWEB("gh_i",    PG_STM32, WV_U16,   0,  gpio_info.p[7].idr),
+  DATAEGETWEB("gh_o",    PG_STM32, WV_U16,   0,  gpio_info.p[7].odr),
+  DATAEGETWEB("gh_t",    PG_STM32, WV_U16,   0,  gpio_info.p[7].otyper),
+  DATAEGETWEB("gh_m",    PG_STM32, WV_U32,   0,  gpio_info.p[7].moder),
+  DATAEGETWEB("gh_p",    PG_STM32, WV_U32,   0,  gpio_info.p[7].pupdr),
+  DATAEGETWEB("gh_al",   PG_STM32, WV_U32,   0,  gpio_info.p[7].afrl),
+  DATAEGETWEB("gh_ah",   PG_STM32, WV_U32,   0,  gpio_info.p[7].afrh),
 
   /* #############################################################################################
    * 1.1 GET  -  SOLO LECTURA (placa -> web)

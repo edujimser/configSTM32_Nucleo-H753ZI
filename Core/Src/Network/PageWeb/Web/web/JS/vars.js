@@ -1,7 +1,7 @@
 // vars.js - Conecta la pagina con la placa y dibuja los widgets. Sin librerias.
 //
 //  <body data-ws="/ws/widgets">   <- WebSocket de esta pagina (nombre de web_pages[] en web_vars.c)
-//  <script src="/vars.js"></script>
+//  <script src="JS/vars.js"></script>
 //
 // "ID" = el ID de la variable en web_vars.c.  Todos los widgets son atributos HTML:
 //

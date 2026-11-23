@@ -37,6 +37,7 @@
 #include "MsgUart/TxUart/TxUart.h"
 #include "SPI_Flash_Memory/SPI_Flash_Memory.h"
 #include "Network/network.h"
+#include "Network/PageWeb/modulo2_threads.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,6 +57,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+#define QUEUE_UART_RX_SIZE 10U
+#define QUEUE_UART_TX_SIZE 15U
+
 I_TestUart Uart1;
 extern SPI_HandleTypeDef hspi1;
 uint8_t flash_id[3] = {0, 0, 0};
@@ -63,35 +67,38 @@ uint8_t flash_id[3] = {0, 0, 0};
 /* ==============================================================================
  * 1. Definición de Atributos de Tareas (Thread Attributes)
  * ============================================================================== */
-
+#define STACK_SIZE_INIT_TASK 512 * 4
 const osThreadAttr_t ThreadAttr_InitTask = {
   .name       = "Task_Init",
-  .stack_size = 512 * 4,
+  .stack_size = STACK_SIZE_INIT_TASK,
   .priority   = (osPriority_t) osPriorityHigh,
 };
 
+#define STACK_SIZE_STATUS_SYSTEM 256 * 4
 const osThreadAttr_t ThreadAttr_StatusSystem = {
   .name       = "Task_StatusSystem",
-  .stack_size = 256 * 4,
+  .stack_size = STACK_SIZE_STATUS_SYSTEM,
   .priority   = (osPriority_t) osPriorityLow,
 };
 
+#define STACK_SIZE_UART_TX 256 * 8
 const osThreadAttr_t ThreadAttr_Uart_Tx = {
   .name       = "Task_UartTx",
-  .stack_size = 256 * 8,
+  .stack_size = STACK_SIZE_UART_TX,
   .priority   = (osPriority_t) osPriorityBelowNormal,
 };
 
+#define STACK_SIZE_UART_RX 256 * 12
 const osThreadAttr_t ThreadAttr_Uart_Rx = {
   .name       = "Task_UartRx",
-  .stack_size = 256 * 12,
+  .stack_size = STACK_SIZE_UART_RX,
   .priority   = (osPriority_t) osPriorityBelowNormal,
 };
 
-
+#define STACK_SIZE_NETWORK 2048 * 10
 static const osThreadAttr_t ThreadAttr_Network = {
   .name       = "Task_Network",
-  .stack_size = 2048 * 10,
+  .stack_size = STACK_SIZE_NETWORK,
   .priority   = (osPriority_t) osPriorityLow1,
 };
 
@@ -127,7 +134,22 @@ void StartDefaultTask(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* Hook prototypes */
+void configureTimerForRunTimeStats(void);
+unsigned long getRunTimeCounterValue(void);
 void vApplicationMallocFailedHook(void);
+
+/* USER CODE BEGIN 1 */
+/* Functions needed when configGENERATE_RUN_TIME_STATS is on */
+__weak void configureTimerForRunTimeStats(void)
+{
+  Modulo2_RunTimeInit();
+}
+
+__weak unsigned long getRunTimeCounterValue(void)
+{
+  return Modulo2_RunTimeGet();
+}
+/* USER CODE END 1 */
 
 /* USER CODE BEGIN 5 */
 void vApplicationMallocFailedHook(void)
@@ -168,8 +190,8 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
-	Queue_Uart_Tx = osMessageQueueNew(15, sizeof(S_UartMsg *), NULL);
-	Queue_Uart_Rx = osMessageQueueNew(10, sizeof(S_UartMsg *), NULL);
+	Queue_Uart_Tx = osMessageQueueNew(QUEUE_UART_TX_SIZE, sizeof(S_UartMsg *), NULL);
+	Queue_Uart_Rx = osMessageQueueNew(QUEUE_UART_RX_SIZE, sizeof(S_UartMsg *), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */

@@ -8,6 +8,7 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "adc.h"
 #include "dma.h"
 #include "eth.h"
 #include "rng.h"
@@ -26,6 +27,7 @@
 #include "MsgUart/TxUart/TxUart.h"
 #include "SPI_Flash_Memory/SPI_Flash_Memory.h"
 #include <string.h>
+#include "Network/PageWeb/Modulo1_memory.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,7 +77,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  RamInfo_PaintMainStack();
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -113,6 +115,7 @@ int main(void)
   MX_SPI1_Init();
   MX_ETH_Init();
   MX_RNG_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
 
 
