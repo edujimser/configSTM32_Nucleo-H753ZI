@@ -7,7 +7,7 @@
 #include "MsgUART/TxUart/TxUart.h"
 
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 
 
@@ -28,11 +28,11 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
     uint8_t cmd = 0;
 
     osDelay(TXFLASHLOG);
-    	   MSG_Enviar(
+    	   MSG_Enviar(MSG_GENERAL,
     		   "\r\n==========================================================\r\n"
     		   " [SPI FLASH] [Flash_Erase_All] BORADO COMPLETO\r\n"
     		   "==========================================================\r\n",
-    		   TestUart_1
+    		   Uart1
 	);
 	osDelay(TXFLASHLOG);
 
@@ -40,13 +40,13 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 	// DIAGNÓSTICO INICIAL (Lectura del estado en frío del componente)
 	// =========================================================================
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Read_Component(flash);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_All] Preparando secuencia de borrado...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_All] Preparando secuencia de borrado...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -54,7 +54,7 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 	// =========================================================================
 
 	if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI.\r\n", Uart1);
 		return false;
 	}
 
@@ -69,7 +69,7 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase.\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -86,7 +86,7 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK || estado_spi_2 != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta.\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -102,7 +102,7 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase.\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -117,7 +117,7 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Erase.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Erase.\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -134,15 +134,15 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 
 	if (!Flash_Wait_Busy(flash, ERASE_ALL_WAIT_BUSY, &timeUse)) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando.\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		   MSG_Enviar(
+		   MSG_Enviar(MSG_GENERAL,
 			   "\r\n==========================================================\r\n"
 			   " [SPI FLASH] [Flash_Erase_All] FIN BORADO COMPLETO\r\n"
 			   "==========================================================\r\n",
-			   TestUart_1
+			   Uart1
 		   );
 	   osDelay(TXFLASHLOG);
 
@@ -152,15 +152,15 @@ bool Flash_Erase_All(SPI_Flash_TypeDef *flash)
 				 "\r\n [SPI FLASH OK] Borrado Finalizado. Tiempo: %lu ms. Memoria virgen.\r\n",
 				 (unsigned long)timeUse);
 
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	}
 
 	osDelay(TXFLASHLOG);
-		   MSG_Enviar(
+		   MSG_Enviar(MSG_GENERAL,
 			   "\r\n==========================================================\r\n"
 			   " [SPI FLASH] [Flash_Erase_All] FIN BORADO COMPLETO\r\n"
 			   "==========================================================\r\n",
-			   TestUart_1
+			   Uart1
 	);
 
 
@@ -192,12 +192,12 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
     HAL_StatusTypeDef estado_spi_2;
 
     osDelay(TXFLASHLOG);
-    	   MSG_Enviar(
+    	   MSG_Enviar(MSG_GENERAL,
     		   "\r\n==========================================================\r\n"
     		   " [SPI FLASH] [Flash_Erase_One_Hex_For_Sector] BORADO POR SECTOR\r\n"
     		   "==========================================================\r\n",
 
-    		   TestUart_1
+    		   Uart1
 	);
 	osDelay(TXFLASHLOG);
 
@@ -213,15 +213,15 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 
 	if (!protocol) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_One_Hex_For_Sector] Fuera de limites o dirección incorrecta (No inicial)\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_One_Hex_For_Sector] Fuera de limites o dirección incorrecta (No inicial)\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Erase_One_Hex_For_Sector] BORADO POR SECTOR\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1);
+		   Uart1);
 	   osDelay(TXFLASHLOG);
 
 		return false;
@@ -230,13 +230,13 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 	// DIAGNÓSTICO INICIAL (Lectura del estado en frío del componente)
 	// =========================================================================
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Read_Component(flash);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_One_For_Sector] Preparando secuencia de borrado...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_One_For_Sector] Preparando secuencia de borrado...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -244,7 +244,7 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 	// =========================================================================
 
 	if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", Uart1);
 		return false;
 	}
 
@@ -257,7 +257,7 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -273,7 +273,7 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK || estado_spi_2 != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -288,7 +288,7 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -307,7 +307,7 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -321,14 +321,14 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
 
 
 	if (!Flash_Wait_Busy(flash, ERASE_ONE_SECTOR, &timeUse)) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", Uart1);
 	} else {
 		snprintf(buf_msg, sizeof(buf_msg),
 				 "\r\n [SPI FLASH OK] Borrado Finalizado. Tiempo: %lu ms\r\n",
 				 (unsigned long)timeUse);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 	}
 
@@ -342,11 +342,11 @@ bool Flash_Erase_One_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addr)
    Flash_Complement_Data_Thread(FLASH_DEBUG_THREAD_SIZE);
 
    osDelay(TXFLASHLOG);
-   MSG_Enviar(
+   MSG_Enviar(MSG_GENERAL,
 	   "\r\n==========================================================\r\n"
 	   " [SPI FLASH] [Flash_Erase_One_Hex_For_Sector] BORADO POR SECTOR\r\n"
 	   "==========================================================\r\n",
-	   TestUart_1);
+	   Uart1);
    osDelay(TXFLASHLOG);
 
    return true;
@@ -367,12 +367,12 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
     uint32_t addr = sector * FLASH_SECTION_SIZE;
 
     osDelay(TXFLASHLOG);
-    	   MSG_Enviar(
+    	   MSG_Enviar(MSG_GENERAL,
     		   "\r\n==========================================================\r\n"
     		   " [SPI FLASH] [Flash_Erase_One_sector_For_Sector] BORADO POR SECTOR\r\n"
     		   "==========================================================\r\n",
 
-    		   TestUart_1
+    		   Uart1
 	);
 	osDelay(TXFLASHLOG);
 
@@ -387,15 +387,15 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 
 	if (!protocol) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_One_sector_For_Sector] Fuera de limites o dirección incorrecta (No inicial)\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_One_sector_For_Sector] Fuera de limites o dirección incorrecta (No inicial)\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Erase_One_sector_For_Sector] BORADO POR SECTOR\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1);
+		   Uart1);
 	   osDelay(TXFLASHLOG);
 
 		return false;
@@ -404,13 +404,13 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 	// DIAGNÓSTICO INICIAL (Lectura del estado en frío del componente)
 	// =========================================================================
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Read_Component(flash);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_One_For_Sector] Preparando secuencia de borrado...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_One_For_Sector] Preparando secuencia de borrado...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -418,7 +418,7 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 	// =========================================================================
 
 	if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", Uart1);
 		return false;
 	}
 
@@ -431,7 +431,7 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -447,7 +447,7 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK || estado_spi_2 != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -462,7 +462,7 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -481,7 +481,7 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -495,14 +495,14 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
 
 
 	if (!Flash_Wait_Busy(flash, ERASE_ONE_SECTOR, &timeUse)) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", Uart1);
 	} else {
 		snprintf(buf_msg, sizeof(buf_msg),
 				 "\r\n [SPI FLASH OK] Borrado Finalizado. Tiempo: %lu ms\r\n",
 				 (unsigned long)timeUse);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 	}
 
@@ -516,11 +516,11 @@ bool Flash_Erase_One_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sector
    Flash_Complement_Data_Thread(FLASH_DEBUG_THREAD_SIZE);
 
    osDelay(TXFLASHLOG);
-   MSG_Enviar(
+   MSG_Enviar(MSG_GENERAL,
 	   "\r\n==========================================================\r\n"
 	   " [SPI FLASH] [Flash_Erase_One_sector_For_Sector] BORADO POR SECTOR\r\n"
 	   "==========================================================\r\n",
-	   TestUart_1);
+	   Uart1);
    osDelay(TXFLASHLOG);
 
    return true;
@@ -540,12 +540,12 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
     HAL_StatusTypeDef estado_spi_2;
 
     osDelay(TXFLASHLOG);
-    	   MSG_Enviar(
+    	   MSG_Enviar(MSG_GENERAL,
     		   "\r\n==========================================================\r\n"
     		   " [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] BORADO POR SECTOR\r\n"
     		   "==========================================================\r\n",
 
-    		   TestUart_1
+    		   Uart1
 	);
 	osDelay(TXFLASHLOG);
 
@@ -565,15 +565,15 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 
 	if (!protocol) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] Fuera de limites o dirección incorrecta (No inicial o  final)\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] Fuera de limites o dirección incorrecta (No inicial o  final)\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] BORRADO POR RANGO HEX\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1);
+		   Uart1);
 	   osDelay(TXFLASHLOG);
 
 		return false;
@@ -582,13 +582,13 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 	// DIAGNÓSTICO INICIAL (Lectura del estado en frío del componente)
 	// =========================================================================
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Read_Component(flash);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] Preparando secuencia de borrado...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] Preparando secuencia de borrado...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -596,7 +596,7 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 	// =========================================================================
 
 	if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", Uart1);
 		return false;
 	}
 
@@ -609,7 +609,7 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -625,7 +625,7 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK || estado_spi_2 != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -647,7 +647,7 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 
 
 		if (estado_spi != HAL_OK) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
@@ -666,13 +666,13 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 
 
 		if (estado_spi != HAL_OK) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
 
 		if (!Flash_Wait_Busy(flash, ERASE_ONE_SECTOR, &timeUse_sector)) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
@@ -690,7 +690,7 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
 	             (unsigned long)totalTimeUse);
 
 	    osDelay(TXFLASHLOG);
-	    MSG_Enviar(buf_msg, TestUart_1);
+	    MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	    osDelay(TXFLASHLOG);
 
 
@@ -703,11 +703,11 @@ bool Flash_Erase_Range_Hex_For_Sector(SPI_Flash_TypeDef *flash, uint32_t addrIni
    Flash_Complement_Data_Thread(FLASH_DEBUG_THREAD_SIZE);
 
    osDelay(TXFLASHLOG);
-   MSG_Enviar(
+   MSG_Enviar(MSG_GENERAL,
 	   "\r\n==========================================================\r\n"
 	   " [SPI FLASH] [Flash_Erase_Range_Hex_For_Sector] FIN \r\n"
 	   "==========================================================\r\n",
-	   TestUart_1);
+	   Uart1);
    osDelay(TXFLASHLOG);
 
    return true;
@@ -727,12 +727,12 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
     HAL_StatusTypeDef estado_spi_2;
 
     osDelay(TXFLASHLOG);
-    	   MSG_Enviar(
+    	   MSG_Enviar(MSG_GENERAL,
     		   "\r\n==========================================================\r\n"
     		   " [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] BORADO POR SECTOR\r\n"
     		   "==========================================================\r\n",
 
-    		   TestUart_1
+    		   Uart1
 	);
 	osDelay(TXFLASHLOG);
 
@@ -754,15 +754,15 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 
 	if (!protocol) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] Fuera de limites o dirección incorrecta (No inicial o  final)\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] Fuera de limites o dirección incorrecta (No inicial o  final)\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] BORRADO POR RANGO HEX\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1);
+		   Uart1);
 	   osDelay(TXFLASHLOG);
 
 		return false;
@@ -771,13 +771,13 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 	// DIAGNÓSTICO INICIAL (Lectura del estado en frío del componente)
 	// =========================================================================
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Read_Component(flash);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] Preparando secuencia de borrado...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] Preparando secuencia de borrado...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -785,7 +785,7 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 	// =========================================================================
 
 	if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", Uart1);
 		return false;
 	}
 
@@ -798,7 +798,7 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -814,7 +814,7 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK || estado_spi_2 != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -836,7 +836,7 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 
 
 		if (estado_spi != HAL_OK) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
@@ -855,13 +855,13 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 
 
 		if (estado_spi != HAL_OK) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
 
 		if (!Flash_Wait_Busy(flash, ERASE_ONE_SECTOR, &timeUse_sector)) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
@@ -879,7 +879,7 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
 	             (unsigned long)totalTimeUse);
 
 	    osDelay(TXFLASHLOG);
-	    MSG_Enviar(buf_msg, TestUart_1);
+	    MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	    osDelay(TXFLASHLOG);
 
 
@@ -892,11 +892,11 @@ bool Flash_Erase_Range_Sector_For_Sector(SPI_Flash_TypeDef *flash, uint32_t sect
    Flash_Complement_Data_Thread(FLASH_DEBUG_THREAD_SIZE);
 
    osDelay(TXFLASHLOG);
-   MSG_Enviar(
+   MSG_Enviar(MSG_GENERAL,
 	   "\r\n==========================================================\r\n"
 	   " [SPI FLASH] [Flash_Erase_Range_Sector_For_Sector] FIN \r\n"
 	   "==========================================================\r\n",
-	   TestUart_1);
+	   Uart1);
    osDelay(TXFLASHLOG);
 
    return true;
@@ -916,12 +916,12 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
     HAL_StatusTypeDef estado_spi_2;
 
     osDelay(TXFLASHLOG);
-    	   MSG_Enviar(
+    	   MSG_Enviar(MSG_GENERAL,
     		   "\r\n==========================================================\r\n"
     		   " [SPI FLASH] [Flash_Erase_Partition] BORADO POR SECTOR\r\n"
     		   "==========================================================\r\n",
 
-    		   TestUart_1
+    		   Uart1
 	);
 	osDelay(TXFLASHLOG);
 
@@ -943,15 +943,15 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 
 	if (!protocol) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_Partition] Fuera de limites o dirección incorrecta (No inicial o  final)\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_Partition] Fuera de limites o dirección incorrecta (No inicial o  final)\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Erase_Partition] BORRADO POR RANGO HEX\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1);
+		   Uart1);
 	   osDelay(TXFLASHLOG);
 
 		return false;
@@ -960,13 +960,13 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 	// DIAGNÓSTICO INICIAL (Lectura del estado en frío del componente)
 	// =========================================================================
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n --- DIAGNOSTICO PRE-BORRADO ---\r\n [1] Estado de la Flash en frio:\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Read_Component(flash);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_Partition] Preparando secuencia de borrado...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_Partition] Preparando secuencia de borrado...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -974,7 +974,7 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 	// =========================================================================
 
 	if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] No se pudo secuestrar el bus SPI\r\n", Uart1);
 		return false;
 	}
 
@@ -987,7 +987,7 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 
 
 	if (estado_spi != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -1003,7 +1003,7 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 	HAL_GPIO_WritePin(flash->cs_port, flash->cs_pin, GPIO_PIN_SET);
 
 	if (estado_spi != HAL_OK || estado_spi_2 != HAL_OK) {
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando eliminar bloqueos zona alta\r\n", Uart1);
 		osMutexRelease(flash->spi_mutex);
 		return false;
 	}
@@ -1025,7 +1025,7 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 
 
 		if (estado_spi != HAL_OK) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
@@ -1044,13 +1044,13 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 
 
 		if (estado_spi != HAL_OK) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Fallo al enviar comando Write para Erase\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
 
 		if (!Flash_Wait_Busy(flash, ERASE_ONE_SECTOR, &timeUse_sector)) {
-			MSG_Enviar("\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] TIMEOUT: El chip se quedo bloqueado borrando\r\n", Uart1);
 			osMutexRelease(flash->spi_mutex);
 			return false;
 		}
@@ -1068,7 +1068,7 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
 	             (unsigned long)totalTimeUse);
 
 	    osDelay(TXFLASHLOG);
-	    MSG_Enviar(buf_msg, TestUart_1);
+	    MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	    osDelay(TXFLASHLOG);
 
 
@@ -1081,11 +1081,11 @@ bool Flash_Erase_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID partitio
    Flash_Complement_Data_Thread(FLASH_DEBUG_THREAD_SIZE);
 
    osDelay(TXFLASHLOG);
-   MSG_Enviar(
+   MSG_Enviar(MSG_GENERAL,
 	   "\r\n==========================================================\r\n"
 	   " [SPI FLASH] [Flash_Erase_Partition] FIN BORRADO PARTITION\r\n"
 	   "==========================================================\r\n",
-	   TestUart_1);
+	   Uart1);
    osDelay(TXFLASHLOG);
 
    return true;

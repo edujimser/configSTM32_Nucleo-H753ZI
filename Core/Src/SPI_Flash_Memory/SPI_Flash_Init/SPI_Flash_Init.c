@@ -7,7 +7,7 @@
 #include "MsgUART/TxUart/TxUart.h"
 
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 SPI_Flash_TypeDef spi_flash_memory_1;
 
@@ -84,11 +84,11 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 	uint32_t tick_inicio = HAL_GetTick();
 
 	osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Init] INIT INIT_SPI\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
 		);
 	osDelay(TXFLASHLOG);
 
@@ -104,18 +104,18 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 	                 __func__, (void*)flash, (void*)hspi, (void*)cs_port, cs_pin);
 
 	        osDelay(TXFLASHLOG);
-	        MSG_Enviar(msn_buffer, TestUart_1);
+	        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 	        osDelay(TXFLASHLOG);
 
 	        if (flash != NULL) flash->init = false;
 
 
 	        osDelay(TXFLASHLOG);
-	        MSG_Enviar(
+	        MSG_Enviar(MSG_GENERAL,
 	            "\r\n==========================================================\r\n"
 	            " [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR PASO 1)\r\n"
 	            "==========================================================\r\n",
-	            TestUart_1
+	            Uart1
 	        );
 	        osDelay(TXFLASHLOG);
 	        return;
@@ -144,18 +144,18 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 					 __func__);
 
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(msn_buffer, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 			osDelay(TXFLASHLOG);
 
 			flash->init = false;
 
 
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n==========================================================\r\n"
 				" [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR MUTEX)\r\n"
 				"==========================================================\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 			return;
@@ -170,7 +170,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
                      __func__, (void*)flash->hspi->Instance, (void*)flash->cs_port, flash->cs_pin, (void*)flash->spi_mutex);
 
 	osDelay(TXFLASHLOG);
-		MSG_Enviar(msn_buffer, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -185,16 +185,16 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 				 __func__, CMD_RESET_ENABLE);
 
 		osDelay(TXFLASHLOG);
-			MSG_Enviar(msn_buffer, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 		osDelay(TXFLASHLOG);
 
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR PASO 3)\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -244,7 +244,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 			 __func__, cmd_wakeup, statusWakeup, cmd_reset_enable, statusResetEnable, cmd_reset, statusResetExecute);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(msn_buffer, TestUart_1);
+	MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 	osDelay(TXFLASHLOG);
 
 
@@ -255,18 +255,18 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 	                 __func__, statusResetEnable, statusResetExecute);
 
 	        osDelay(TXFLASHLOG);
-	        MSG_Enviar(msn_buffer, TestUart_1);
+	        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 	        osDelay(TXFLASHLOG);
 
 	        if (!Flash_Init_Reset_SPI(flash, 0x1)) {
 	            flash->init = false;
 
 	            osDelay(TXFLASHLOG);
-	            MSG_Enviar(
+	            MSG_Enviar(MSG_GENERAL,
 	                "\r\n==========================================================\r\n"
 	                " [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR RST 0x1)\r\n"
 	                "==========================================================\r\n",
-	                TestUart_1
+	                Uart1
 	            );
 	            osDelay(TXFLASHLOG);
 	            return;
@@ -285,18 +285,18 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
                      __func__);
 
             osDelay(TXFLASHLOG);
-            MSG_Enviar(msn_buffer, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
             osDelay(TXFLASHLOG);
 
             if (!Flash_Init_Reset_SPI(flash, 0x2)) {
                 flash->init = false;
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(
+                MSG_Enviar(MSG_GENERAL,
                     "\r\n==========================================================\r\n"
                     " [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR RST 0x2)\r\n"
                     "==========================================================\r\n",
-                    TestUart_1
+                    Uart1
                 );
                 osDelay(TXFLASHLOG);
                 return;
@@ -313,7 +313,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 					 __func__);
 
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(msn_buffer, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 			osDelay(TXFLASHLOG);
 		}
 
@@ -321,11 +321,11 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR WR_EN)\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 		return;
@@ -337,15 +337,15 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 				 __func__);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(msn_buffer, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR PASO 5)\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -375,7 +375,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 			 __func__, cmd_unprotect, statusUnprotectCmd, status_val[0], status_val[1], statusUnprotectVal);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(msn_buffer, TestUart_1);
+	MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 	osDelay(TXFLASHLOG);
 
 	if (!Flash_Comeplement_Wait_For_Ready(flash, 500)) {
@@ -385,16 +385,16 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 				 __func__);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(msn_buffer, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 		osDelay(TXFLASHLOG);
 
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Init] FINAL INIT_SPI (ERR BSY)\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -457,7 +457,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
         	         FLASH_num_sector_count);
 
         	osDelay(TXFLASHLOG);
-            MSG_Enviar(msn_buffer, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
             osDelay(TXFLASHLOG);
 
             // Bucle de particiones optimizado
@@ -474,7 +474,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
                              i, (unsigned long)count, (unsigned long)start, (unsigned long)end);
 
                     osDelay(TXFLASHLOG);
-                    MSG_Enviar(msn_buffer, TestUart_1);
+                    MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
                     osDelay(TXFLASHLOG);
 
                     start = flash->partitions[i].start_sector;
@@ -485,7 +485,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 							i, (unsigned long)start, (unsigned long)end);
 
 				   osDelay(TXFLASHLOG);
-				   MSG_Enviar(msn_buffer, TestUart_1);
+				   MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 				   osDelay(TXFLASHLOG);
                 }
             }
@@ -495,7 +495,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
                      "    - Fin del Mapa de Memoria\r\n"
                      "==================================\r\n\r\n");
             osDelay(TXFLASHLOG);
-			MSG_Enviar(msn_buffer, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 			osDelay(TXFLASHLOG);
         }
         else
@@ -510,7 +510,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
 					 FLASH_num_sector_count);
 
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(msn_buffer, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 			osDelay(TXFLASHLOG);
         }
     }
@@ -530,7 +530,7 @@ void Flash_Init(SPI_Flash_TypeDef *flash, SPI_HandleTypeDef *hspi, GPIO_TypeDef 
              (unsigned long)(HAL_GetTick() - tick_inicio));
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(msn_buffer, TestUart_1);
+	MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 	osDelay(TXFLASHLOG);
 
 }
@@ -543,35 +543,35 @@ bool Flash_Init_Config_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_ID pa
     if (flash == NULL) {
         snprintf(msn_buffer, sizeof(msn_buffer),
                  "\r\n [SPI FLASH ERROR] [%s] Puntero nulo detectado en el objeto flash\r\n", __func__);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         return false;
     }
 
     if (part_id >= FLASH_SECTION_COUNT_END) {
         snprintf(msn_buffer, sizeof(msn_buffer),
                  "\r\n [SPI FLASH ERROR] [%s] ID de particion invalido o fuera de rango (ID: %d)\r\n", __func__, part_id);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         return false;
     }
 
     if (end_sector < start_sector) {
         snprintf(msn_buffer, sizeof(msn_buffer),
                  "\r\n [SPI FLASH ERROR] [%s] Rango ilogico en Part. [%lu] (Inicio: %lu > Fin: %lu)\r\n", __func__, (unsigned long)part_id, (unsigned long)start_sector, (unsigned long)end_sector);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         return false;
     }
 
     if (end_sector >= FLASH_num_sector_count) {
         snprintf(msn_buffer, sizeof(msn_buffer),
                  "\r\n [SPI FLASH ERROR] [%s] La Part. [%lu] excede el limite fisico (Fin: %lu / Max: %d)\r\n", __func__, (unsigned long)part_id, (unsigned long)end_sector, FLASH_num_sector_count);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         return false;
     }
 
     if (strlen(namePartition) > (STRUCT_NAME_PARTITION - 1)) {
         snprintf(msn_buffer, sizeof(msn_buffer),
                  "\r\n [SPI FLASH ERROR] [%s] Error longitud del nombre de la particion [%s]\r\n", __func__, namePartition);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         return false;
     }
 
@@ -647,7 +647,7 @@ bool Flash_Init_Check_Partition_Overlap(SPI_Flash_TypeDef *flash, Flash_Partitio
                 // Opcional: solo un delay corto si hay ráfagas previas en la UART
                 // osDelay(TXFLASHLOG);
 
-                MSG_Enviar(msn_buffer, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
 
                 // ELIMINADO: osDelay(TXFLASHLOG) después del envío.
                 // MSG_Enviar debe gestionar su propia bandera de fin de transmisión (TxCpltCallback)
@@ -672,7 +672,7 @@ bool Flash_Init_detect_chip(SPI_Flash_TypeDef *flash)
         snprintf(msn_buffer, sizeof(msn_buffer),
                  "\r\n [SPI FLASH ERROR] [%s] Timeout de Mutex: El bus SPI esta ocupado.\r\n", __func__);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -696,7 +696,7 @@ bool Flash_Init_detect_chip(SPI_Flash_TypeDef *flash)
                  "\r\n [SPI FLASH ERROR] [%s] HAL_SPI ha devuelto un error (Code: %d).\r\n",
                  __func__, spi_status);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -707,7 +707,7 @@ bool Flash_Init_detect_chip(SPI_Flash_TypeDef *flash)
                  "\r\n [SPI FLASH ERROR] [%s] Fallo comunicacion SPI.\r\n"
                  " └─ ID: 0x00 (Posible corto a GND o chip danado).\r\n\r\n", __func__);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -717,7 +717,7 @@ bool Flash_Init_detect_chip(SPI_Flash_TypeDef *flash)
                  "\r\n [SPI FLASH ERROR] [%s] Fallo comunicacion SPI.\r\n"
                  " └─ ID: 0xFF (Chip ausente o pines desoldados).\r\n\r\n", __func__);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -757,7 +757,7 @@ bool Flash_Init_detect_chip(SPI_Flash_TypeDef *flash)
 
     if (!MSG_Enviar_Longitud_Limit(msn_buffer)) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer, Uart1);
         osDelay(TXFLASHLOG);
     }
 
@@ -778,7 +778,7 @@ bool Flash_Hardware_Double_Check(SPI_Flash_TypeDef *flash, bool mensaje)
         if (mensaje) {
             snprintf(msg, sizeof(msg), "\r\n [SPI FLASH HW FAIL] [%s] Timeout de Mutex.\r\n", __func__);
             osDelay(TXFLASHLOG);
-            MSG_Enviar(msg, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msg, Uart1);
             osDelay(TXFLASHLOG);
         }
         return false;
@@ -811,7 +811,7 @@ bool Flash_Hardware_Double_Check(SPI_Flash_TypeDef *flash, bool mensaje)
             snprintf(msg, sizeof(msg), "\r\n [SPI FLASH HW FAIL] [%s] Error HAL en Double Check (%d, %d).\r\n",
                      __func__, st1, st2);
             osDelay(TXFLASHLOG);
-            MSG_Enviar(msg, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msg, Uart1);
             osDelay(TXFLASHLOG);
         }
         return false;
@@ -824,7 +824,7 @@ bool Flash_Hardware_Double_Check(SPI_Flash_TypeDef *flash, bool mensaje)
                      "\r\n [SPI FLASH HW FAIL] [%s] Chip atascado en estado BUSY (SR1: 0x%02X).\r\n",
                      __func__, status_reg);
             osDelay(TXFLASHLOG);
-            MSG_Enviar(msg, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msg, Uart1);
             osDelay(TXFLASHLOG);
         }
         return false;
@@ -838,7 +838,7 @@ bool Flash_Hardware_Double_Check(SPI_Flash_TypeDef *flash, bool mensaje)
                      "\r\n [SPI FLASH HW FAIL] [%s] Bus MISO inestable. JEDEC: %02X %02X %02X\r\n",
                      __func__, jedec_id[0], jedec_id[1], jedec_id[2]);
             osDelay(TXFLASHLOG);
-            MSG_Enviar(msg, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msg, Uart1);
             osDelay(TXFLASHLOG);
         }
         return false;
@@ -850,7 +850,7 @@ bool Flash_Hardware_Double_Check(SPI_Flash_TypeDef *flash, bool mensaje)
                  "\r\n [SPI FLASH] [%s] HW Double Check OK (SR1: 0x%02X | JEDEC: %02X%02X%02X)\r\n",
                  __func__, status_reg, jedec_id[0], jedec_id[1], jedec_id[2]);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msg, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msg, Uart1);
         osDelay(TXFLASHLOG);
     }
 
@@ -872,7 +872,7 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
 	);
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar(msg, TestUart_1);
+    MSG_Enviar(MSG_GENERAL,msg, Uart1);
     osDelay(TXFLASHLOG);
 
     // =========================================================================
@@ -910,7 +910,7 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
         }
 
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msg, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msg, Uart1);
         osDelay(TXFLASHLOG);
     }
 
@@ -919,14 +919,14 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
     // =========================================================================
     if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout de Mutex en intento de reset.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout de Mutex en intento de reset.\r\n", Uart1);
         osDelay(TXFLASHLOG);
 
-        MSG_Enviar(
+        MSG_Enviar(MSG_GENERAL,
             "\r\n==========================================================\r\n"
             " [SPI FLASH] [Flash_Reset_SPI] FIN RESET SPI (FALLIDO)\r\n"
             "==========================================================\r\n",
-            TestUart_1
+            Uart1
         );
         return false;
     }
@@ -944,7 +944,7 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
 
         snprintf(msg, sizeof(msg), "\r\n [SPI FLASH] Ejecutando Reset HW (Intento %d/%d)...\r\n", i + 1, FLASH_RESET_INIT);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msg, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msg, Uart1);
         osDelay(TXFLASHLOG);
 
         // Apagado Lógico
@@ -991,7 +991,7 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
 
 			snprintf(msg, sizeof(msg), " [SPI FLASH] OK: Bus SPI recuperado con exito en el intento %d.\r\n", i + 1);
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(msg, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,msg, Uart1);
 			osDelay(TXFLASHLOG);
 
 			statusReset = true;
@@ -1000,14 +1000,14 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
 
         snprintf(msg, sizeof(msg), " [SPI FLASH] WARN: Intento %d fallido. Preparando nuevo ciclo...\r\n", i + 1);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msg, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msg, Uart1);
         osDelay(TXFLASHLOG);
 
     } // FIN BUCLE FOR
 
     if (!statusReset) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH] ERROR FATAL: No se pudo reiniciar el SPI tras los reintentos.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] ERROR FATAL: No se pudo reiniciar el SPI tras los reintentos.\r\n", Uart1);
         osDelay(TXFLASHLOG);
     }
 
@@ -1067,7 +1067,7 @@ bool Flash_Init_Reset_SPI(SPI_Flash_TypeDef *flash, uint32_t codePositionReset)
 	);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(msg, TestUart_1);
+	MSG_Enviar(MSG_GENERAL,msg, Uart1);
 	osDelay(TXFLASHLOG);
 
 	return statusReset;

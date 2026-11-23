@@ -7,7 +7,7 @@
 #include "MsgUART/TxUart/TxUart.h"
 
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 
 bool Flash_read_One_Sector_Search(SPI_Flash_TypeDef *flash, uint32_t addr, uint32_t sizeSearchData, uint8_t *data){
@@ -21,14 +21,14 @@ if (flash == NULL) {
 
    if(addr > GET_FLASH_CAPCITY){
 	   osDelay(TXFLASHLOG);
-	   MSG_Enviar("\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] Fallo en direccióin fuera de limites.\r\n", TestUart_1);
+	   MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] Fallo en direccióin fuera de limites.\r\n", Uart1);
 	   osDelay(TXFLASHLOG);
 	   return false;
    }
 
    if(sizeSearchData > FLASH_PAGE_SIZE){
 	   osDelay(TXFLASHLOG);
-	   MSG_Enviar("\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] No se puede superar el limite de una pagina para la busqueda.\r\n", TestUart_1);
+	   MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] No se puede superar el limite de una pagina para la busqueda.\r\n", Uart1);
 	   osDelay(TXFLASHLOG);
 	   return false;
    }
@@ -42,7 +42,7 @@ if (flash == NULL) {
 
    if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
 	  osDelay(TXFLASHLOG);
-	  MSG_Enviar("\r\n [SPI FLASH OCUPED][Flash_read_One_Sector_Search] SPI secuestrado.\r\n", TestUart_1);
+	  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH OCUPED][Flash_read_One_Sector_Search] SPI secuestrado.\r\n", Uart1);
 	  osDelay(TXFLASHLOG);
 	  return false;
 	}
@@ -66,7 +66,7 @@ if (flash == NULL) {
 				__func__, status_tx, (unsigned long)(sizeSearchData + 4));
 
 	   osDelay(TXFLASHLOG);
-	   MSG_Enviar(buf_msg, TestUart_1);
+	   MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	   osDelay(TXFLASHLOG);
 	   return false;
    }
@@ -80,7 +80,7 @@ if (flash == NULL) {
    				__func__, status_rx, (unsigned long)(sizeSearchData + 4));
 
    	   osDelay(TXFLASHLOG);
-   	   MSG_Enviar(buf_msg, TestUart_1);
+   	   MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
    	   osDelay(TXFLASHLOG);
    	   return false;
       }
@@ -101,14 +101,14 @@ if (flash == NULL) {
 
    if(addr > GET_FLASH_CAPCITY){
 	   osDelay(TXFLASHLOG);
-	   MSG_Enviar("\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] Fallo en direccióin fuera de limites.\r\n", TestUart_1);
+	   MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] Fallo en direccióin fuera de limites.\r\n", Uart1);
 	   osDelay(TXFLASHLOG);
 	   return false;
    }
 
    if(sizeSearchData > FLASH_PAGE_SIZE){
 	   osDelay(TXFLASHLOG);
-	   MSG_Enviar("\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] No se puede superar el limite de una pagina para la busqueda.\r\n", TestUart_1);
+	   MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR][Flash_read_One_Sector_Search] No se puede superar el limite de una pagina para la busqueda.\r\n", Uart1);
 	   osDelay(TXFLASHLOG);
 	   return false;
    }
@@ -141,7 +141,7 @@ if (flash == NULL) {
 				__func__, status_tx, (unsigned long)(sizeSearchData + 4));
 
 	   osDelay(TXFLASHLOG);
-	   MSG_Enviar(buf_msg, TestUart_1);
+	   MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	   osDelay(TXFLASHLOG);
 	   return false;
    }
@@ -155,7 +155,7 @@ if (flash == NULL) {
    				__func__, status_tx, (unsigned long)(sizeSearchData + 4));
 
    	   osDelay(TXFLASHLOG);
-   	   MSG_Enviar(buf_msg, TestUart_1);
+   	   MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
    	   osDelay(TXFLASHLOG);
    	   return false;
       }

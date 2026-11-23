@@ -9,7 +9,7 @@
 #include "SPI_Flash_Memory/SPI_Flash_Sections/SPI_flash_section_log_monitor/SPI_Flash_Logs_Monitor.h"
 #include "MsgUART/TxUart/TxUart.h"
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 bool Flas_Monitor_protetionLimit(SPI_Flash_TypeDef *flash, uint32_t addr) {
 	uint32_t start_addr = flash->partitions[FLASH_SECTION_LOG_MONITOR].start_sector;
@@ -22,7 +22,7 @@ bool Flas_Monitor_protetionLimit(SPI_Flash_TypeDef *flash, uint32_t addr) {
                  (unsigned long)addr, (unsigned long)start_addr, (unsigned long)end_addr);
 
         osDelay(TXFLASHLOG);
-        MSG_Enviar(buf_err, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,buf_err, Uart1);
         osDelay(TXFLASHLOG);
 
 		return false;
@@ -45,24 +45,24 @@ bool Test_Flash_Monitor_Inject_Valid_Data(SPI_Flash_TypeDef *flash) {
 	flash->partitions[FLASH_SECTION_LOG_MONITOR].run = false;
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(
+	MSG_Enviar(MSG_GENERAL,
 		"\r\n==========================================================\r\n"
 		" [SPI FLASH] [Flash_Monitor_Test] MONITOR_SPI\r\n"
 		"==========================================================\r\n",
-		TestUart_1
+		Uart1
 	);
 	osDelay(TXFLASHLOG);
 
 
 	if (!flash->init || !flash->load ) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Inicializacion abortada: SPI o Load no iniciado.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Inicializacion abortada: SPI o Load no iniciado.\r\n", Uart1);
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -78,18 +78,18 @@ bool Test_Flash_Monitor_Inject_Valid_Data(SPI_Flash_TypeDef *flash) {
 
 	if (!protectionLimit) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Inicializacion abortada: fallo en limites de sectores.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Inicializacion abortada: fallo en limites de sectores.\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
 	}
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n Inyectando y verificando 3 Sectores Validos...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n Inyectando y verificando 3 Sectores Validos...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	if (!Flash_Erase_Range_Hex_For_Sector(flash, start_addr, end_addr)) {
-		MSG_Enviar("[TEST ERROR] Fallo al borrar particion.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"[TEST ERROR] Fallo al borrar particion.\r\n", Uart1);
 		return false;
 	}
 
@@ -112,7 +112,7 @@ bool Test_Flash_Monitor_Inject_Valid_Data(SPI_Flash_TypeDef *flash) {
 
 		if (!protectionLimit) {
 			osDelay(TXFLASHLOG);
-			MSG_Enviar("[TEST] Bucle escritura con fallo de direccion, saltando...\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"[TEST] Bucle escritura con fallo de direccion, saltando...\r\n", Uart1);
 			osDelay(TXFLASHLOG);
 			continue;
 		}
@@ -121,7 +121,7 @@ bool Test_Flash_Monitor_Inject_Valid_Data(SPI_Flash_TypeDef *flash) {
 	}
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("[TEST OK] Escritura finalizada. Comprobando memoria...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"[TEST OK] Escritura finalizada. Comprobando memoria...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -144,13 +144,13 @@ bool Test_Flash_Monitor_Inject_Valid_Data(SPI_Flash_TypeDef *flash) {
 				 i, (unsigned long)sector_addr, (unsigned long)read_magic, (unsigned long long)read_secret);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 	}
 
 	// El retorno y los mensajes finales deben ir FUERA del bucle
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(" \\- Sec 3 [Centinela]: Esperando ser detectado (Magic=0xFFFFFFFF)\r\n\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL," \\- Sec 3 [Centinela]: Esperando ser detectado (Magic=0xFFFFFFFF)\r\n\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	osDelay(500);
@@ -166,24 +166,24 @@ bool Test_Flash_Monitor_Inject_Valid_Data_All(SPI_Flash_TypeDef *flash) {
 	flash->partitions[FLASH_SECTION_LOG_MONITOR].run = false;
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(
+	MSG_Enviar(MSG_GENERAL,
 		"\r\n==========================================================\r\n"
 		" [SPI FLASH] [Flash_Monitor_Test] MONITOR_SPI\r\n"
 		"==========================================================\r\n",
-		TestUart_1
+		Uart1
 	);
 	osDelay(TXFLASHLOG);
 
 
 	if (!flash->init || !flash->load ) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Inicializacion abortada: SPI o Load no iniciado.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Inicializacion abortada: SPI o Load no iniciado.\r\n", Uart1);
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI_ALL\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -200,14 +200,14 @@ bool Test_Flash_Monitor_Inject_Valid_Data_All(SPI_Flash_TypeDef *flash) {
 
 	if (!protectionLimit) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH FATAL] Inicializacion abortada: fallo en limites de sectores.\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Inicializacion abortada: fallo en limites de sectores.\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
 	}
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n Inyectando y verificando datos...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n Inyectando y verificando datos...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 
@@ -232,7 +232,7 @@ bool Test_Flash_Monitor_Inject_Valid_Data_All(SPI_Flash_TypeDef *flash) {
 
 		if (!protectionLimit) {
 			osDelay(TXFLASHLOG);
-			MSG_Enviar("[TEST] Bucle escritura con fallo de direccion, saltando...\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"[TEST] Bucle escritura con fallo de direccion, saltando...\r\n", Uart1);
 			osDelay(TXFLASHLOG);
 			continue;
 		}
@@ -241,7 +241,7 @@ bool Test_Flash_Monitor_Inject_Valid_Data_All(SPI_Flash_TypeDef *flash) {
 	}
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("[TEST OK] Escritura finalizada. Comprobando memoria...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"[TEST OK] Escritura finalizada. Comprobando memoria...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
 
 	// =========================================================================
@@ -264,18 +264,18 @@ bool Test_Flash_Monitor_Inject_Valid_Data_All(SPI_Flash_TypeDef *flash) {
 				 i, (unsigned long)sector_addr, (unsigned long)read_magic, (unsigned long)read_secret);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 	}
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar("\r\n [SPI FLASH FATAL] Sistema inyectado reiniciando...\r\n", TestUart_1);
+	MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] Sistema inyectado reiniciando...\r\n", Uart1);
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(
+	MSG_Enviar(MSG_GENERAL,
 		"\r\n==========================================================\r\n"
 		" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI_ALL\r\n"
 		"==========================================================\r\n",
-		TestUart_1
+		Uart1
 	);
 	osDelay(TXFLASHLOG);
 

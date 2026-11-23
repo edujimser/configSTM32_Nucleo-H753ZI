@@ -6,7 +6,7 @@
 #include "SPI_Flash_Memory/SPI_Flash_Memory.h"
 #include "MsgUART/TxUart/TxUart.h"
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read option)
 {
@@ -22,11 +22,11 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
     char optionFound = false;
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] UARD CMD\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -35,14 +35,14 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 
     if(!optionFound){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] Opciopn erronea, opcion por defecto\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] Opciopn erronea, opcion por defecto\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
     }
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] Iniciando volcado y visualización de datos...\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] Iniciando volcado y visualización de datos...\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
 
@@ -80,40 +80,40 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 
 			  osMutexRelease(flash->spi_mutex);
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], FLASH_PAGE_SIZE);
 
 
-	          	char log_line[LONGITUD_MAX_UART_TX];
+	          	char log_line[LONG_TYPE_TEXT];
 
 
-	        	snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+	        	snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 	        	         (unsigned long)sector, (unsigned long)sector,
 	        	         (unsigned long)page, (unsigned long)page);
 	        	osDelay(TXFLASHLOG);
-	        	MSG_Enviar(log_line, TestUart_1);
+	        	MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	osDelay(TXFLASHLOG);
 
 
 	        	for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i += 16) {
 
-	        	    int pos = snprintf(log_line, LONGITUD_MAX_UART_TX, "  0x%04lX: ", (unsigned long)i);
+	        	    int pos = snprintf(log_line, LONG_TYPE_TEXT, "  0x%04lX: ", (unsigned long)i);
 
 	        	    for (uint32_t j = 0; j < 16; ++j) {
 	        	        if ((i + j) < FLASH_PAGE_SIZE) {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "%02X ", page_rx_buffer[i + j]);
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "%02X ", page_rx_buffer[i + j]);
 	        	        } else {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "   ");
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "   ");
 	        	        }
 	        	    }
 
-	        	    snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "\r\n");
+	        	    snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "\r\n");
 
 	        	    osDelay(TXFLASHLOG);
-	        	    MSG_Enviar(log_line, TestUart_1);
+	        	    MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	    osDelay(TXFLASHLOG);
 	        	}
 
@@ -154,21 +154,21 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 	  			  osMutexRelease(flash->spi_mutex);
 
 	  			  if (estado_spi != HAL_OK) {
-	  				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+	  				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 	  				  return false;
 	  			  }
 
 	  			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-	  			char log_line[LONGITUD_MAX_UART_TX];
+	  			char log_line[LONG_TYPE_TEXT];
 
 
-				  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+				  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 						   (unsigned long)sector, (unsigned long)sector,
 						   (unsigned long)page, (unsigned long)page);
 				  osDelay(TXFLASHLOG);
-				  MSG_Enviar(log_line, TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				  osDelay(TXFLASHLOG);
 
 
@@ -195,7 +195,7 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 
 
 				      osDelay(TXFLASHLOG);
-				      MSG_Enviar(log_line, TestUart_1);
+				      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				      osDelay(TXFLASHLOG);
 				  }
 
@@ -237,21 +237,21 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 			  osMutexRelease(flash->spi_mutex);
 
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-          	char log_line[LONGITUD_MAX_UART_TX];
+          	char log_line[LONG_TYPE_TEXT];
 
 
-			  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+			  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 					   (unsigned long)sector, (unsigned long)sector,
 					   (unsigned long)page, (unsigned long)page);
 			  osDelay(TXFLASHLOG);
-			  MSG_Enviar(log_line, TestUart_1);
+			  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			  osDelay(TXFLASHLOG);
 
 
@@ -291,7 +291,7 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 
 
 			      osDelay(TXFLASHLOG);
-			      MSG_Enviar(log_line, TestUart_1);
+			      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			      osDelay(TXFLASHLOG);
 			  }
 		  }
@@ -302,11 +302,11 @@ bool Flash_CMD_UART_Read_All_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART_Read o
 
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] UARD CMD - FIN \r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -330,11 +330,11 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
     char optionFound = false;
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_Range_Sectors_Page] UARD CMD\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -343,7 +343,7 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 
     if(!optionFound){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_Range_Sectors_Page] Opciopn erronea, opcion por defecto\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_Range_Sectors_Page] Opciopn erronea, opcion por defecto\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
@@ -355,7 +355,7 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
     if(sectorFinal == 0 || numPage == 0) return false;
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_Range_Sectors_Page] Iniciando volcado y visualización de datos...\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_Range_Sectors_Page] Iniciando volcado y visualización de datos...\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
 
@@ -393,40 +393,40 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 			  osMutexRelease(flash->spi_mutex);
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], FLASH_PAGE_SIZE);
 
 
-	          	char log_line[LONGITUD_MAX_UART_TX];
+	          	char log_line[LONG_TYPE_TEXT];
 
 
-	        	snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+	        	snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 	        	         (unsigned long)sector, (unsigned long)sector,
 	        	         (unsigned long)page, (unsigned long)page);
 	        	osDelay(TXFLASHLOG);
-	        	MSG_Enviar(log_line, TestUart_1);
+	        	MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	osDelay(TXFLASHLOG);
 
 
 	        	for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i += 16) {
 
-	        	    int pos = snprintf(log_line, LONGITUD_MAX_UART_TX, "  0x%04lX: ", (unsigned long)i);
+	        	    int pos = snprintf(log_line, LONG_TYPE_TEXT, "  0x%04lX: ", (unsigned long)i);
 
 	        	    for (uint32_t j = 0; j < 16; ++j) {
 	        	        if ((i + j) < FLASH_PAGE_SIZE) {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "%02X ", page_rx_buffer[i + j]);
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "%02X ", page_rx_buffer[i + j]);
 	        	        } else {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "   ");
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "   ");
 	        	        }
 	        	    }
 
-	        	    snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "\r\n");
+	        	    snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "\r\n");
 
 	        	    osDelay(TXFLASHLOG);
-	        	    MSG_Enviar(log_line, TestUart_1);
+	        	    MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	    osDelay(TXFLASHLOG);
 	        	}
 
@@ -467,21 +467,21 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 	  			  osMutexRelease(flash->spi_mutex);
 
 	  			  if (estado_spi != HAL_OK) {
-	  				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+	  				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 	  				  return false;
 	  			  }
 
 	  			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-	  			char log_line[LONGITUD_MAX_UART_TX];
+	  			char log_line[LONG_TYPE_TEXT];
 
 
-				  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+				  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 						   (unsigned long)sector, (unsigned long)sector,
 						   (unsigned long)page, (unsigned long)page);
 				  osDelay(TXFLASHLOG);
-				  MSG_Enviar(log_line, TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				  osDelay(TXFLASHLOG);
 
 
@@ -508,7 +508,7 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 
 				      osDelay(TXFLASHLOG);
-				      MSG_Enviar(log_line, TestUart_1);
+				      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				      osDelay(TXFLASHLOG);
 				  }
 
@@ -550,21 +550,21 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 			  osMutexRelease(flash->spi_mutex);
 
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-          	char log_line[LONGITUD_MAX_UART_TX];
+          	char log_line[LONG_TYPE_TEXT];
 
 
-			  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+			  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 					   (unsigned long)sector, (unsigned long)sector,
 					   (unsigned long)page, (unsigned long)page);
 			  osDelay(TXFLASHLOG);
-			  MSG_Enviar(log_line, TestUart_1);
+			  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			  osDelay(TXFLASHLOG);
 
 
@@ -604,7 +604,7 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 
 			      osDelay(TXFLASHLOG);
-			      MSG_Enviar(log_line, TestUart_1);
+			      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			      osDelay(TXFLASHLOG);
 			  }
 		  }
@@ -615,11 +615,11 @@ bool Flash_CMD_UART_Read_Range_Sectors_Page(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] UARD CMD - FIN \r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -644,11 +644,11 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
     bool optionFoundID = false;
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] UARD CMD\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -658,7 +658,7 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 
     if(!optionFound){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] Opciopn erronea, opcion por defecto\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] Opciopn erronea, opcion por defecto\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
@@ -667,14 +667,14 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 
     if(!optionFoundID){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] Sector errone o no existente\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] Sector errone o no existente\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
     }
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] Iniciando volcado y visualización de datos...\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector] Iniciando volcado y visualización de datos...\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
 
@@ -713,40 +713,40 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 
 			  osMutexRelease(flash->spi_mutex);
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], FLASH_PAGE_SIZE);
 
 
-	          	char log_line[LONGITUD_MAX_UART_TX];
+	          	char log_line[LONG_TYPE_TEXT];
 
 
-	        	snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+	        	snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 	        	         (unsigned long)sector, (unsigned long)sector,
 	        	         (unsigned long)page, (unsigned long)page);
 	        	osDelay(TXFLASHLOG);
-	        	MSG_Enviar(log_line, TestUart_1);
+	        	MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	osDelay(TXFLASHLOG);
 
 
 	        	for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i += 16) {
 
-	        	    int pos = snprintf(log_line, LONGITUD_MAX_UART_TX, "  0x%04lX: ", (unsigned long)i);
+	        	    int pos = snprintf(log_line, LONG_TYPE_TEXT, "  0x%04lX: ", (unsigned long)i);
 
 	        	    for (uint32_t j = 0; j < 16; ++j) {
 	        	        if ((i + j) < FLASH_PAGE_SIZE) {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "%02X ", page_rx_buffer[i + j]);
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "%02X ", page_rx_buffer[i + j]);
 	        	        } else {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "   ");
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "   ");
 	        	        }
 	        	    }
 
-	        	    snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "\r\n");
+	        	    snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "\r\n");
 
 	        	    osDelay(TXFLASHLOG);
-	        	    MSG_Enviar(log_line, TestUart_1);
+	        	    MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	    osDelay(TXFLASHLOG);
 	        	}
 
@@ -787,21 +787,21 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 	  			  osMutexRelease(flash->spi_mutex);
 
 	  			  if (estado_spi != HAL_OK) {
-	  				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+	  				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 	  				  return false;
 	  			  }
 
 	  			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-	  			char log_line[LONGITUD_MAX_UART_TX];
+	  			char log_line[LONG_TYPE_TEXT];
 
 
-				  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+				  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 						   (unsigned long)sector, (unsigned long)sector,
 						   (unsigned long)page, (unsigned long)page);
 				  osDelay(TXFLASHLOG);
-				  MSG_Enviar(log_line, TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				  osDelay(TXFLASHLOG);
 
 
@@ -828,7 +828,7 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 
 
 				      osDelay(TXFLASHLOG);
-				      MSG_Enviar(log_line, TestUart_1);
+				      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				      osDelay(TXFLASHLOG);
 				  }
 
@@ -870,21 +870,21 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 			  osMutexRelease(flash->spi_mutex);
 
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-          	char log_line[LONGITUD_MAX_UART_TX];
+          	char log_line[LONG_TYPE_TEXT];
 
 
-			  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+			  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 					   (unsigned long)sector, (unsigned long)sector,
 					   (unsigned long)page, (unsigned long)page);
 			  osDelay(TXFLASHLOG);
-			  MSG_Enviar(log_line, TestUart_1);
+			  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			  osDelay(TXFLASHLOG);
 
 
@@ -924,7 +924,7 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 
 
 			      osDelay(TXFLASHLOG);
-			      MSG_Enviar(log_line, TestUart_1);
+			      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			      osDelay(TXFLASHLOG);
 			  }
 		  }
@@ -935,11 +935,11 @@ bool Flash_CMD_UART_Read_EnumSector(SPI_Flash_TypeDef *flash, E_CMD_UART_Read op
 
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] UARD CMD - FIN \r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -965,11 +965,11 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
     bool protectedLimit = false;
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] UARD CMD\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 
@@ -984,7 +984,7 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
     if(!optionFound){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Opciopn erronea, opcion por defecto\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Opciopn erronea, opcion por defecto\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
@@ -993,7 +993,7 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
     if(!optionFoundID){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Sector final incorrecto o fuera de rango\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Sector final incorrecto o fuera de rango\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
@@ -1002,14 +1002,14 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
     if(!protectedLimit){
     	osDelay(TXFLASHLOG);
-		MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Fuera de rango uera de rango\r\n", TestUart_1);
+		MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Fuera de rango uera de rango\r\n", Uart1);
 		osDelay(TXFLASHLOG);
 
 		return false;
     }
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Iniciando volcado y visualización de datos...\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_CMD_UART_Read_EnumSector_Sectors] Iniciando volcado y visualización de datos...\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
 
@@ -1045,40 +1045,40 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 			  osMutexRelease(flash->spi_mutex);
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], FLASH_PAGE_SIZE);
 
 
-	          	char log_line[LONGITUD_MAX_UART_TX];
+	          	char log_line[LONG_TYPE_TEXT];
 
 
-	        	snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+	        	snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 	        	         (unsigned long)sector, (unsigned long)sector,
 	        	         (unsigned long)page, (unsigned long)page);
 	        	osDelay(TXFLASHLOG);
-	        	MSG_Enviar(log_line, TestUart_1);
+	        	MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	osDelay(TXFLASHLOG);
 
 
 	        	for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i += 16) {
 
-	        	    int pos = snprintf(log_line, LONGITUD_MAX_UART_TX, "  0x%04lX: ", (unsigned long)i);
+	        	    int pos = snprintf(log_line, LONG_TYPE_TEXT, "  0x%04lX: ", (unsigned long)i);
 
 	        	    for (uint32_t j = 0; j < 16; ++j) {
 	        	        if ((i + j) < FLASH_PAGE_SIZE) {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "%02X ", page_rx_buffer[i + j]);
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "%02X ", page_rx_buffer[i + j]);
 	        	        } else {
-	        	            pos += snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "   ");
+	        	            pos += snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "   ");
 	        	        }
 	        	    }
 
-	        	    snprintf(log_line + pos, LONGITUD_MAX_UART_TX - pos, "\r\n");
+	        	    snprintf(log_line + pos, LONG_TYPE_TEXT - pos, "\r\n");
 
 	        	    osDelay(TXFLASHLOG);
-	        	    MSG_Enviar(log_line, TestUart_1);
+	        	    MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 	        	    osDelay(TXFLASHLOG);
 	        	}
 
@@ -1119,21 +1119,21 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 	  			  osMutexRelease(flash->spi_mutex);
 
 	  			  if (estado_spi != HAL_OK) {
-	  				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+	  				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 	  				  return false;
 	  			  }
 
 	  			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-	  			char log_line[LONGITUD_MAX_UART_TX];
+	  			char log_line[LONG_TYPE_TEXT];
 
 
-				  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+				  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 						   (unsigned long)sector, (unsigned long)sector,
 						   (unsigned long)page, (unsigned long)page);
 				  osDelay(TXFLASHLOG);
-				  MSG_Enviar(log_line, TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				  osDelay(TXFLASHLOG);
 
 
@@ -1160,7 +1160,7 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 
 				      osDelay(TXFLASHLOG);
-				      MSG_Enviar(log_line, TestUart_1);
+				      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 				      osDelay(TXFLASHLOG);
 				  }
 
@@ -1202,21 +1202,21 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 			  osMutexRelease(flash->spi_mutex);
 
 			  if (estado_spi != HAL_OK) {
-				  MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", TestUart_1);
+				  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en TransmitReceive.\r\n", Uart1);
 				  return false;
 			  }
 
 			  memcpy(page_rx_buffer, &rx_unified[4], 256);
 
 
-          	char log_line[LONGITUD_MAX_UART_TX];
+          	char log_line[LONG_TYPE_TEXT];
 
 
-			  snprintf(log_line, LONGITUD_MAX_UART_TX, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
+			  snprintf(log_line, LONG_TYPE_TEXT, "\r\n=== Sector: %lu (0x%04lX) | Página: %lu (0x%04lX) ===\r\n",
 					   (unsigned long)sector, (unsigned long)sector,
 					   (unsigned long)page, (unsigned long)page);
 			  osDelay(TXFLASHLOG);
-			  MSG_Enviar(log_line, TestUart_1);
+			  MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			  osDelay(TXFLASHLOG);
 
 
@@ -1256,7 +1256,7 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 
 			      osDelay(TXFLASHLOG);
-			      MSG_Enviar(log_line, TestUart_1);
+			      MSG_Enviar(MSG_GENERAL,log_line, Uart1);
 			      osDelay(TXFLASHLOG);
 			  }
 		  }
@@ -1267,11 +1267,11 @@ bool Flash_CMD_UART_Read_EnumSector_Sectors(SPI_Flash_TypeDef *flash, E_CMD_UART
 
 
     osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_CMD_UART_Read_All_Sectors] UARD CMD - FIN \r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
     );
 	osDelay(TXFLASHLOG);
 

@@ -9,13 +9,13 @@
 #include <stdio.h>
 #include "MsgUart/TestUart/TestUart.h"
 
-#define LONGITUD_MAX_UART_TX_RX 128
+#define LONG_TYPE_TEXT_RX 128
 
 
 extern osMessageQueueId_t Queue_Uart_Rx;
 extern osThreadId_t UartRXTaskHandle;
-extern uint8_t rxDmaBuffer[LONGITUD_MAX_UART_TX_RX];
-extern uint8_t processingBuffer[LONGITUD_MAX_UART_TX_RX];
+extern uint8_t rxDmaBuffer[LONG_TYPE_TEXT_RX];
+extern uint8_t processingBuffer[LONG_TYPE_TEXT_RX];
 extern uint16_t receivedDataSize;
 
 typedef struct {

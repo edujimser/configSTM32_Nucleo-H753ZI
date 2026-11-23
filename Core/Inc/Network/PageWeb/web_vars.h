@@ -18,19 +18,20 @@
  *   WV("temp", PG_DATOS | PG_SISTEMA, ...)
  * Pagina nueva: anade su PG_xxx aqui y una linea en web_pages[] (web_vars.c).
  * Su WebSocket sera /ws/<nombre>. */
-#define PG_DATOS    (1u << 0)
-#define PG_CONFIG   (1u << 1)
-#define PG_SISTEMA  (1u << 2)
-#define PG_WIDGETS  (1u << 3)
+#define PG_DATOS     (1u << 0)
+#define PG_CONFIG    (1u << 1)
+#define PG_SISTEMA   (1u << 2)
+#define PG_WIDGETS   (1u << 3)
 #define PG_INDUSTRIA (1u << 4)
-#define PG_INTERNO  (1u << 5)      /* estado interno del STM32: hilos, RAM, CPU */
-#define PG_HVAC     (1u << 6)      /* climatizacion: circuito frigorifico */
-#define PG_COMPON   (1u << 7)      /* climatizacion: componentes, mando manual, electrico */
-#define PG_OBJETO   (1u << 8)      /* identificacion, versiones, red, ayuda HVAC, soporte */
-#define PG_WDATOS   (1u << 9)      /* catalogo de widgets de datos */
-#define PG_CAN      (1u << 10)     /* visor y forzado de tramas CAN */
-#define PG_TRDP     (1u << 11)     /* visor y forzado de datos TRDP */
-#define PG_ERR      (1u << 12)     /* errores en vivo, historico y contadores */
+#define PG_INTERNO   (1u << 5)      /* estado interno del STM32: hilos, RAM, CPU */
+#define PG_HVAC      (1u << 6)      /* climatizacion: circuito frigorifico */
+#define PG_COMPON    (1u << 7)      /* climatizacion: componentes, mando manual, electrico */
+#define PG_OBJETO    (1u << 8)      /* identificacion, versiones, red, ayuda HVAC, soporte */
+#define PG_WDATOS    (1u << 9)      /* catalogo de widgets de datos */
+#define PG_CAN       (1u << 10)     /* visor y forzado de tramas CAN */
+#define PG_TRDP      (1u << 11)     /* visor y forzado de datos TRDP */
+#define PG_ERR       (1u << 12)     /* errores en vivo, historico y contadores */
+#define PG_STM32     (1U << 13)     /* user 1 */
 
 typedef enum {
   WV_U8,      /* uint8_t  */

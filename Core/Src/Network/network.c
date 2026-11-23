@@ -16,7 +16,7 @@
 #include "Network/PageWeb/web_sig.h"       /* señales de comunicacion con forzado individual */
 #include "Network/PageWeb/web_err.h"       /* errores: estado, historico, contadores */
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 /* Tabla de archivos web (la define packed_fs.c) y puntero que usa mongoose.c.
  * Si tu mongoose.h ya los declara, estas lineas no molestan. */

@@ -10,21 +10,31 @@
 #include "stm32h7xx_hal_uart.h"
 #include "MsgUart/TestUart/TestUart.h"
 
-// ==========================================================================================================================================
+// ==========================================================================================
+// CONFIGURACION TYPE MSG
+// ==========================================================================================
+static const char MSG_TYPETEXT[TYPE_MSG_UART_COUNT][LONG_TYPE_COMAND] = {
+    [MSG_GENERAL] = "[GEN]",
+    [MSG_FLASH_1] = "[FL1]",
+    [MSG_WEB]     = "[WEB]",
+    [MSG_ERROR]   = "[ERR]",
+};
+// ==========================================================================================
 // TRANSMISIÓNM
-// ==========================================================================================================================================
+// ==========================================================================================
 
 uint32_t Stack_libre_uarth;
 uint32_t Stack_libre_uarth_critic;
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 osMessageQueueId_t Queue_Uart_Tx = NULL;
 
 
-void MSG_Enviar(const char *texto, I_TestUart TestUart) {
+void MSG_Enviar(E_TYPE_MSG_UART typeMSG, const char *texto, I_TestUart TestUart) {
+	// Comprobamos si estamos realizando algún test de transmisión
 	if(TestUart_GetStatus(TestUart) == ESTADO_CORRIENDO) return;
 
     // Comprobación: el kernel debe estar en ejecución.
-    //    Si FreeRTOS aún no ha arrancado, no podemos usar colas.
+    // Si FreeRTOS aún no ha arrancado, no podemos usar colas.
     if (osKernelGetState() != osKernelRunning) return;
 
     // Comprobación: la cola debe existir.
@@ -32,11 +42,15 @@ void MSG_Enviar(const char *texto, I_TestUart TestUart) {
     if (Queue_Uart_Tx == NULL) return;
 
     // Comprobación: texto válido.
-    //    Evita punteros nulos y fallos de memoria.
+    // Evita punteros nulos y fallos de memoria.
     if (texto == NULL) return;
 
+    // ---------------------------------------------------------
+    // VALIDACIONES MSG
+    // ---------------------------------------------------------
+
     // Validación de longitud máxima definida por el usuario.
-    //    Evita mensajes demasiado grandes que saturen el heap o DMA.
+    // Evita mensajes demasiado grandes que saturen el heap o DMA.
     if (MSG_Enviar_Longitud_Limit(texto)) {
         MSG_Enviar_Error("Se ha superado el limite maximo de caracteres \r\n");
         return;
@@ -53,6 +67,29 @@ void MSG_Enviar(const char *texto, I_TestUart TestUart) {
     }
 
     // ---------------------------------------------------------
+    // RESERVA DE ESPACIO PARA PREFIJO
+    // ---------------------------------------------------------
+    const char *prefijo;
+    char textBuf[LONG_MAX_UART_TX];
+
+    if(typeMSG >= TYPE_MSG_UART_COUNT){
+    	prefijo = "???";
+    }else{
+    	prefijo = MSG_TYPETEXT[typeMSG];
+    }
+
+    snprintf(textBuf,sizeof(textBuf),"%s %s", prefijo,texto);
+
+    // ---------------------------------------------------------
+    // VALIDACIONES MSG BUFFER
+    // ---------------------------------------------------------
+
+    if (MSG_Enviar_Longitud_LimitBuf(textBuf)) {
+	   MSG_Enviar_Error("Se ha superado el limite maximo de caracteres \r\n");
+	   return;
+   }
+
+    // ---------------------------------------------------------
     // RESERVA DE LA ESTRUCTURA EN EL HEAP
     // ---------------------------------------------------------
     // Creamos un puntero a estructura S_UartMsg.
@@ -61,11 +98,12 @@ void MSG_Enviar(const char *texto, I_TestUart TestUart) {
     S_UartMsg *msg = pvPortMalloc(sizeof(S_UartMsg));
     if (msg == NULL) return;   // Seguridad ante falta de memoria
 
+
     // ---------------------------------------------------------
     // RESERVA DEL BUFFER DE TEXTO EN EL HEAP
     // ---------------------------------------------------------
     // Calculamos la longitud del texto (+1 para el terminador '\0').
-    msg->len = strlen(texto) + 1;
+    msg->len = strlen(textBuf) + 1;
 
     // Reservamos memoria para el texto.
     msg->Ptr = pvPortMalloc(msg->len);
@@ -80,7 +118,7 @@ void MSG_Enviar(const char *texto, I_TestUart TestUart) {
     // ---------------------------------------------------------
     // Copiamos el texto al buffer reservado.
     // strncpy evita desbordamientos.
-    strncpy(msg->Ptr, texto, msg->len - 1);
+    strncpy(msg->Ptr, textBuf, msg->len - 1);
 
     // Aseguramos que el último byte sea '\0'.
     msg->Ptr[msg->len - 1] = '\0';
@@ -126,6 +164,8 @@ void MSG_Enviar_Test(const char *texto) {
         MSG_Enviar_Error("Se ha introducido un carcacter fuera de rango \r\n");
         return;
     }
+
+
 
     // ---------------------------------------------------------
     // RESERVA DE LA ESTRUCTURA EN EL HEAP
@@ -241,7 +281,17 @@ char MSG_Enviar_Longitud_Limit(const char *texto){
 
 	size_t len = strlen(texto) + 1;
 
-	if(len > LONGITUD_MAX_UART_TX){
+	if(len > LONG_TYPE_TEXT){
+		return true;
+	}
+	 return false;
+}
+
+char MSG_Enviar_Longitud_LimitBuf(const char *texto){
+
+	size_t len = strlen(texto) + 1;
+
+	if(len > LONG_MAX_UART_TX){
 		return true;
 	}
 	 return false;

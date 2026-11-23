@@ -234,8 +234,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     if (huart->Instance == USART3) {
 
-        if (Size > 0 && Size <= LONGITUD_MAX_UART_TX_RX) {
-            SCB_InvalidateDCache_by_Addr((uint32_t*)rxDmaBuffer, LONGITUD_MAX_UART_TX_RX);
+        if (Size > 0 && Size <= LONG_TYPE_TEXT_RX) {
+            SCB_InvalidateDCache_by_Addr((uint32_t*)rxDmaBuffer, LONG_TYPE_TEXT_RX);
 
             memcpy(processingBuffer, rxDmaBuffer, Size);
             processingBuffer[Size] = '\0';
@@ -251,13 +251,13 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
             huart->RxState = HAL_UART_STATE_READY;
         }
 
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_TX_RX);
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONG_TYPE_TEXT_RX);
 
         if (huart3.hdmarx != NULL) {
             __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
         }
 
-        if (Size > 0 && Size <= LONGITUD_MAX_UART_TX_RX) {
+        if (Size > 0 && Size <= LONG_TYPE_TEXT_RX) {
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             vTaskNotifyGiveFromISR(ThreadId_Uart_Rx, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

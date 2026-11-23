@@ -7,7 +7,7 @@
 #include "MsgUART/TxUart/TxUart.h"
 
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 
 
@@ -18,14 +18,14 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
     }
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_Write_All] Iniciando escritura masiva por páginas...\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Write_All] Iniciando escritura masiva por páginas...\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
     // =========================================================================
     // DESBLOQUEO GLOBAL DE HARDWARE (Asegurar permisos de escritura en toda la Flash)
     // =========================================================================
     if (!Flash_Complement_Write_Enable(flash)) {
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en Write Enable para Desbloqueo.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en Write Enable para Desbloqueo.\r\n", Uart1);
         return false;
     }
 
@@ -35,7 +35,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
     uint8_t status_val[2] = {0x00, 0x00};
 
     if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout de Mutex en desbloqueo.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout de Mutex en desbloqueo.\r\n", Uart1);
         return false;
     }
 
@@ -47,7 +47,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
     osMutexRelease(flash->spi_mutex);
 
     if (!Flash_Comeplement_Wait_For_Ready(flash, ERASE_ONE_SECTOR)) {
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando desbloqueo global.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout esperando desbloqueo global.\r\n", Uart1);
         return false;
     }
     // =========================================================================
@@ -69,7 +69,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
             // 1. Habilitar la escritura obligatoriamente antes de CADA página
             if (!Flash_Complement_Write_Enable(flash)) {
                 osDelay(TXFLASHLOG);
-                MSG_Enviar("\r\n [SPI FLASH ERROR] Error en Write Enable por página.\r\n", TestUart_1);
+                MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Error en Write Enable por página.\r\n", Uart1);
                 osDelay(TXFLASHLOG);
                 return false;
             }
@@ -88,7 +88,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
 
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout de Mutex en escritura de página.\r\n", TestUart_1);
+                MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout de Mutex en escritura de página.\r\n", Uart1);
                 osDelay(TXFLASHLOG);
                 return false;
             }
@@ -103,7 +103,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
 
             if (estado_spi != HAL_OK) {
                 osDelay(TXFLASHLOG);
-                MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo de hardware SPI transmitiendo el paquete unificado.\r\n", TestUart_1);
+                MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo de hardware SPI transmitiendo el paquete unificado.\r\n", Uart1);
                 osDelay(TXFLASHLOG);
                 return false;
             }
@@ -111,7 +111,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
             // 6. Esperar a que el chip termine de programar la página internamente (control por bit BSY)
             if (!Flash_Comeplement_Wait_For_Ready(flash, WRITE_READ_NORMAL_VELOCITY)) {
                 osDelay(TXFLASHLOG);
-                MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando a que la página se escriba.\r\n", TestUart_1);
+                MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout esperando a que la página se escriba.\r\n", Uart1);
                 osDelay(TXFLASHLOG);
                 return false;
             }
@@ -130,7 +130,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
                      data_value);
 
             osDelay(TXFLASHLOG);
-            MSG_Enviar(buf_progreso, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,buf_progreso, Uart1);
             osDelay(TXFLASHLOG);
             // =====================================================================
         }
@@ -138,7 +138,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
     // =========================================================================
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar(" [SPI FLASH] [Flash_Write_All] Escritura masiva completada con exito.\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL," [SPI FLASH] [Flash_Write_All] Escritura masiva completada con exito.\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
     // =========================================================================
@@ -158,7 +158,7 @@ bool Flash_Write_All_Sectors_Data(SPI_Flash_TypeDef *flash, uint32_t total_secto
                  (unsigned long)libres_bytes);
 
         osDelay(TXFLASHLOG);
-        MSG_Enviar(buf_memoria, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,buf_memoria, Uart1);
         osDelay(TXFLASHLOG);
     }
     // =========================================================================
@@ -176,7 +176,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
     // Comprobaciones  -->
     if (!Flash_Complement_Is_Sector_partition(flash, partition, addr)) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH] [Flash_Write_One_Sector] No estar particionado\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Write_One_Sector] No estar particionado\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -184,7 +184,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
     if (Flash_Complement_HaveData_Sector(flash, partition, addr)) {
     	if(!Flash_Erase_One_Hex_For_Sector(flash, addr)){
     		osDelay(TXFLASHLOG);
-			MSG_Enviar("\r\n [SPI FLASH] [Flash_Write_One_Sector_Partition] Fallo borrado del sector con datos\r\n", TestUart_1);
+			MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Write_One_Sector_Partition] Fallo borrado del sector con datos\r\n", Uart1);
 			osDelay(TXFLASHLOG);
 			return false;
     	}
@@ -192,19 +192,19 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
 
     if (dataLenght == 0 || dataLenght > FLASH_SECTION_SIZE || data == NULL) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH] [Flash_Erase_One_Sector] Parámetros inválidos-vacíos-limite, no se realiza borrado \r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Erase_One_Sector] Parámetros inválidos-vacíos-limite, no se realiza borrado \r\n", Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_Write_One_Sector] Iniciando escritura masiva por páginas...\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Write_One_Sector] Iniciando escritura masiva por páginas...\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
 
     if (!Flash_Complement_Write_Enable(flash)) {
     	osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo en Write Enable para Desbloqueo.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo en Write Enable para Desbloqueo.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -215,7 +215,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
     uint8_t status_val[2] = {0x00, 0x00};
 
     if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout de Mutex en desbloqueo.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout de Mutex en desbloqueo.\r\n", Uart1);
         return false;
     }
 
@@ -227,7 +227,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
     osMutexRelease(flash->spi_mutex);
 
     if (!Flash_Comeplement_Wait_For_Ready(flash, ERASE_ONE_SECTOR)) {
-        MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando desbloqueo global.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout esperando desbloqueo global.\r\n", Uart1);
         return false;
     }
 
@@ -257,7 +257,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
 
         if (!Flash_Complement_Write_Enable(flash)) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] Error en Write Enable por página.\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Error en Write Enable por página.\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return false;
         }
@@ -274,7 +274,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
 
         if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout de Mutex en escritura de página.\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout de Mutex en escritura de página.\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return false;
         }
@@ -289,7 +289,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
 
         if (estado_spi != HAL_OK) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo de hardware SPI transmitiendo el paquete unificado.\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo de hardware SPI transmitiendo el paquete unificado.\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return false;
         }
@@ -297,7 +297,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
 
         if (!Flash_Comeplement_Wait_For_Ready(flash, WRITE_READ_NORMAL_VELOCITY)) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] Timeout esperando a que la página se escriba.\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Timeout esperando a que la página se escriba.\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return false;
         }
@@ -310,13 +310,13 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
                  (unsigned long)page);
 
         osDelay(TXFLASHLOG);
-        MSG_Enviar(buf_progreso, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,buf_progreso, Uart1);
         osDelay(TXFLASHLOG);
     }
 
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar(" [SPI FLASH] [Flash_Write_One_Sector] Escritura de sector completada con exito.\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL," [SPI FLASH] [Flash_Write_One_Sector] Escritura de sector completada con exito.\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
 
@@ -334,7 +334,7 @@ bool Flash_Write_One_Sector_Partition(SPI_Flash_TypeDef *flash, Flash_Partition_
                  (unsigned long)libres_bytes);
 
         osDelay(TXFLASHLOG);
-        MSG_Enviar(buf_memoria, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,buf_memoria, Uart1);
         osDelay(TXFLASHLOG);
     }
 

@@ -15,10 +15,10 @@
 #include "SPI_Flash_Memory/SPI_Flash_Sections/SPI_flash_section_log_monitor/SPI_Flash_Logs_Monitor.h"
 
 osMessageQueueId_t Queue_Uart_Rx = NULL;
-ALIGN_32BYTES(uint8_t rxDmaBuffer[LONGITUD_MAX_UART_TX_RX]);
-ALIGN_32BYTES(uint8_t processingBuffer[LONGITUD_MAX_UART_TX_RX]);
+ALIGN_32BYTES(uint8_t rxDmaBuffer[LONG_TYPE_TEXT_RX]);
+ALIGN_32BYTES(uint8_t processingBuffer[LONG_TYPE_TEXT_RX]);
 uint16_t receivedDataSize = 0;
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 
 extern osThreadId_t ThreadId_InitTask;
@@ -33,7 +33,7 @@ void ThreadFunc_Uart_Rx (void *argument)
     vTaskDelay(pdMS_TO_TICKS(100));
 
     if (huart3.hdmarx != NULL) {
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONGITUD_MAX_UART_TX_RX);
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rxDmaBuffer, LONG_TYPE_TEXT_RX);
         __HAL_DMA_DISABLE_IT(huart3.hdmarx, DMA_IT_HT);
     }
 
@@ -50,7 +50,7 @@ void ThreadFunc_Uart_Rx (void *argument)
 
 
         	if (strncmp((char *)processingBuffer, "TEST_TX", 7) == 0) {
-        	    Prueba_TX(TestUart_1, true);
+        	    Prueba_TX(Uart1, true);
         	}
 
         	/* ==============================================================================
@@ -127,7 +127,7 @@ void ThreadFunc_Uart_Rx (void *argument)
 					}
         	    }
         	    else {
-        	        MSG_Enviar("\r\n[ERROR] SUBCMD FLASH DESCONOCIDO\r\n", TestUart_1);
+        	        MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH DESCONOCIDO\r\n", Uart1);
         	    }
 
         	}
@@ -158,12 +158,12 @@ void ThreadFunc_Uart_Rx (void *argument)
 							Flash_Erase_Partition(&spi_flash_memory_1, id_partition);
 
 							} else {
-								MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE PARTITION DESCONOCIDA\r\n", TestUart_1);
+								MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE PARTITION DESCONOCIDA\r\n", Uart1);
 							}
 					}
 					else
 					{
-						MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 					}
 				}
 				else if (strncmp(sub_cmd, "ONE_", 4) == 0)
@@ -179,7 +179,7 @@ void ThreadFunc_Uart_Rx (void *argument)
 						}
 				    	else
 				    	{
-							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+							MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 						}
 					}
 				    //FLASH_ERASE_ONE_SECTOR_FOR_SECTOR
@@ -192,12 +192,12 @@ void ThreadFunc_Uart_Rx (void *argument)
 						}
 				    	else
 				    	{
-							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+							MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 						}
 					}
 				    else
 				    {
-						MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 					}
 				}
 				else if (strncmp(sub_cmd, "RANGE_", 6) == 0)
@@ -214,7 +214,7 @@ void ThreadFunc_Uart_Rx (void *argument)
 						}
 						else
 						{
-							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+							MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 						}
 					}
 					//FLASH_ERASE_ONE_SECTR_FOR_SECTOR
@@ -227,17 +227,17 @@ void ThreadFunc_Uart_Rx (void *argument)
 						}
 						else
 						{
-							MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+							MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 						}
 					}
 					else
 					{
-						MSG_Enviar("\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", TestUart_1);
+						MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH ERASE DESCONOCIDO\r\n", Uart1);
 					}
 				}
 				else
 				{
-					MSG_Enviar("\r\n[ERROR] SUBCMD FLASH DESCONOCIDO\r\n", TestUart_1);
+					MSG_Enviar(MSG_GENERAL,"\r\n[ERROR] SUBCMD FLASH DESCONOCIDO\r\n", Uart1);
 				}
 
 
@@ -266,16 +266,16 @@ void ThreadFunc_Uart_Rx (void *argument)
 					}
 					else
 					{
-						 MSG_Enviar("COMANDO DESCONOCIDO EN TEST_FLASH", TestUart_1);
+						 MSG_Enviar(MSG_GENERAL,"COMANDO DESCONOCIDO EN TEST_FLASH", Uart1);
 					}
 				}
 				else
 				{
-					 MSG_Enviar("COMANDO DESCONOCIDO EN TEST_FLASH NUMBER ", TestUart_1);
+					 MSG_Enviar(MSG_GENERAL,"COMANDO DESCONOCIDO EN TEST_FLASH NUMBER ", Uart1);
 				}
 			}
 			else{
-        	    MSG_Enviar("COMANDO DESCONOCIDO EN RX", TestUart_1);
+        	    MSG_Enviar(MSG_GENERAL,"COMANDO DESCONOCIDO EN RX", Uart1);
         	}
 
 

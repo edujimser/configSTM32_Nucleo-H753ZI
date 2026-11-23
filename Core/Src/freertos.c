@@ -56,7 +56,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-I_TestUart TestUart_1;
+I_TestUart Uart1;
 extern SPI_HandleTypeDef hspi1;
 uint8_t flash_id[3] = {0, 0, 0};
 
@@ -91,7 +91,7 @@ const osThreadAttr_t ThreadAttr_Uart_Rx = {
 
 static const osThreadAttr_t ThreadAttr_Network = {
   .name       = "Task_Network",
-  .stack_size = 2048 * 8,
+  .stack_size = 2048 * 10,
   .priority   = (osPriority_t) osPriorityLow1,
 };
 
@@ -226,7 +226,7 @@ void StartDefaultTask(void *argument)
  */
 void ThreadFunc_InitTask(void *argument)
 {
-  TestUart_1 = TestUart_Init(false);
+  Uart1 = TestUart_Init(false);
   osDelay(100);
   Flash_Init(&spi_flash_memory_1, &hspi1, SPI1_CS_GPIO_Port, SPI1_CS_Pin, true);
   osDelay(300);

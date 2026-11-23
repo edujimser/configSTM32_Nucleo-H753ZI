@@ -6,7 +6,7 @@
 #include "SPI_Flash_Memory/SPI_Flash_Memory.h"
 #include "MsgUART/TxUart/TxUart.h"
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 void Flash_Complement_Data_Thread(bool debugSystem){
 
@@ -26,7 +26,7 @@ void Flash_Complement_Data_Thread(bool debugSystem){
 			 (unsigned long)libres_bytes);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(buf_memoria, TestUart_1);
+	MSG_Enviar(MSG_GENERAL,buf_memoria, Uart1);
 	osDelay(TXFLASHLOG);
 }
 
@@ -46,7 +46,7 @@ bool Flash_Comeplement_Wait_For_Ready(SPI_Flash_TypeDef *flash, uint32_t timeout
 
         if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Comeplement_Wait_For_Ready] Timeout de Mutex: El bus SPI esta ocupado.\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Comeplement_Wait_For_Ready] Timeout de Mutex: El bus SPI esta ocupado.\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return false;
         }
@@ -68,7 +68,7 @@ bool Flash_Comeplement_Wait_For_Ready(SPI_Flash_TypeDef *flash, uint32_t timeout
                          tx_status, rx_status);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buf_err, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buf_err, Uart1);
                 osDelay(TXFLASHLOG);
             }
             return false;
@@ -86,7 +86,7 @@ bool Flash_Comeplement_Wait_For_Ready(SPI_Flash_TypeDef *flash, uint32_t timeout
                          block_prot);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buf_warn, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buf_warn, Uart1);
                 osDelay(TXFLASHLOG);
             }
         }
@@ -94,7 +94,7 @@ bool Flash_Comeplement_Wait_For_Ready(SPI_Flash_TypeDef *flash, uint32_t timeout
 
         if (bsy_state == 0) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar(" \r\n [SPI FLASH] [Flash_Comeplement_Wait_For_Ready] Memoria lista (Libre de operaciones).\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL," \r\n [SPI FLASH] [Flash_Comeplement_Wait_For_Ready] Memoria lista (Libre de operaciones).\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return true;
         }
@@ -110,7 +110,7 @@ bool Flash_Comeplement_Wait_For_Ready(SPI_Flash_TypeDef *flash, uint32_t timeout
                          seg_transcurridos);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buf_wait, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buf_wait, Uart1);
                 osDelay(TXFLASHLOG);
             }
             last_print_tick = HAL_GetTick();
@@ -127,7 +127,7 @@ bool Flash_Comeplement_Wait_For_Ready(SPI_Flash_TypeDef *flash, uint32_t timeout
                  timeout_ms);
 
         osDelay(TXFLASHLOG);
-        MSG_Enviar(buf_timeout, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,buf_timeout, Uart1);
         osDelay(TXFLASHLOG);
     }
 
@@ -145,7 +145,7 @@ bool Flash_Complement_Write_Enable(SPI_Flash_TypeDef *flash)
 
     if (!ready) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Complement_Write_Enable] Memoria bloqueada, no se puede habilitar el Write Enable.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Complement_Write_Enable] Memoria bloqueada, no se puede habilitar el Write Enable.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -155,7 +155,7 @@ bool Flash_Complement_Write_Enable(SPI_Flash_TypeDef *flash)
 
     if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Complement_Write_Enable] Timeout de Mutex: El bus SPI esta ocupado.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Complement_Write_Enable] Timeout de Mutex: El bus SPI esta ocupado.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return false;
     }
@@ -175,7 +175,7 @@ bool Flash_Complement_Write_Enable(SPI_Flash_TypeDef *flash)
                      tx_status);
 
             osDelay(TXFLASHLOG);
-            MSG_Enviar(buf_err, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,buf_err, Uart1);
             osDelay(TXFLASHLOG);
         }
         return false;
@@ -183,7 +183,7 @@ bool Flash_Complement_Write_Enable(SPI_Flash_TypeDef *flash)
 
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("\r\n [SPI FLASH] [Flash_Complement_Write_Enable] Habilitada escritura HAL_SPI .\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH] [Flash_Complement_Write_Enable] Habilitada escritura HAL_SPI .\r\n", Uart1);
     osDelay(TXFLASHLOG);
 
     return true;
@@ -208,7 +208,7 @@ bool Flash_Complement_Is_Sector_partition(SPI_Flash_TypeDef *flash, Flash_Partit
                          (unsigned long)addr, (int)partition);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buf_msg, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
                 osDelay(TXFLASHLOG);
 
                 return true;
@@ -219,7 +219,7 @@ bool Flash_Complement_Is_Sector_partition(SPI_Flash_TypeDef *flash, Flash_Partit
                          (unsigned long)addr, (int)partition);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buf_msg, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
                 osDelay(TXFLASHLOG);
 
                 return false;
@@ -228,7 +228,7 @@ bool Flash_Complement_Is_Sector_partition(SPI_Flash_TypeDef *flash, Flash_Partit
     }
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar(" [SPI FLASH ERROR] La particion solicitada NO EXISTE en el mapa.\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL," [SPI FLASH ERROR] La particion solicitada NO EXISTE en el mapa.\r\n", Uart1);
     osDelay(TXFLASHLOG);
     return false;
 }
@@ -273,7 +273,7 @@ bool Flash_Complement_HaveData_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_
 
         if (estado_spi != HAL_OK) {
         	osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] Fallo hardware en lectura de datos.\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] Fallo hardware en lectura de datos.\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return false;
         }
@@ -286,7 +286,7 @@ bool Flash_Complement_HaveData_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_
                          (unsigned long)addr, page, (b - 4), rx_unified[b]);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buf_progreso, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buf_progreso, Uart1);
                 osDelay(TXFLASHLOG);
 
                 return true;
@@ -300,7 +300,7 @@ bool Flash_Complement_HaveData_Sector(SPI_Flash_TypeDef *flash, Flash_Partition_
 
     snprintf(buf_progreso, sizeof(buf_progreso), " [SPI FLASH] Sector %lu completamente VACIO.\r\n", (unsigned long)addr);
     osDelay(TXFLASHLOG);
-    MSG_Enviar(buf_progreso, TestUart_1);
+    MSG_Enviar(MSG_GENERAL,buf_progreso, Uart1);
     osDelay(TXFLASHLOG);
 
     return false;

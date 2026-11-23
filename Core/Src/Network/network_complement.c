@@ -8,14 +8,14 @@
 #include "MsgUart/TestUart/TestUart.h"
 #include "MsgUart/TxUart/TxUart.h"
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 
 
 // =============================================================================================================================
 // MSG
 // =============================================================================================================================
-void net_print(const char *s) { MSG_Enviar(s, TestUart_1); }
+void net_print(const char *s) { MSG_Enviar(MSG_WEB,s, Uart1); }
 
 void mongoose_log_fn(char ch, void *param) {
   static char line[LOGNET_LINE_MAX];

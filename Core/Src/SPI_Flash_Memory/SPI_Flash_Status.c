@@ -7,7 +7,7 @@
 #include "MsgUART/TxUart/TxUart.h"
 
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 
 void Flash_Read_ID(SPI_Flash_TypeDef *flash)
@@ -22,7 +22,7 @@ void Flash_Read_ID(SPI_Flash_TypeDef *flash)
 
     if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_ID] Timeout de Mutex: El bus SPI esta ocupado.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_ID] Timeout de Mutex: El bus SPI esta ocupado.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return;
     }
@@ -38,7 +38,7 @@ void Flash_Read_ID(SPI_Flash_TypeDef *flash)
 
     if (tx_status != HAL_OK || rx_status != HAL_OK) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_ID] HAL_SPI ha devuelto un error (Timeout o Busy).\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_ID] HAL_SPI ha devuelto un error (Timeout o Busy).\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return;
     }
@@ -46,14 +46,14 @@ void Flash_Read_ID(SPI_Flash_TypeDef *flash)
     if (id_rx[0] == 0x00 || id_rx[0] == 0xFF) {
         if (id_rx[0] == 0x00) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_ID] Fallo comunicacion SPI.\r\n └─ ID: 0x00 (Posible corto a GND o chip dañado).\r\n\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_ID] Fallo comunicacion SPI.\r\n └─ ID: 0x00 (Posible corto a GND o chip dañado).\r\n\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return;
         }
 
         if (id_rx[0] == 0xFF) {
             osDelay(TXFLASHLOG);
-            MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_ID] Fallo comunicacion SPI.\r\n └─ ID: 0xFF (Chip ausente o pines desoldados).\r\n\r\n", TestUart_1);
+            MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_ID] Fallo comunicacion SPI.\r\n └─ ID: 0xFF (Chip ausente o pines desoldados).\r\n\r\n", Uart1);
             osDelay(TXFLASHLOG);
             return;
         }
@@ -94,7 +94,7 @@ void Flash_Read_ID(SPI_Flash_TypeDef *flash)
                  capacidad);
 
         if (!MSG_Enviar_Longitud_Limit(msn_buffer_local)) {
-            MSG_Enviar(msn_buffer_local, TestUart_1);
+            MSG_Enviar(MSG_GENERAL,msn_buffer_local, Uart1);
         }
         osDelay(TXFLASHLOG);
     }
@@ -106,7 +106,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
 
     if (flash == NULL || flash->hspi == NULL || flash->cs_port == NULL || flash->spi_mutex == NULL) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_Component] Puntero nulo detectado en el componente.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_Component] Puntero nulo detectado en el componente.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return;
     }
@@ -114,7 +114,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
 
     if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_Component] Timeout de Mutex: El bus SPI esta ocupado.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_Component] Timeout de Mutex: El bus SPI esta ocupado.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return;
     }
@@ -142,7 +142,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
 
     if (tx1 != HAL_OK || rx1 != HAL_OK || tx2 != HAL_OK || rx2 != HAL_OK) {
         osDelay(TXFLASHLOG);
-        MSG_Enviar("\r\n [SPI FLASH ERROR] [Flash_Read_Component] Error de comunicacion HAL_SPI.\r\n", TestUart_1);
+        MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH ERROR] [Flash_Read_Component] Error de comunicacion HAL_SPI.\r\n", Uart1);
         osDelay(TXFLASHLOG);
         return;
     }
@@ -160,7 +160,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
                  "  - JEDEC ID Raw     : %02hhX %02hhX %02hhX\r\n",
                  id_rx[0], id_rx[1], id_rx[2]);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer_local, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer_local, Uart1);
         osDelay(TXFLASHLOG);
 
         snprintf(msn_buffer_local, sizeof(msn_buffer_local),
@@ -172,7 +172,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
                  status_reg, bsy, wel,
                  (void*)flash->cs_port, flash->cs_pin);
         osDelay(TXFLASHLOG);
-        MSG_Enviar(msn_buffer_local, TestUart_1);
+        MSG_Enviar(MSG_GENERAL,msn_buffer_local, Uart1);
         osDelay(TXFLASHLOG);
     }
 
@@ -195,7 +195,7 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
                          flash->partitions[i].sector_offset);
 
                 osDelay(TXFLASHLOG);
-                MSG_Enviar(buffer_particion, TestUart_1);
+                MSG_Enviar(MSG_GENERAL,buffer_particion, Uart1);
                 osDelay(TXFLASHLOG);
             }
         }
@@ -203,6 +203,6 @@ void Flash_Read_Component(SPI_Flash_TypeDef *flash)
 
 
     osDelay(TXFLASHLOG);
-    MSG_Enviar("========================================\r\n\r\n", TestUart_1);
+    MSG_Enviar(MSG_GENERAL,"========================================\r\n\r\n", Uart1);
     osDelay(TXFLASHLOG);
 }

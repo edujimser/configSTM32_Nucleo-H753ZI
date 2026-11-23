@@ -8,17 +8,17 @@
 #include "MsgUART/TxUart/TxUart.h"
 
 
-extern I_TestUart TestUart_1;
+extern I_TestUart Uart1;
 
 bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 	//revisar el centinal tiene que se el que está vacio
 	osDelay(TXFLASHLOG);
-	   MSG_Enviar(
+	   MSG_Enviar(MSG_GENERAL,
 		   "\r\n==========================================================\r\n"
 		   " [SPI FLASH] [Flash_Monitor_Init] INIT MONITOR_SPI\r\n"
 		   "==========================================================\r\n",
-		   TestUart_1
+		   Uart1
 	   );
 	   osDelay(TXFLASHLOG);
 
@@ -31,13 +31,13 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 	//PUNTERO -->
 	if (flash == NULL) {
 		osDelay(TXFLASHLOG);
-		   MSG_Enviar("\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: Referencias de hardware nulas (NULL).\r\n", TestUart_1);
+		   MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: Referencias de hardware nulas (NULL).\r\n", Uart1);
 
-		   MSG_Enviar(
+		   MSG_Enviar(MSG_GENERAL,
 			   "\r\n==========================================================\r\n"
 			   " [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			   "==========================================================\r\n",
-			   TestUart_1
+			   Uart1
 		   );
 		   osDelay(TXFLASHLOG);
 	return false;
@@ -47,13 +47,13 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 	//INICIALIZACIÓN FLASH -->
 	if (!flash->init || !flash->load || !flash->partitions[FLASH_SECTION_LOAD].run) {
 		osDelay(TXFLASHLOG);
-		   MSG_Enviar("\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: SPI o Load no iniciado.\r\n", TestUart_1);
+		   MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: SPI o Load no iniciado.\r\n", Uart1);
 		osDelay(TXFLASHLOG);
-		   MSG_Enviar(
+		   MSG_Enviar(MSG_GENERAL,
 			   "\r\n==========================================================\r\n"
 			   " [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			   "==========================================================\r\n",
-			   TestUart_1
+			   Uart1
 		   );
 		   osDelay(TXFLASHLOG);
 
@@ -82,26 +82,26 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 			if (!statusFindSection) {
 				osDelay(TXFLASHLOG);
-				MSG_Enviar(
+				MSG_Enviar(MSG_GENERAL,
 					"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: Particion LOG_MONITOR no encontrada.\r\n",
-					TestUart_1
+					Uart1
 				);
 				osDelay(TXFLASHLOG);
 			} else {
 				osDelay(TXFLASHLOG);
-				MSG_Enviar(
+				MSG_Enviar(MSG_GENERAL,
 					"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: Sectores insuficientes en LOG_MONITOR.\r\n",
-					TestUart_1
+					Uart1
 				);
 				osDelay(TXFLASHLOG);
 			}
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -129,7 +129,7 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 	 if (osMutexAcquire(flash->spi_mutex, osWaitForever) != osOK) {
 	  osDelay(TXFLASHLOG);
-	  MSG_Enviar("\r\n [SPI FLASH OCUPED][Flash_read_One_Sector_Search] SPI secuestrado.\r\n", TestUart_1);
+	  MSG_Enviar(MSG_GENERAL,"\r\n [SPI FLASH OCUPED][Flash_read_One_Sector_Search] SPI secuestrado.\r\n", Uart1);
 	  osDelay(TXFLASHLOG);
 	  return false;
 	}
@@ -145,17 +145,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 					(unsigned long)addrFor);
 
 				osDelay(TXFLASHLOG);
-				MSG_Enviar(buf_msg, TestUart_1);
+				MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 				osDelay(TXFLASHLOG);
 
 
 
 				osDelay(TXFLASHLOG);
-				MSG_Enviar(
+				MSG_Enviar(MSG_GENERAL,
 					"\r\n==========================================================\r\n"
 					" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 					"==========================================================\r\n",
-					TestUart_1
+					Uart1
 				);
 				osDelay(TXFLASHLOG);
 
@@ -173,7 +173,7 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 			snprintf(buf_msg, sizeof(buf_msg), "  |- Dir: 0x%06lX | Cent: 0x%08lX | Cont: %lu\r\n",
 					 (unsigned long)addrFor, (unsigned long)leido_centinela, (unsigned long)leido_contador);
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(buf_msg, TestUart_1);
+			MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 			osDelay(TXFLASHLOG);
 		}
 
@@ -192,9 +192,9 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 	// ASIGNACION CONTADOR -->
 	if(findCentinela){
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Buscando centinela en sección anterior.\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -206,17 +206,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 		if(contador >= 4294967295){
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] El contador a fallao sistema abortado.\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n==========================================================\r\n"
 				" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 				"==========================================================\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 
@@ -235,13 +235,13 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 				 "  \\- Contador : %lu\r\n",
 				 (unsigned long)addrCentinela, (unsigned long)contador);
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 	} else {
 		snprintf(buf_msg, sizeof(buf_msg),
 				 "\r\n [SPI FLASH WARN] Fin de busqueda. Centinela NO encontrado.\r\n");
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 	}
 
@@ -261,17 +261,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 		if (!protectionLimit) {
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: fallo en limites de sectores.\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n==========================================================\r\n"
 				" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 				"==========================================================\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 
@@ -284,17 +284,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 		if (!statusFlash) {
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: fallo en borrado de sectores.\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 			osDelay(TXFLASHLOG);
-			MSG_Enviar(
+			MSG_Enviar(MSG_GENERAL,
 				"\r\n==========================================================\r\n"
 				" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 				"==========================================================\r\n",
-				TestUart_1
+				Uart1
 			);
 			osDelay(TXFLASHLOG);
 
@@ -336,15 +336,15 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 		);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(buf_msg, TestUart_1);
+		MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 		osDelay(TXFLASHLOG);
 
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 		return true;
@@ -360,17 +360,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 	if (!protectionLimit) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: fallo en limites de sectores con centinela encontrado.\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -382,17 +382,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 
 	if (!protectionLimit) {
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n [SPI FLASH FATAL] [Flash_Monitor_Init] Inicializacion abortada: fallo en limite de dirección del centinela.\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 		osDelay(TXFLASHLOG);
-		MSG_Enviar(
+		MSG_Enviar(MSG_GENERAL,
 			"\r\n==========================================================\r\n"
 			" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 			"==========================================================\r\n",
-			TestUart_1
+			Uart1
 		);
 		osDelay(TXFLASHLOG);
 
@@ -436,17 +436,17 @@ bool Flash_Monitor_Init(SPI_Flash_TypeDef *flash){
 	);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(buf_msg, TestUart_1);
+	MSG_Enviar(MSG_GENERAL,buf_msg, Uart1);
 	osDelay(TXFLASHLOG);
 
 	Flash_Complement_Data_Thread(FLASH_DEBUG_THREAD_SIZE);
 
 	osDelay(TXFLASHLOG);
-	MSG_Enviar(
+	MSG_Enviar(MSG_GENERAL,
 		"\r\n==========================================================\r\n"
 		" [SPI FLASH] [Flash_Monitor_Init] FINAL MONITOR_SPI\r\n"
 		"==========================================================\r\n",
-		TestUart_1
+		Uart1
 	);
 	osDelay(TXFLASHLOG);
 

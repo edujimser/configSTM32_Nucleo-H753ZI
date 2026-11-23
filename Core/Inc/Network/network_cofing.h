@@ -3,15 +3,15 @@
 
 #include <stdint.h>
 
-#define NET_MODE_DHCP    0                      // LIST NUMBER 0
-#define NET_MODE_STATIC  1                      // LIST NUMBER 1
+/*      [    LIST CONFIG    ]        [    NUMBER CONFIG    ]       */
+#define   NET_MODE_DHCP                         0
+#define   NET_MODE_STATIC                       1
 
 
 
-// Configuracion por defecto del proyecto
 #define NET_CONFIG_DEFAULT {                    \
   .mode            		= NET_MODE_STATIC,      \
-  .ip              		= {192, 168, 1, 145},   \
+  .ip              		= {192, 168, 1, 100},   \
   .mask            		= {255, 255, 255, 0},   \
   .gw              		= {192, 168, 1, 1},     \
   .http_port       		= 80,                   \
@@ -22,7 +22,7 @@
 
 #define NET_CONFIG_TYPE1 {                      \
   .mode            		= NET_MODE_DHCP,        \
-  .ip              		= {192, 168, 1, 145},   \
+  .ip              		= {192, 168, 1, 100},   \
   .mask            		= {255, 255, 255, 0},   \
   .gw              		= {192, 168, 1, 1},     \
   .http_port       		= 80,                   \
